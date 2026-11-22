@@ -46,7 +46,7 @@
 +}
 --- a/chrome/browser/ui/views/argon/argon_sidebar_view.cc
 +++ b/chrome/browser/ui/views/argon/argon_sidebar_view.cc
-@@ -0,0 +1,371 @@
+@@ -0,0 +1,378 @@
 +// Copyright 2026 The Argon Authors
 +// Licensed under the GNU General Public License v3.0; see Argon's LICENSE file.
 +
@@ -208,12 +208,19 @@
 +  return list;
 +}
 +
++// LabelButton keeps label() protected, and has no other way to set the font.
++class TextButton : public views::LabelButton {
++ public:
++  using LabelButton::LabelButton;
++  using LabelButton::label;
++};
++
 +std::unique_ptr<views::LabelButton> MakeTextButton(
 +    views::Button::PressedCallback callback,
 +    std::u16string text,
 +    int size_delta) {
 +  auto button =
-+      std::make_unique<views::LabelButton>(std::move(callback), std::move(text));
++      std::make_unique<TextButton>(std::move(callback), std::move(text));
 +  button->SetTextColor(views::Button::STATE_NORMAL,
 +                       ui::kColorSysOnSurfaceSecondary);
 +  button->SetTextColor(views::Button::STATE_HOVERED, ui::kColorSysOnSurface);
@@ -333,7 +340,7 @@
 +      model_->GetFocusedGroup();
 +  std::u16string space_name = kDefaultSpaceName;
 +  if (focused) {
-+    const tabs::TabGroup* group = model_->group_model()->GetTabGroup(*focused);
++    const TabGroup* group = model_->group_model()->GetTabGroup(*focused);
 +    if (group && !group->visual_data()->title().empty()) {
 +      space_name = group->visual_data()->title();
 +    }
