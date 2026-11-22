@@ -47,3 +47,5 @@ cat "$argon/patches/series" >> patches/series
 
 # Helium's own workflows don't run here (Argon's do), and GITHUB_TOKEN can't push workflow files.
 rm -rf .github/workflows
+# Resuming a failed build (.github/workflows/build-phase.yml). Helium's CI copies .github/scripts to the root.
+cp "$argon/ci/swap-patches.sh" .github/scripts/argon_swap_patches.sh

@@ -70,6 +70,13 @@ compiled yet. Spaces designed, not started.
 
 Rebuild a tag: Actions > Build Argon > Run workflow, with the tag.
 
+Resuming: a failed build still uploads its build directory (`ci/helium-macos.patch` makes do-build's upload steps
+run after a failure). A rerun looks for the newest failed run whose assembled tree differs only in
+`patches/argon/` (`find-resume` compares a hash of everything else, stored in the `argon_state` artifact). If it
+finds one, it downloads that run's build directory instead of preparing the source, and `ci/swap-patches.sh` reverts
+the old Argon patches and applies the new ones. Files that come out unchanged keep their timestamps, so only the
+fixed files recompile. Tick "fresh" to build from scratch. Artifacts expire after 90 days.
+
 For now ad-hoc signed, no notarization, no Sparkle update server; builds are downloaded from draft Releases.
 Before anyone else uses it: Developer ID signing and notarization, Sparkle updates, rebranding (Helium's name and
 icons are non-free), and its own or permitted use of Helium's services (updates, extension proxy, filter lists).

@@ -11,9 +11,14 @@ on:
       tag:
         description: helium-macos tag to (re)build; empty = latest release if not built yet
         required: false
+      fresh:
+        description: Build from scratch, even if a failed run of the same tag left a build to resume from
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+  actions: read  # to resume from another run's build artifact
 
 concurrency: build
 
@@ -45,10 +50,47 @@ jobs:
             commit -qm "Helium $tag + Argon $GITHUB_SHA"
           git push -f "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY" "HEAD:refs/heads/$ref"
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          # What find-resume compares: everything but Argon's patches (and CI scripts), plus those patches.
+          mkdir ../state
+          cp -R patches/series patches/argon ../state/
+          { git ls-files -s -- . ':!:.github' ':!:patches/argon' ':!:patches/series'; grep -v '^argon/' patches/series; } |
+            sha256sum > ../state/manifest.txt
+      - if: steps.assemble.outputs.ref
+        uses: actions/upload-artifact@v4
+        with:
+          name: argon_state
+          path: state/
+
+  # A rerun after a compile fix resumes from the newest failed run whose tree differs only in Argon's patches.
+  find-resume:
+    needs: assemble
+    if: needs.assemble.outputs.ref && !inputs.fresh
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.find.outputs.run }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: argon_state
+          path: new
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for id in $(gh run list -R "$GITHUB_REPOSITORY" -w build.yml -s failure -L 20 --json databaseId -q '.[].databaseId'); do
+            names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts" -q '.artifacts[] | select(.expired | not) | .name')
+            grep -qx github_build_artifact_arm64 <<< "$names" && grep -qx argon_state <<< "$names" || continue
+            gh run download "$id" -R "$GITHUB_REPOSITORY" -n argon_state -D "old/$id"
+            if cmp -s "old/$id/manifest.txt" new/manifest.txt; then
+              echo "Resuming from run $id"
+              echo "run=$id" >> "$GITHUB_OUTPUT"
+              break
+            fi
+          done
 
   retrieve-resources:
-    needs: assemble
-    if: needs.assemble.outputs.ref
+    needs: [assemble, find-resume]
+    if: ${{ !failure() && !cancelled() && needs.assemble.outputs.ref && !needs.find-resume.outputs.run }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,13 +112,15 @@ jobs:
           path: upload_build_resources/
 
   build_01:
-    needs: [assemble, retrieve-resources]
+    needs: [assemble, find-resume, retrieve-resources]
+    if: ${{ !failure() && !cancelled() && needs.assemble.outputs.ref }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
       arch: arm64
       os: macos-latest
       ref: ${{ needs.assemble.outputs.ref }}
+      resume_run: ${{ needs.find-resume.outputs.run }}
 
   build_02:
     needs: [assemble, build_01]
@@ -200,7 +244,7 @@ jobs:
             $(find . -name '*.dmg') $(find . -name '*.hashes.md')
 
   report-failure:
-    needs: [assemble, retrieve-resources, build_01, build_02, build_03, build_04, build_05, build_06, build_07, build_08, build_09, build_10, release]
+    needs: [assemble, find-resume, retrieve-resources, build_01, build_02, build_03, build_04, build_05, build_06, build_07, build_08, build_09, build_10, release]
     if: failure()
     runs-on: ubuntu-latest
     permissions:
