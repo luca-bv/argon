@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@font-face{font-family:'Allo';src:url('https://cdn.jsdelivr.net/gh/joshpuckett/allo@main/fonts/webfonts/AlloVariable.woff2') format('woff2'),url('https://cdn.jsdelivr.net/npm/allo-font/fonts/webfonts/AlloVariable.woff2') format('woff2');font-weight:100 900;font-display:swap}html,body{margin:0;height:100%;background:#f3f1ed}body{font-family:'Allo',system-ui,sans-serif;color:#1d1c1a;-webkit-font-smoothing:antialiased}a{color:#3d5fa8}a:hover{color:#2a4580}button,input{font:inherit;color:inherit;border:0;background:transparent;padding:0;font-variation-settings:inherit;font-feature-settings:inherit}button{cursor:pointer}button:focus-visible{outline:2px solid #8a857c;outline-offset:2px}input:focus{outline:none}</style></helmet>
+<div style="position:fixed;inset:0;display:flex;background:#f3f1ed;font-feature-settings:'ss01','tnum';font-variation-settings:'ROND' {{ rond }};overflow:hidden">
+
+  <sc-if value="{{ isQuiet }}" hint-placeholder-val="{{ true }}">
+    <aside style="width:224px;flex:none;display:flex;flex-direction:column;gap:14px;padding:52px 14px 18px 28px;box-sizing:border-box">
+      <div style="font-size:12px;font-weight:600;color:#8a857c;padding:0 0 0 0">{{ space.name }}</div><div style="height:1px;background:rgba(29,28,26,.1);margin:0 -8px 0 0"></div>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <sc-for list="{{ keptRows }}" as="t" hint-placeholder-count="2">
+          <button onClick="{{ t.open }}" style="height:30px;padding:0 8px;margin:0 -8px;border-radius:7px;font-size:13px;text-align:left;display:flex;align-items:center;gap:9px;color:{{ t.ink }};font-weight:{{ t.weight }};background:{{ t.bg }}" style-hover="background:rgba(29,28,26,.05);color:#1d1c1a"><span style="width:16px;height:16px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:#fff;background:{{ t.iconBg }}">{{ t.letter }}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span></button>
+        </sc-for>
+      </div>
+      <div style="height:1px;background:rgba(29,28,26,.1);margin:0 -8px 0 0"></div>
+      <div onMouseEnter="{{ looseEnter }}" onMouseLeave="{{ looseLeave }}" style="display:flex;flex-direction:column;gap:1px">
+        <sc-for list="{{ looseRows }}" as="t" hint-placeholder-count="3">
+          <div onMouseEnter="{{ t.enter }}" style="display:flex;align-items:center;margin:0 -8px;border-radius:7px;background:{{ t.bg }}">
+            <button onClick="{{ t.open }}" style="flex:1;min-width:0;height:30px;padding:0 8px;font-size:13px;text-align:left;display:flex;align-items:center;gap:9px;color:{{ t.ink }};font-weight:{{ t.weight }}"><span style="width:16px;height:16px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:#fff;background:{{ t.iconBg }}">{{ t.letter }}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span></button>
+            <button onClick="{{ t.close }}" aria-label="Close tab" title="Close · ⌥W" style="width:24px;height:24px;margin-right:3px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#5c5953;opacity:{{ t.xOp }}" style-hover="background:rgba(29,28,26,.08);color:#1d1c1a"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;margin:0 -8px">
+          <button onClick="{{ openCmd }}" style="flex:1;height:30px;padding:0 8px;border-radius:7px;font-size:13px;color:#8a857c;text-align:left" style-hover="background:rgba(29,28,26,.05);color:#3f3c37">+ New</button>
+          <sc-if value="{{ showClear }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ clearLoose }}" style="height:26px;padding:0 8px;border-radius:6px;font-size:12px;color:#5c5953" style-hover="background:rgba(29,28,26,.07);color:#1d1c1a">Clear</button>
+          </sc-if>
+        </div>
+      </div>
+    </aside>
+    <div onMouseEnter="{{ pillEnter }}" onMouseLeave="{{ pillLeave }}" style="position:absolute;left:0;top:50%;transform:translateY(-50%);padding:14px 14px 14px 7px;z-index:3">
+      <sc-if value="{{ pillClosed }}" hint-placeholder-val="{{ true }}">
+        <div aria-label="Spaces" style="width:6px;height:56px;border-radius:999px;background:rgba(29,28,26,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+          <sc-for list="{{ spaceItems }}" as="s" hint-placeholder-count="3"><span style="width:4px;border-radius:999px;height:{{ s.dot }};background:{{ s.dotBg }}"></span></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ pillOpen }}" hint-placeholder-val="{{ false }}">
+        <nav aria-label="Spaces" style="display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.08),0 10px 30px rgba(29,28,26,.16)">
+          <sc-for list="{{ spaceItems }}" as="s" hint-placeholder-count="3">
+            <button onClick="{{ s.pick }}" title="{{ s.tip }}" aria-label="{{ s.name }}" aria-pressed="{{ s.on }}" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }}" style-hover="filter:brightness(.94)"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.icon }}"></path></svg></button>
+          </sc-for>
+        </nav>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <main style="flex:1;min-width:0;margin:{{ mainMargin }};border-radius:{{ mainRadius }};background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.06);overflow:auto;display:flex;justify-content:center">
+    <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ true }}">
+      <article style="width:100%;max-width:660px;padding:88px 40px 60px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#8a857c"><span style="width:8px;height:8px;border-radius:50%;background:{{ space.accent }}"></span>{{ page.host }}</div>
+        <h1 style="margin:0;font-size:44px;line-height:1.05;font-weight:650;letter-spacing:-.015em;text-wrap:pretty">{{ page.title }}</h1>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+          <div style="height:12px;border-radius:6px;background:#f1efeb"></div><div style="height:12px;width:92%;border-radius:6px;background:#f1efeb"></div><div style="height:12px;width:78%;border-radius:6px;background:#f1efeb"></div><div style="height:12px;width:85%;border-radius:6px;background:#f1efeb;margin-top:12px"></div><div style="height:12px;width:60%;border-radius:6px;background:#f1efeb"></div>
+        </div>
+        <div style="margin-top:28px;font-size:12px;color:#a19d95">Stand-in for the web page</div>
+      </article>
+    </sc-if>
+    <sc-if value="{{ noActive }}" hint-placeholder-val="{{ false }}">
+      <div style="align-self:center;display:flex;flex-direction:column;align-items:center;gap:10px;color:#8a857c;font-size:14px">
+        <span>No tab open in {{ space.name }}</span>
+        <button onClick="{{ openCmd }}" style="padding:7px 12px;border-radius:8px;background:#f3f1ed;color:#3f3c37;font-size:13px" style-hover="background:#ebe8e2">Open something · ⌘K</button>
+      </div>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ isTicks }}" hint-placeholder-val="{{ false }}">
+    <div onMouseEnter="{{ ticksEnter }}" onMouseLeave="{{ ticksLeave }}" style="position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;padding:0 18px 0 12px;z-index:3">
+      <sc-if value="{{ ticksClosed }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <sc-for list="{{ tickRows }}" as="t" hint-placeholder-count="5"><span style="height:2px;border-radius:2px;width:{{ t.w }};background:{{ t.c }};margin-top:{{ t.gap }}"></span></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ ticksOpen }}" hint-placeholder-val="{{ false }}">
+        <nav aria-label="Tabs" style="width:240px;display:flex;flex-direction:column;gap:1px;padding:10px;border-radius:14px;background:rgba(255,255,255,.98);box-shadow:0 0 0 1px rgba(29,28,26,.07),0 18px 50px rgba(29,28,26,.16)">
+          <div style="font-size:12px;font-weight:600;color:#8a857c;padding:4px 8px 2px">{{ space.name }}</div><div style="height:1px;background:rgba(29,28,26,.1);margin:6px 8px"></div>
+          <sc-for list="{{ keptRows }}" as="t" hint-placeholder-count="2">
+            <button onClick="{{ t.open }}" style="height:30px;padding:0 8px;border-radius:7px;font-size:13px;text-align:left;display:flex;align-items:center;gap:9px;color:{{ t.ink }};font-weight:{{ t.weight }};background:{{ t.bg }}" style-hover="background:rgba(29,28,26,.05);color:#1d1c1a"><span style="width:16px;height:16px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:#fff;background:{{ t.iconBg }}">{{ t.letter }}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span></button>
+          </sc-for>
+          <div style="height:1px;background:rgba(29,28,26,.1);margin:6px 8px"></div>
+          <sc-for list="{{ looseRows }}" as="t" hint-placeholder-count="3">
+            <div onMouseEnter="{{ t.enter }}" style="display:flex;align-items:center;border-radius:7px;background:{{ t.bg }}">
+              <button onClick="{{ t.open }}" style="flex:1;min-width:0;height:30px;padding:0 8px;font-size:13px;text-align:left;display:flex;align-items:center;gap:9px;color:{{ t.ink }};font-weight:{{ t.weight }}"><span style="width:16px;height:16px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:#fff;background:{{ t.iconBg }}">{{ t.letter }}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span></button>
+              <button onClick="{{ t.close }}" aria-label="Close tab" style="width:24px;height:24px;margin-right:3px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#5c5953;opacity:{{ t.xOp }}" style-hover="background:rgba(29,28,26,.08)"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+            </div>
+          </sc-for>
+          <button onClick="{{ openCmd }}" style="height:30px;padding:0 8px;border-radius:7px;font-size:13px;color:#8a857c;text-align:left" style-hover="background:rgba(29,28,26,.05)">+ New</button>
+          <div style="display:flex;align-items:center;gap:4px;padding:8px 2px 0;margin-top:6px;border-top:1px solid rgba(29,28,26,.07)">
+            <sc-for list="{{ spaceItems }}" as="s" hint-placeholder-count="3">
+              <button onClick="{{ s.pick }}" title="{{ s.tip }}" aria-label="{{ s.name }}" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }}" style-hover="filter:brightness(.94)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.icon }}"></path></svg></button>
+            </sc-for>
+            <span style="flex:1"></span>
+            <sc-if value="{{ showClear }}" hint-placeholder-val="{{ false }}"><button onClick="{{ clearLoose }}" style="height:26px;padding:0 8px;border-radius:6px;font-size:12px;color:#5c5953" style-hover="background:rgba(29,28,26,.07)">Clear</button></sc-if>
+          </div>
+        </nav>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ cmdOpen }}" hint-placeholder-val="{{ false }}">
+    <div onMouseDown="{{ scrimDown }}" style="position:absolute;inset:0;background:rgba(29,28,26,.22);display:flex;justify-content:center;align-items:flex-start;z-index:10">
+      <section aria-label="Command bar" style="margin-top:14vh;width:min(600px,92%);background:#fff;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.28);overflow:hidden">
+        <input ref="{{ inputRef }}" value="{{ q }}" onChange="{{ onQ }}" placeholder="Search tabs, type a URL, or run a command" aria-label="Command" style="width:100%;box-sizing:border-box;padding:18px 20px;font-size:18px;border-bottom:1px solid #efede9">
+        <div style="padding:6px;display:flex;flex-direction:column;gap:1px;max-height:52vh;overflow:auto">
+          <sc-for list="{{ results }}" as="r" hint-placeholder-count="5">
+            <div onMouseEnter="{{ r.hover }}" onClick="{{ r.run }}" style="cursor:pointer;display:flex;align-items:center;gap:12px;min-height:40px;padding:0 12px;border-radius:9px;background:{{ r.bg }}">
+              <span style="width:8px;height:8px;border-radius:50%;flex:none;background:{{ r.dot }}"></span>
+              <span style="flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span>
+              <span style="font-size:12px;color:#8a857c">{{ r.meta }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:16px;padding:10px 18px;border-top:1px solid #efede9;background:#faf9f7;font-size:11.5px;color:#8a857c"><span>↑↓ move</span><span>↵ open</span><span>esc close</span></div>
+      </section>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:9px 10px 9px 16px;background:#1d1c1a;color:#f3f1ed;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:12">
+      <span>{{ toastText }}</span>
+      <sc-if value="{{ toastUndo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ undo }}" style="font-weight:600;padding:4px 10px;border-radius:7px;background:rgba(255,255,255,.14)" style-hover="background:rgba(255,255,255,.22)">Undo ⌘Z</button></sc-if>
+    </div>
+  </sc-if>
+
+  <button onClick="{{ toggleHelp }}" style="position:absolute;right:14px;bottom:12px;z-index:4;font-size:11.5px;color:#8a857c;padding:5px 9px;border-radius:7px;background:rgba(243,241,237,.9)" style-hover="color:#3f3c37">{{ layoutName }} · ⌃⇧L to switch · ?</button>
+  <sc-if value="{{ helpOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;right:14px;bottom:44px;z-index:4;width:240px;padding:12px 14px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.08),0 14px 40px rgba(29,28,26,.14);display:grid;grid-template-columns:1fr auto;gap:7px 12px;font-size:12.5px;color:#3f3c37">
+      <span>Switch layout</span><span style="color:#8a857c">⌃⇧L</span>
+      <span>Command bar</span><span style="color:#8a857c">⌘K</span>
+      <span>Go to space 1–3</span><span style="color:#8a857c">⌃1–3</span>
+      <span>Next / previous tab</span><span style="color:#8a857c">⌃↓ ⌃↑</span>
+      <span>Close tab</span><span style="color:#8a857c">⌥W</span>
+      <span>Undo</span><span style="color:#8a857c">⌘Z</span>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Quiet sidebar&quot;,&quot;Ticks&quot;],&quot;default&quot;:&quot;Quiet sidebar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;roundness&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:5,&quot;default&quot;:100,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const T = (id, title, host) => ({ id, title, host });
+    this.state = {
+      layout: p.startLayout === 'Ticks' ? 'ticks' : 'quiet',
+      cur: 1, cmd: false, q: '', sel: 0, pill: false, ticks: false, hover: null, looseHover: false, help: false, toast: null,
+      active: { 0: 'p3', 1: 'a3', 2: 's2' },
+      spaces: [
+        { name: 'Personal', hue: 250, icon: 'M2.5 7.5 8 3l5.5 4.5V13a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5z',
+          kept: [T('p1','Inbox','mail.icloud.com'), T('p2','Calendar','calendar.icloud.com')],
+          loose: [T('p3','Hacker News','news.ycombinator.com'), T('p4','Watch later','youtube.com')] },
+        { name: 'Argon', hue: 300, icon: 'm5.5 4.5-3.5 3.5 3.5 3.5M10.5 4.5 14 8l-3.5 3.5',
+          kept: [T('a1','imputnet/helium','github.com'), T('a2','Chromium Code Search','source.chromium.org')],
+          loose: [T('a3','Amazon EC2 Mac instances','docs.aws.amazon.com'), T('a4','memory_saver_mode_policy.cc','source.chromium.org'), T('a5','Building Helium for macOS','github.com')] },
+        { name: 'School', hue: 155, icon: 'M2 3.5h4a2 2 0 0 1 2 2v8a1.5 1.5 0 0 0-1.5-1.5H2zM14 3.5h-4a2 2 0 0 0-2 2v8a1.5 1.5 0 0 1 1.5-1.5H14z',
+          kept: [T('s1','Course dashboard','canvas.instructure.com')],
+          loose: [T('s2','Essay draft','docs.google.com'), T('s3','Derivative of arctan(x)','wolframalpha.com')] },
+      ],
+    };
+  }
+  componentDidMount() { this._k = e => this.onKey(e); window.addEventListener('keydown', this._k); }
+  componentWillUnmount() { window.removeEventListener('keydown', this._k); clearTimeout(this._tt); }
+  acc(h) { return `oklch(0.56 0.13 ${h})`; }
+  flash(text, undo) { clearTimeout(this._tt); this.setState({ toast: { text, undo } }); this._tt = setTimeout(() => this.setState({ toast: null }), undo ? 6000 : 1400); }
+  setLayout(l) { this.setState({ layout: l, ticks: false, pill: false }); this.flash(l === 'quiet' ? 'Quiet sidebar' : 'Ticks'); }
+  goSpace(i) { this.setState({ cur: i }); }
+  activate(si, id) { this.setState(s => ({ cur: si, active: { ...s.active, [si]: id }, cmd: false, q: '' })); }
+  tabsOf(s) { return [...s.kept, ...s.loose]; }
+  closeTab(id) {
+    const s = this.state, si = s.cur, sp = s.spaces[si], idx = sp.loose.findIndex(t => t.id === id);
+    if (idx < 0) return;
+    const snapshot = s.spaces, prevActive = s.active;
+    const loose = sp.loose.filter(t => t.id !== id);
+    const spaces = s.spaces.map((x, i) => i === si ? { ...x, loose } : x);
+    let act = s.active[si];
+    if (act === id) { const n = loose[idx] || loose[idx - 1] || sp.kept[sp.kept.length - 1]; act = n ? n.id : null; }
+    this.setState({ spaces, active: { ...s.active, [si]: act } });
+    this.flash(`Closed “${sp.loose[idx].title}”`, () => this.setState({ spaces: snapshot, active: prevActive }));
+  }
+  clearLoose() {
+    const s = this.state, si = s.cur, sp = s.spaces[si], n = sp.loose.length;
+    if (!n) return;
+    const snapshot = s.spaces, prevActive = s.active;
+    const spaces = s.spaces.map((x, i) => i === si ? { ...x, loose: [] } : x);
+    const act = sp.loose.some(t => t.id === s.active[si]) ? (sp.kept[0] ? sp.kept[0].id : null) : s.active[si];
+    this.setState({ spaces, active: { ...s.active, [si]: act } });
+    this.flash(`${n} loose tab${n > 1 ? 's' : ''} archived`, () => this.setState({ spaces: snapshot, active: prevActive }));
+  }
+  newTab(q) {
+    const s = this.state, si = s.cur, isUrl = /\.[a-z]{2,}/i.test(q) && !/\s/.test(q);
+    const t = { id: 'n' + Date.now(), title: isUrl ? q.replace(/^https?:\/\//, '') : q, host: isUrl ? q.replace(/^https?:\/\//, '').split('/')[0] : 'search · ' + q };
+    const spaces = s.spaces.map((x, i) => i === si ? { ...x, loose: [t, ...x.loose] } : x);
+    this.setState({ spaces, active: { ...s.active, [si]: t.id }, cmd: false, q: '' });
+  }
+  cycle(d) {
+    const s = this.state, tabs = this.tabsOf(s.spaces[s.cur]); if (!tabs.length) return;
+    const i = tabs.findIndex(t => t.id === s.active[s.cur]);
+    this.activate(s.cur, tabs[(i + d + tabs.length) % tabs.length].id);
+  }
+  buildResults() {
+    const s = this.state, q = s.q.trim().toLowerCase(), out = [];
+    s.spaces.forEach((sp, si) => this.tabsOf(sp).forEach(t => {
+      if (!q || t.title.toLowerCase().includes(q) || t.host.includes(q))
+        out.push({ title: t.title, meta: si === s.cur ? 'Switch to tab' : sp.name, dot: this.acc(sp.hue), run: () => this.activate(si, t.id) });
+    }));
+    const tabs = out.slice(0, 6);
+    const cmds = [
+      { title: `Switch to ${s.layout === 'quiet' ? 'ticks' : 'quiet sidebar'}`, meta: '⌃⇧L', run: () => { this.setState({ cmd: false, q: '' }); this.setLayout(s.layout === 'quiet' ? 'ticks' : 'quiet'); } },
+      { title: 'Clear loose tabs', meta: s.spaces[s.cur].name, run: () => { this.setState({ cmd: false, q: '' }); this.clearLoose(); } },
+      ...s.spaces.map((sp, i) => ({ title: `Go to ${sp.name}`, meta: `⌃${i + 1}`, run: () => this.setState({ cur: i, cmd: false, q: '' }) })),
+    ].filter(c => !q || c.title.toLowerCase().includes(q)).map(c => ({ ...c, dot: '#c9c5bd' }));
+    const web = q ? [{ title: /\.[a-z]{2,}/i.test(q) && !/\s/.test(q) ? `Open ${s.q.trim()}` : `Search the web for “${s.q.trim()}”`, meta: 'New tab', dot: '#8a857c', run: () => this.newTab(s.q.trim()) }] : [];
+    return q ? [...tabs, ...web, ...cmds] : [...tabs, ...cmds];
+  }
+  onKey(e) {
+    const s = this.state, mod = e.metaKey || e.ctrlKey;
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyL') { e.preventDefault(); return this.setLayout(s.layout === 'quiet' ? 'ticks' : 'quiet'); }
+    if (mod && e.code === 'KeyK') { e.preventDefault(); return this.setState({ cmd: !s.cmd, q: '', sel: 0 }); }
+    if (e.ctrlKey && !e.metaKey && /^Digit[1-3]$/.test(e.code)) { e.preventDefault(); return this.goSpace(+e.code.slice(5) - 1); }
+    if (e.altKey && e.code === 'KeyW') { e.preventDefault(); return this.closeTab(s.active[s.cur]); }
+    if (mod && e.code === 'KeyZ' && s.toast && s.toast.undo) { e.preventDefault(); s.toast.undo(); return this.setState({ toast: null }); }
+    if (s.cmd) {
+      const n = (this._results || []).length;
+      if (e.key === 'ArrowDown') { e.preventDefault(); this.setState({ sel: (s.sel + 1) % n }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState({ sel: (s.sel - 1 + n) % n }); }
+      else if (e.key === 'Enter') { e.preventDefault(); this._results[s.sel] && this._results[s.sel].run(); }
+      else if (e.key === 'Escape') this.setState({ cmd: false, q: '' });
+      return;
+    }
+    if (e.ctrlKey && e.key === 'ArrowDown') { e.preventDefault(); this.cycle(1); }
+    if (e.ctrlKey && e.key === 'ArrowUp') { e.preventDefault(); this.cycle(-1); }
+    if (e.key === 'Escape') this.setState({ ticks: false, help: false });
+  }
+  renderVals() {
+    const s = this.state, sp = s.spaces[s.cur], act = s.active[s.cur], accent = this.acc(sp.hue);
+    const row = (t, loose) => {
+      const on = t.id === act;
+      const hh = [...t.host].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
+      return { ...t, letter: t.host.replace(/^www\./, '')[0].toUpperCase(), iconBg: `oklch(0.55 0.12 ${hh})`, ink: on ? '#1d1c1a' : '#5c5953', weight: on ? 600 : 400, bg: on ? 'rgba(29,28,26,.06)' : 'transparent',
+        open: () => this.activate(s.cur, t.id), close: () => this.closeTab(t.id), enter: () => this.setState({ hover: t.id }),
+        xOp: loose && (s.hover === t.id || on) && s.looseHover !== false ? 1 : 0 };
+    };
+    const page = this.tabsOf(sp).find(t => t.id === act);
+    const results = s.cmd ? this.buildResults() : [];
+    this._results = results;
+    const quiet = s.layout === 'quiet';
+    return {
+      rond: this.props.roundness ?? 100,
+      isQuiet: quiet, isTicks: !quiet, layoutName: quiet ? 'Quiet sidebar' : 'Ticks',
+      space: { name: sp.name, accent },
+      keptRows: sp.kept.map(t => row(t, false)),
+      looseRows: sp.loose.map(t => row(t, true)),
+      looseEnter: () => this.setState({ looseHover: true }), looseLeave: () => this.setState({ looseHover: false, hover: null }),
+      showClear: sp.loose.length > 0,
+      clearLoose: () => this.clearLoose(),
+      spaceItems: s.spaces.map((x, i) => { const on = i === s.cur; return { name: x.name, tip: `${x.name} · ⌃${i + 1}`, icon: x.icon, on, pick: () => this.goSpace(i), bg: on ? this.acc(x.hue) : 'transparent', fg: on ? '#fff' : '#3f3c37', dot: on ? '14px' : '4px', dotBg: on ? this.acc(x.hue) : 'rgba(29,28,26,.35)' }; }),
+      pillOpen: s.pill, pillClosed: !s.pill,
+      pillEnter: () => this.setState({ pill: true }), pillLeave: () => this.setState({ pill: false }),
+      ticksOpen: s.ticks, ticksClosed: !s.ticks,
+      ticksEnter: () => this.setState({ ticks: true }), ticksLeave: () => this.setState({ ticks: false, hover: null }),
+      tickRows: [...sp.kept.map((t, i) => ({ t, gap: '0' })), ...sp.loose.map((t, i) => ({ t, gap: i === 0 ? '8px' : '0' }))].map(({ t, gap }) => ({ gap, w: t.id === act ? '18px' : '10px', c: t.id === act ? accent : 'rgba(29,28,26,.3)' })),
+      mainMargin: quiet ? '8px 8px 8px 0' : '0', mainRadius: quiet ? '10px' : '0',
+      hasActive: !!page, noActive: !page,
+      page: page || { title: '', host: '' },
+      cmdOpen: s.cmd, q: s.q,
+      openCmd: () => this.setState({ cmd: true, q: '', sel: 0 }),
+      onQ: e => this.setState({ q: e.target.value, sel: 0 }),
+      inputRef: el => { if (el && document.activeElement !== el) el.focus(); },
+      scrimDown: e => { if (e.target === e.currentTarget) this.setState({ cmd: false, q: '' }); },
+      results: results.map((r, i) => ({ ...r, bg: i === s.sel ? 'rgba(29,28,26,.06)' : 'transparent', hover: () => this.setState({ sel: i }) })),
+      hasToast: !!s.toast, toastText: s.toast ? s.toast.text : '', toastUndo: !!(s.toast && s.toast.undo),
+      undo: () => { s.toast && s.toast.undo && s.toast.undo(); this.setState({ toast: null }); },
+      helpOpen: s.help, toggleHelp: () => this.setState(x => ({ help: !x.help })),
+    };
+  }
+}
+</script>
+</body>
+</html>

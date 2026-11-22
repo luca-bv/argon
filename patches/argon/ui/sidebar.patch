@@ -1,0 +1,558 @@
+--- a/chrome/browser/BUILD.gn
++++ b/chrome/browser/BUILD.gn
+@@ -4309,6 +4309,7 @@
+       "//chrome/browser/ui/views/apps:impl",
+       "//chrome/browser/ui/views/apps/app_info_dialog",
+       "//chrome/browser/ui/views/apps/app_info_dialog:impl",
++      "//chrome/browser/ui/views/argon:impl",
+       "//chrome/browser/ui/views/autofill:address_editor_view",
+       "//chrome/browser/ui/views/autofill:at_memory_promo_bubble_view",
+       "//chrome/browser/ui/views/autofill:at_memory_promo_bubble_view_impl",
+--- a/chrome/browser/ui/views/argon/BUILD.gn
++++ b/chrome/browser/ui/views/argon/BUILD.gn
+@@ -0,0 +1,34 @@
++# Copyright 2026 The Argon Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++# Argon's own browser interface. Headers here, implementations in :impl (linked
++# by //chrome/browser), like //chrome/browser/ui/views/tabs/vertical.
++source_set("argon") {
++  public = [ "argon_sidebar_view.h" ]
++  public_deps = [
++    "//base",
++    "//chrome/browser/ui/tabs:tab_strip",
++    "//ui/base/metadata",
++    "//ui/views",
++  ]
++}
++
++source_set("impl") {
++  sources = [ "argon_sidebar_view.cc" ]
++  deps = [
++    ":argon",
++    "//chrome/app:command_ids",
++    "//chrome/browser/ui:browser_commands",
++    "//chrome/browser/ui:tab_ui_helper",
++    "//chrome/browser/ui/browser_window",
++    "//chrome/browser/ui/tabs",
++    "//chrome/browser/ui/tabs:tab_enums",
++    "//chrome/browser/ui/tabs:tab_group",
++    "//components/tab_groups",
++    "//components/tabs:public",
++    "//components/vector_icons",
++    "//ui/color",
++    "//ui/gfx",
++  ]
++}
+--- a/chrome/browser/ui/views/argon/argon_sidebar_view.cc
++++ b/chrome/browser/ui/views/argon/argon_sidebar_view.cc
+@@ -0,0 +1,372 @@
++// Copyright 2026 The Argon Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "chrome/browser/ui/views/argon/argon_sidebar_view.h"
++
++#include <memory>
++#include <utility>
++#include <vector>
++
++#include "base/functional/bind.h"
++#include "base/location.h"
++#include "base/task/sequenced_task_runner.h"
++#include "chrome/app/chrome_command_ids.h"
++#include "chrome/browser/ui/browser_commands.h"
++#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
++#include "chrome/browser/ui/tab_ui_helper.h"
++#include "chrome/browser/ui/tabs/tab_enums.h"
++#include "chrome/browser/ui/tabs/tab_group_model.h"
++#include "chrome/browser/ui/tabs/tab_strip_model.h"
++#include "chrome/browser/ui/tabs/tab_strip_user_gesture_details.h"
++#include "components/tab_groups/tab_group_visual_data.h"
++#include "components/tabs/public/tab_group.h"
++#include "components/tabs/public/tab_interface.h"
++#include "components/vector_icons/vector_icons.h"
++#include "ui/base/metadata/metadata_impl_macros.h"
++#include "ui/color/color_id.h"
++#include "ui/gfx/font.h"
++#include "ui/gfx/font_list.h"
++#include "ui/gfx/text_constants.h"
++#include "ui/views/accessibility/view_accessibility.h"
++#include "ui/views/background.h"
++#include "ui/views/border.h"
++#include "ui/views/controls/button/button.h"
++#include "ui/views/controls/button/image_button.h"
++#include "ui/views/controls/button/image_button_factory.h"
++#include "ui/views/controls/button/label_button.h"
++#include "ui/views/controls/image_view.h"
++#include "ui/views/controls/label.h"
++#include "ui/views/controls/scroll_view.h"
++#include "ui/views/controls/separator.h"
++#include "ui/views/layout/box_layout.h"
++#include "ui/views/layout/box_layout_view.h"
++#include "ui/views/layout/fill_layout.h"
++
++namespace {
++
++// Sizes from the handoff's tokens. Colors come from the system color tokens
++// for now, so light and dark both work; Argon's own Paper palette is a later
++// color-mixer patch.
++constexpr int kRowHeight = 30;
++constexpr int kRowRadius = 7;
++constexpr int kRowGap = 1;
++constexpr int kSectionGap = 14;
++constexpr int kIconTitleGap = 9;
++constexpr int kFaviconSize = 16;
++constexpr int kCloseSize = 24;
++constexpr int kCloseIconSize = 10;
++
++// ponytail: fixed until Spaces (stage 1) names spaces; then the space's name.
++constexpr char16_t kDefaultSpaceName[] = u"Home";
++
++gfx::FontList Font(int size_delta, gfx::Font::Weight weight) {
++  return gfx::FontList().Derive(size_delta, gfx::Font::NORMAL, weight);
++}
++
++// One tab: favicon and title; loose tabs also get a close button, shown while
++// the row is hovered or active.
++class ArgonTabRow : public views::Button {
++  METADATA_HEADER(ArgonTabRow, views::Button)
++
++ public:
++  ArgonTabRow(tabs::TabInterface* tab,
++              bool active,
++              PressedCallback open,
++              PressedCallback close)
++      : views::Button(std::move(open)), active_(active) {
++    SetNotifyEnterExitOnChild(true);
++    GetViewAccessibility().SetName(TabUIHelper::From(tab)->GetTitle());
++
++    auto* layout = SetLayoutManager(std::make_unique<views::BoxLayout>(
++        views::BoxLayout::Orientation::kHorizontal,
++        gfx::Insets::TLBR(0, 8, 0, close ? 3 : 8), kIconTitleGap));
++    layout->set_cross_axis_alignment(
++        views::BoxLayout::CrossAxisAlignment::kCenter);
++    layout->set_minimum_cross_axis_size(kRowHeight);
++
++    icon_ = AddChildView(std::make_unique<views::ImageView>());
++    icon_->SetImage(TabUIHelper::From(tab)->GetFavicon());
++    icon_->SetImageSize(gfx::Size(kFaviconSize, kFaviconSize));
++
++    title_ = AddChildView(
++        std::make_unique<views::Label>(TabUIHelper::From(tab)->GetTitle()));
++    title_->SetHorizontalAlignment(gfx::ALIGN_LEFT);
++    title_->SetElideBehavior(gfx::ELIDE_TAIL);
++    title_->SetFontList(Font(0, active ? gfx::Font::Weight::SEMIBOLD
++                                       : gfx::Font::Weight::NORMAL));
++    layout->SetFlexForView(title_, 1);
++
++    if (close) {
++      close_ = AddChildView(views::CreateVectorImageButton(std::move(close)));
++      views::SetImageFromVectorIconWithColor(
++          close_, vector_icons::kCloseIcon, kCloseIconSize,
++          views::IconColors(ui::kColorSysOnSurfaceSubtle,
++                            ui::kColorSysOnSurfaceSubtle));
++      close_->SetPreferredSize(gfx::Size(kCloseSize, kCloseSize));
++      close_->GetViewAccessibility().SetName(u"Close tab");
++    }
++    UpdateLook();
++  }
++  ArgonTabRow(const ArgonTabRow&) = delete;
++  ArgonTabRow& operator=(const ArgonTabRow&) = delete;
++  ~ArgonTabRow() override = default;
++
++ protected:
++  void StateChanged(ButtonState old_state) override {
++    views::Button::StateChanged(old_state);
++    UpdateLook();
++  }
++
++ private:
++  void UpdateLook() {
++    const bool hovered = GetState() == STATE_HOVERED ||
++                         GetState() == STATE_PRESSED || IsMouseHovered();
++    if (active_) {
++      SetBackground(views::CreateRoundedRectBackground(
++          ui::kColorSysStateRippleNeutralOnSubtle, kRowRadius));
++    } else if (hovered) {
++      SetBackground(views::CreateRoundedRectBackground(
++          ui::kColorSysStateHoverOnSubtle, kRowRadius));
++    } else {
++      SetBackground(nullptr);
++    }
++    title_->SetEnabledColor(active_ || hovered ? ui::kColorSysOnSurface
++                                               : ui::kColorSysOnSurfaceSubtle);
++    if (close_) {
++      close_->SetVisible(active_ || hovered);
++    }
++  }
++
++  const bool active_;
++  raw_ptr<views::ImageView> icon_ = nullptr;
++  raw_ptr<views::Label> title_ = nullptr;
++  raw_ptr<views::ImageButton> close_ = nullptr;
++};
++
++BEGIN_METADATA(ArgonTabRow)
++END_METADATA
++
++std::unique_ptr<views::Separator> MakeSeparator() {
++  auto separator = std::make_unique<views::Separator>();
++  separator->SetColorId(ui::kColorSysDivider);
++  return separator;
++}
++
++std::unique_ptr<views::View> MakeList() {
++  auto list = std::make_unique<views::BoxLayoutView>();
++  list->SetOrientation(views::BoxLayout::Orientation::kVertical);
++  list->SetBetweenChildSpacing(kRowGap);
++  return list;
++}
++
++std::unique_ptr<views::LabelButton> MakeTextButton(
++    views::Button::PressedCallback callback,
++    std::u16string text,
++    int size_delta) {
++  auto button =
++      std::make_unique<views::LabelButton>(std::move(callback), std::move(text));
++  button->SetTextColor(views::Button::STATE_NORMAL,
++                       ui::kColorSysOnSurfaceSecondary);
++  button->SetTextColor(views::Button::STATE_HOVERED, ui::kColorSysOnSurface);
++  button->SetTextColor(views::Button::STATE_PRESSED, ui::kColorSysOnSurface);
++  button->label()->SetFontList(Font(size_delta, gfx::Font::Weight::NORMAL));
++  button->SetMinSize(gfx::Size(0, kRowHeight));
++  return button;
++}
++
++}  // namespace
++
++ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
++    : browser_(browser), model_(browser->GetTabStripModel()) {
++  SetLayoutManager(std::make_unique<views::FillLayout>());
++
++  auto* scroll = AddChildView(std::make_unique<views::ScrollView>());
++  scroll->SetHorizontalScrollBarMode(views::ScrollView::ScrollBarMode::kDisabled);
++  scroll->SetBackgroundColor(std::nullopt);
++  scroll->SetDrawOverflowIndicator(false);
++
++  auto* contents =
++      scroll->SetContents(std::make_unique<views::BoxLayoutView>());
++  contents->SetOrientation(views::BoxLayout::Orientation::kVertical);
++  contents->SetBetweenChildSpacing(kSectionGap);
++  contents->SetInsideBorderInsets(gfx::Insets::TLBR(6, 0, 18, 0));
++  contents->SetCrossAxisAlignment(
++      views::BoxLayout::CrossAxisAlignment::kStretch);
++
++  space_name_ = contents->AddChildView(std::make_unique<views::Label>());
++  space_name_->SetHorizontalAlignment(gfx::ALIGN_LEFT);
++  space_name_->SetFontList(Font(-1, gfx::Font::Weight::SEMIBOLD));
++  space_name_->SetEnabledColor(ui::kColorSysOnSurfaceSubtle);
++  space_name_->SetBorder(views::CreateEmptyBorder(gfx::Insets::VH(0, 8)));
++
++  contents->AddChildView(MakeSeparator());
++  kept_ = contents->AddChildView(MakeList());
++  kept_separator_ = contents->AddChildView(MakeSeparator());
++
++  auto* loose_section = contents->AddChildView(MakeList());
++  loose_ = loose_section->AddChildView(MakeList());
++
++  auto* new_row =
++      loose_section->AddChildView(std::make_unique<views::BoxLayoutView>());
++  new_row->SetCrossAxisAlignment(views::BoxLayout::CrossAxisAlignment::kCenter);
++  auto* new_tab = new_row->AddChildView(MakeTextButton(
++      base::BindRepeating(&ArgonSidebarView::NewTab, base::Unretained(this)),
++      u"+ New", 0));
++  new_row->SetFlexForView(new_tab, 1);
++  clear_ = new_row->AddChildView(MakeTextButton(
++      base::BindRepeating(&ArgonSidebarView::CloseLooseTabs,
++                          base::Unretained(this)),
++      u"Clear", -1));
++  clear_->SetTooltipText(u"Close every loose tab in this space");
++
++  model_->AddObserver(this);
++  Rebuild();
++}
++
++ArgonSidebarView::~ArgonSidebarView() {
++  model_->RemoveObserver(this);
++}
++
++void ArgonSidebarView::OnTabStripModelChanged(
++    TabStripModel* tab_strip_model,
++    const TabStripModelChange& change,
++    const TabStripSelectionChange& selection) {
++  ScheduleRebuild();
++}
++
++void ArgonSidebarView::OnTabChangedAt(tabs::TabInterface* tab,
++                                      TabChangeType change_type) {
++  ScheduleRebuild();
++}
++
++void ArgonSidebarView::OnTabPinnedStateChanged(tabs::TabInterface* tab,
++                                               int index) {
++  ScheduleRebuild();
++}
++
++void ArgonSidebarView::TabGroupedStateChanged(
++    TabStripModel* tab_strip_model,
++    std::optional<tab_groups::TabGroupId> old_group,
++    std::optional<tab_groups::TabGroupId> new_group,
++    tabs::TabInterface* tab,
++    int index) {
++  ScheduleRebuild();
++}
++
++void ArgonSidebarView::OnTabGroupChanged(const TabGroupChange& change) {
++  ScheduleRebuild();
++}
++
++void ArgonSidebarView::OnTabGroupFocusChanged(
++    std::optional<tab_groups::TabGroupId> new_focused_group_id,
++    std::optional<tab_groups::TabGroupId> old_focused_group_id) {
++  ScheduleRebuild();
++}
++
++void ArgonSidebarView::ScheduleRebuild() {
++  if (rebuild_pending_) {
++    return;
++  }
++  rebuild_pending_ = true;
++  base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
++      FROM_HERE, base::BindOnce(&ArgonSidebarView::Rebuild,
++                                weak_factory_.GetWeakPtr()));
++}
++
++// ponytail: rebuilds every row on any change; diff rows if long tab lists
++// make this show up in profiles.
++void ArgonSidebarView::Rebuild() {
++  rebuild_pending_ = false;
++  kept_->RemoveAllChildViews();
++  loose_->RemoveAllChildViews();
++
++  const std::optional<tab_groups::TabGroupId> focused =
++      model_->GetFocusedGroup();
++  std::u16string space_name = kDefaultSpaceName;
++  if (focused) {
++    const tabs::TabGroup* group = model_->group_model()->GetTabGroup(*focused);
++    if (group && !group->visual_data()->title().empty()) {
++      space_name = group->visual_data()->title();
++    }
++  }
++  space_name_->SetText(space_name);
++
++  bool any_loose = false;
++  for (int i = 0; i < model_->count(); ++i) {
++    tabs::TabInterface* tab = model_->GetTabAtIndex(i);
++    const bool kept = model_->IsTabPinned(i);
++    // Focus mode hides the other groups' tabs; so does the sidebar.
++    if (!kept && focused && model_->GetTabGroupForTab(i) != focused) {
++      continue;
++    }
++    auto weak_tab = tab->GetWeakPtr();
++    auto open = base::BindRepeating(&ArgonSidebarView::Activate,
++                                    weak_factory_.GetWeakPtr(), weak_tab);
++    views::Button::PressedCallback close;
++    if (!kept) {
++      close = base::BindRepeating(&ArgonSidebarView::Close,
++                                  weak_factory_.GetWeakPtr(), weak_tab);
++    }
++    (kept ? kept_ : loose_)
++        ->AddChildView(std::make_unique<ArgonTabRow>(
++            tab, i == model_->active_index(), std::move(open),
++            std::move(close)));
++    any_loose |= !kept;
++  }
++
++  const bool any_kept = !kept_->children().empty();
++  kept_->SetVisible(any_kept);
++  kept_separator_->SetVisible(any_kept);
++  clear_->SetVisible(any_loose);
++  PreferredSizeChanged();
++}
++
++void ArgonSidebarView::Activate(base::WeakPtr<tabs::TabInterface> tab) {
++  if (!tab) {
++    return;
++  }
++  const int index = model_->GetIndexOfTab(tab.get());
++  if (index != TabStripModel::kNoTab) {
++    model_->ActivateTabAt(index, TabStripUserGestureDetails(
++                                     TabStripUserGestureDetails::GestureType::kMouse));
++  }
++}
++
++// Closed tabs stay reopenable with Cmd+Shift+T (historical tab entries).
++void ArgonSidebarView::Close(base::WeakPtr<tabs::TabInterface> tab) {
++  if (!tab) {
++    return;
++  }
++  const int index = model_->GetIndexOfTab(tab.get());
++  if (index != TabStripModel::kNoTab) {
++    model_->CloseWebContentsAt(index, TabCloseTypes::CLOSE_USER_GESTURE |
++                                          TabCloseTypes::CLOSE_CREATE_HISTORICAL_TAB);
++  }
++}
++
++void ArgonSidebarView::CloseLooseTabs() {
++  const std::optional<tab_groups::TabGroupId> focused =
++      model_->GetFocusedGroup();
++  std::vector<base::WeakPtr<tabs::TabInterface>> loose;
++  for (int i = 0; i < model_->count(); ++i) {
++    if (!model_->IsTabPinned(i) &&
++        (!focused || model_->GetTabGroupForTab(i) == focused)) {
++      loose.push_back(model_->GetTabAtIndex(i)->GetWeakPtr());
++    }
++  }
++  // Closing a window's last tab closes the window; Clear only empties the space.
++  if (static_cast<int>(loose.size()) == model_->count()) {
++    NewTab();
++  }
++  for (const auto& tab : loose) {
++    Close(tab);
++  }
++}
++
++void ArgonSidebarView::NewTab() {
++  chrome::ExecuteCommand(browser_, IDC_NEW_TAB);
++}
++
++BEGIN_METADATA(ArgonSidebarView)
++END_METADATA
+--- a/chrome/browser/ui/views/argon/argon_sidebar_view.h
++++ b/chrome/browser/ui/views/argon/argon_sidebar_view.h
+@@ -0,0 +1,85 @@
++// Copyright 2026 The Argon Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
++#define CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
++
++#include <optional>
++
++#include "base/memory/raw_ptr.h"
++#include "base/memory/weak_ptr.h"
++#include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
++#include "ui/base/metadata/metadata_header_macros.h"
++#include "ui/views/view.h"
++
++class BrowserWindowInterface;
++class TabStripModel;
++
++namespace views {
++class Label;
++class LabelButton;
++class Separator;
++}  // namespace views
++
++// Argon's "Quiet sidebar" (design_handoff_argon_browser/README.md, section 2):
++// the space name, kept tabs, a divider, loose tabs, then "+ New" and "Clear".
++// It takes the place of the vertical tab strip's tab list inside
++// VerticalTabStripRegionView, which still owns the width, collapse, resize and
++// the window controls above it.
++//
++// Until Spaces (stage 1) and pins (stage 2) land: the space is the focused tab
++// group ("Home" when none), kept tabs are Chromium-pinned tabs, and loose tabs
++// are the unpinned tabs Chromium shows (only the focused group's in focus mode).
++class ArgonSidebarView : public views::View, public TabStripModelObserver {
++  METADATA_HEADER(ArgonSidebarView, views::View)
++
++ public:
++  explicit ArgonSidebarView(BrowserWindowInterface* browser);
++  ArgonSidebarView(const ArgonSidebarView&) = delete;
++  ArgonSidebarView& operator=(const ArgonSidebarView&) = delete;
++  ~ArgonSidebarView() override;
++
++  // TabStripModelObserver:
++  void OnTabStripModelChanged(TabStripModel* tab_strip_model,
++                              const TabStripModelChange& change,
++                              const TabStripSelectionChange& selection) override;
++  void OnTabChangedAt(tabs::TabInterface* tab,
++                      TabChangeType change_type) override;
++  void OnTabPinnedStateChanged(tabs::TabInterface* tab, int index) override;
++  void TabGroupedStateChanged(TabStripModel* tab_strip_model,
++                              std::optional<tab_groups::TabGroupId> old_group,
++                              std::optional<tab_groups::TabGroupId> new_group,
++                              tabs::TabInterface* tab,
++                              int index) override;
++  void OnTabGroupChanged(const TabGroupChange& change) override;
++  void OnTabGroupFocusChanged(
++      std::optional<tab_groups::TabGroupId> new_focused_group_id,
++      std::optional<tab_groups::TabGroupId> old_focused_group_id) override;
++
++ private:
++  // Rows are rebuilt from the model after the current task, so a row is never
++  // destroyed while its own click handler runs (closing a tab notifies
++  // synchronously), and bursts of changes during page loads coalesce.
++  void ScheduleRebuild();
++  void Rebuild();
++
++  void Activate(base::WeakPtr<tabs::TabInterface> tab);
++  void Close(base::WeakPtr<tabs::TabInterface> tab);
++  void CloseLooseTabs();
++  void NewTab();
++
++  const raw_ptr<BrowserWindowInterface> browser_;
++  const raw_ptr<TabStripModel> model_;
++
++  raw_ptr<views::Label> space_name_ = nullptr;
++  raw_ptr<views::View> kept_ = nullptr;
++  raw_ptr<views::Separator> kept_separator_ = nullptr;
++  raw_ptr<views::View> loose_ = nullptr;
++  raw_ptr<views::LabelButton> clear_ = nullptr;
++
++  bool rebuild_pending_ = false;
++  base::WeakPtrFactory<ArgonSidebarView> weak_factory_{this};
++};
++
++#endif  // CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
+--- a/chrome/browser/ui/views/frame/BUILD.gn
++++ b/chrome/browser/ui/views/frame/BUILD.gn
+@@ -546,6 +546,7 @@
+     "//ui/views",
+   ]
+   deps = [
++    "//chrome/browser/ui/views/argon",
+     ":browser_view_header",
+     ":custom_corners_background",
+     ":frame",
+--- a/chrome/browser/ui/views/frame/vertical_tab_strip_region_view.cc
++++ b/chrome/browser/ui/views/frame/vertical_tab_strip_region_view.cc
+@@ -36,6 +36,7 @@
+ #include "chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h"
+ #include "chrome/browser/ui/ui_features.h"
+ #include "chrome/browser/ui/views/animations/tab_strip_animations.h"
++#include "chrome/browser/ui/views/argon/argon_sidebar_view.h"
+ #include "chrome/browser/ui/views/frame/base_tab_strip_region_view.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+ #include "chrome/browser/ui/views/frame/custom_corners_background.h"
+@@ -190,6 +191,18 @@
+               LayoutConstant::kVerticalTabStripCollapsedVerticalPadding),
+           region_horizontal_padding, 0, region_horizontal_padding));
+ 
++  // Argon: its sidebar replaces the tab list and the new tab button below it;
++  // both stay in the tree (hidden) for the code that still expects them.
++  bottom_button_container_->SetVisible(false);
++  auto* const argon_sidebar = content_area_view_->AddChildView(
++      std::make_unique<ArgonSidebarView>(browser_view->browser()));
++  argon_sidebar->SetProperty(
++      views::kFlexBehaviorKey,
++      views::FlexSpecification(views::MinimumFlexSizeRule::kScaleToZero,
++                               views::MaximumFlexSizeRule::kUnbounded));
++  argon_sidebar->SetProperty(views::kMarginsKey,
++                             gfx::Insets::VH(0, region_horizontal_padding));
++
+   gemini_button_ =
+       content_area_view_->AddChildView(std::make_unique<views::View>());
+ 
+@@ -880,6 +893,8 @@
+               LayoutConstant::kVerticalTabStripCollapsedVerticalPadding),
+           0));
+ 
++  view->SetVisible(false);  // Argon: ArgonSidebarView shows the tabs.
++
+   views::View* const content_parent =
+       content_area_view_ ? content_area_view_.get() : this;
+   std::optional<size_t> separator_index =

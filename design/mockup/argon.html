@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argon UI mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#1c1c1e; --muted:#4f4f57; --page:#fff; --hover:rgba(255,255,255,.78); --soft:rgba(255,255,255,.5); --bar:#ececef; }
+.dark { --ink:#f2f2f5; --muted:#b4b4bd; --page:#1c1c1e; --hover:rgba(255,255,255,.12); --soft:rgba(255,255,255,.07); --bar:#2c2c30; }
+* { box-sizing: border-box; }
+body { margin:0; font-family:Inter,system-ui,sans-serif; }
+button { font:inherit; color:inherit; border:0; background:transparent; cursor:pointer; }
+#app { height:100vh; display:flex; gap:8px; padding:8px; position:relative; overflow:hidden; color:var(--ink); background:var(--tint); transition:background .25s; }
+aside { width:260px; flex-shrink:0; display:flex; flex-direction:column; gap:12px; min-height:0; }
+.row { display:flex; align-items:center; gap:6px; }
+.lights { display:flex; gap:6px; padding:0 6px; }
+.lights i { width:12px; height:12px; border-radius:50%; }
+.icon { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:8px; color:var(--muted); }
+.icon:hover, .tab:hover { background:var(--soft); }
+.address { display:flex; align-items:center; gap:8px; height:36px; padding:0 10px; border-radius:10px; background:var(--soft); color:var(--muted); font-size:13px; width:100%; }
+.address span { flex:1; text-align:left; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+kbd { font:11px Inter,sans-serif; padding:2px 6px; border-radius:4px; background:rgba(127,127,127,.15); }
+.favs { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.favs button { height:44px; border-radius:10px; background:var(--soft); display:flex; align-items:center; justify-content:center; }
+.favs button.on { background:var(--hover); }
+.tile { flex-shrink:0; color:#fff; font-weight:600; display:flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:5px; font-size:10px; }
+.tile.big { width:22px; height:22px; border-radius:6px; font-size:12px; }
+.tab { display:flex; align-items:center; gap:10px; min-height:36px; padding:0 10px; border-radius:8px; font-size:13px; width:100%; text-align:left; }
+.tab span:not(.tile) { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.tab.on { background:var(--hover); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+.list { display:flex; flex-direction:column; gap:2px; overflow:auto; }
+.muted { font-size:12px; color:var(--muted); margin:0; }
+.rule { flex:1; height:1px; background:rgba(127,127,127,.25); }
+main { flex:1; min-width:0; position:relative; overflow:hidden; background:var(--page); border-radius:10px; box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 10px rgba(0,0,0,.08); }
+.site { height:44px; display:flex; align-items:center; gap:10px; padding:0 20px; border-bottom:1px solid var(--bar); font-size:13px; font-weight:600; }
+.content { max-width:720px; margin:0 auto; padding:48px 32px; display:flex; flex-direction:column; gap:16px; }
+.content h1 { margin:0; font-size:32px; }
+.bar { height:12px; border-radius:6px; background:var(--bar); }
+.link { color:#2f5fb3; text-decoration:underline; padding:0; }
+.dark .link { color:#9db8ff; }
+.scrim { position:absolute; inset:0; background:rgba(0,0,0,.25); display:flex; align-items:flex-start; justify-content:center; z-index:5; }
+.panel { background:var(--page); color:var(--ink); border-radius:14px; box-shadow:0 24px 70px rgba(0,0,0,.3); overflow:hidden; }
+.cmd { margin-top:140px; width:min(680px,92%); }
+.cmd input { flex:1; border:0; outline:none; background:transparent; font:18px Inter,sans-serif; color:var(--ink); }
+.peek { width:70%; height:76%; margin:auto; }
+.pill { border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600; color:#fff; background:var(--accent); }
+.hidden { display:none !important; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+.controls { position:fixed; right:16px; bottom:16px; display:flex; gap:8px; z-index:9; }
+.controls button { padding:8px 12px; border-radius:8px; background:#1c1c1e; color:#fff; font-size:12px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="controls"><button id="darkBtn">Toggle dark</button></div>
+<script>
+const SPACES = [
+  { name:'Personal', light:'#dfe7f4', dark:'#1d2533', accent:'#2f5fb3',
+    pinned:[{id:'p1',title:'Inbox',host:'mail.icloud.com'},{id:'p2',title:'Calendar',host:'calendar.icloud.com'}],
+    today:[{id:'p3',title:'Hacker News',host:'news.ycombinator.com'},{id:'p4',title:'Watch later',host:'youtube.com'}] },
+  { name:'Argon', light:'#e8e2f4', dark:'#261f33', accent:'#6a4fb3',
+    pinned:[{id:'a1',title:'imputnet/helium',host:'github.com'},{id:'a2',title:'Chromium Code Search',host:'source.chromium.org'}],
+    today:[{id:'a3',title:'Amazon EC2 Mac instances',host:'docs.aws.amazon.com'},{id:'a4',title:'memory_saver_mode_policy.cc',host:'source.chromium.org'},{id:'a5',title:'Building Helium for macOS',host:'github.com'}] },
+  { name:'School', light:'#dfeee3', dark:'#1c2b22', accent:'#2c7a4b',
+    pinned:[{id:'s1',title:'Course dashboard',host:'canvas.instructure.com'}],
+    today:[{id:'s2',title:'Essay draft',host:'docs.google.com'},{id:'s3',title:'Derivative of arctan(x)',host:'wolframalpha.com'}] },
+];
+const FAVS = [['Mail','mail.icloud.com','#2f5fb3'],['Calendar','calendar.icloud.com','#b3402f'],['GitHub','github.com','#24292f'],['Music','music.apple.com','#b0305a'],['Notes','icloud.com/notes','#8a6a12'],['Maps','maps.apple.com','#2c7a4b'],['Drive','drive.google.com','#1a6b8a'],['Claude','claude.ai','#9a4a2c']];
+
+const st = { space:1, active:'a3', fav:null, cmd:false, peek:false, sidebar:true, dark:false, query:'', cleared:{}, added:{}, archived:14 };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const todayOf = i => (st.cleared[i] ? [] : SPACES[i].today).concat(st.added[i] || []);
+const allTabs = () => SPACES.flatMap((s,i) => s.pinned.concat(todayOf(i)).map(t => ({...t, space:i})));
+const tile = (color, letter, big) => `<span class="tile${big?' big':''}" style="background:${color}">${esc(letter)}</span>`;
+const tabBtn = t => `<button class="tab${t.id===st.active && st.fav===null?' on':''}" data-tab="${t.id}" data-space="${t.space}">${tile(SPACES[t.space].accent, t.title[0].toUpperCase())}<span>${esc(t.title)}</span></button>`;
+const svg = d => `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${d}</svg>`;
+
+function results() {
+  const q = st.query.trim().toLowerCase();
+  const r = allTabs().filter(t => !q || t.title.toLowerCase().includes(q) || t.host.includes(q)).slice(0,6)
+    .map(t => `<button class="tab" style="min-height:44px" data-tab="${t.id}" data-space="${t.space}" data-close>${tile(SPACES[t.space].accent, t.title[0].toUpperCase(), true)}<span>${esc(t.title)}</span><em class="muted">${t.space===st.space?'Switch to tab':'In '+SPACES[t.space].name}</em></button>`);
+  const extra = q ? [[`Search the web for “${esc(st.query.trim())}”`,'?','Enter']] : [['New space','+','Command'],['Copy URL','⌘','⌘⇧C']];
+  return r.concat(extra.map(([t,l,h]) => `<button class="tab" style="min-height:44px" data-act="closeCmd">${tile('#6b6b73',l,true)}<span>${t}</span><em class="muted">${h}</em></button>`)).join('');
+}
+
+function render() {
+  const sp = SPACES[st.space], app = document.getElementById('app');
+  const fav = st.fav !== null ? FAVS[st.fav] : null;
+  const cur = fav ? {title:fav[0], host:fav[1]} : (allTabs().find(t => t.id===st.active) || allTabs()[0]);
+  const today = todayOf(st.space).map(t => ({...t, space:st.space}));
+  app.className = st.dark ? 'dark' : '';
+  app.style.setProperty('--tint', st.dark ? sp.dark : sp.light);
+  app.style.setProperty('--accent', sp.accent);
+  app.innerHTML = `
+  <aside class="${st.sidebar?'':'hidden'}" aria-label="Sidebar">
+    <div class="row" style="height:32px">
+      <div class="lights" aria-hidden="true"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+      <span style="flex:1"></span>
+      <button class="icon" aria-label="Hide sidebar" data-act="hideSidebar">${svg('<rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M6 2.5v11"/>')}</button>
+      <button class="icon" aria-label="Back">${svg('<path d="M10 3 5 8l5 5"/>')}</button>
+      <button class="icon" aria-label="Forward">${svg('<path d="m6 3 5 5-5 5"/>')}</button>
+      <button class="icon" aria-label="Reload">${svg('<path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2.5V5h-2.5"/>')}</button>
+    </div>
+    <button class="address" data-act="openCmd" aria-label="Address and command bar">${svg('<rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/>')}<span>${esc(cur.host)}</span><kbd>⌘T</kbd></button>
+    <div class="favs">${FAVS.map((f,i) => `<button class="${st.fav===i?'on':''}" aria-label="${f[0]}" data-fav="${i}">${tile(f[2], f[0][0], true)}</button>`).join('')}</div>
+    <div class="row" style="padding:4px 8px 0;gap:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${sp.accent}"></span>
+      <strong style="font-size:13px;flex:1">${sp.name}</strong>
+      <button class="icon" aria-label="Space options">${svg('<circle cx="3.5" cy="8" r=".6"/><circle cx="8" cy="8" r=".6"/><circle cx="12.5" cy="8" r=".6"/>')}</button>
+    </div>
+    <nav class="list" aria-label="Pinned tabs">${sp.pinned.map(t => tabBtn({...t, space:st.space})).join('')}</nav>
+    <div class="row" style="padding:0 8px;gap:8px"><span class="rule"></span><span class="muted">Today</span><button class="muted" style="padding:6px 4px" data-act="clearToday">Clear</button></div>
+    <button class="tab" style="color:var(--muted)" data-act="openCmd">${svg('<path d="M8 3v10M3 8h10"/>')}<span>New Tab</span></button>
+    <nav class="list" aria-label="Today tabs">${today.map(tabBtn).join('') || '<p class="muted" style="margin:4px 10px;line-height:1.45">Nothing open today. Tabs you leave alone for 12 hours move to the archive by themselves.</p>'}</nav>
+    <span style="flex:1"></span>
+    <div class="row" style="padding:4px">
+      <button class="icon" style="width:auto;padding:0 6px;gap:4px" aria-label="Archive, ${st.archived} tabs">${svg('<rect x="1.5" y="2.5" width="13" height="3.5" rx="1"/><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"/>')}<span style="font-size:12px">${st.archived}</span></button>
+      <span style="flex:1"></span>
+      ${SPACES.map((s,i) => `<button class="icon" aria-label="Switch to ${s.name}" aria-pressed="${i===st.space}" data-switch="${i}"><span style="width:${i===st.space?10:8}px;height:${i===st.space?10:8}px;border-radius:50%;background:${i===st.space?s.accent:'transparent'};box-shadow:inset 0 0 0 1.5px ${s.accent}"></span></button>`).join('')}
+      <span style="flex:1"></span>
+      <button class="icon" aria-label="New space">${svg('<path d="M8 3v10M3 8h10"/>')}</button>
+    </div>
+  </aside>
+  <main>
+    <div class="site" style="${st.sidebar?'':'padding-left:200px'}">
+      ${st.sidebar ? '' : `<div class="row" style="position:absolute;left:12px;top:16px"><div class="lights" aria-hidden="true" style="padding:0"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><button class="muted" style="margin-left:8px;padding:4px 8px;border-radius:6px;background:var(--bar)" data-act="showSidebar">Show sidebar</button></div>`}
+      ${tile(sp.accent, cur.title[0].toUpperCase(), true)}<span>${esc(cur.host)}</span>
+    </div>
+    <div class="content">
+      <p class="muted">Stand-in for the web page</p>
+      <h1>${esc(cur.title)}</h1>
+      <div class="bar"></div><div class="bar" style="width:88%"></div><div class="bar" style="width:64%"></div>
+      <p style="margin:8px 0 0;font-size:15px;line-height:1.5">Links on a page can open in Peek, a floating preview that closes back to this tab: <button class="link" data-act="openPeek">open a link in Peek</button>.</p>
+      <div class="bar" style="width:88%"></div><div class="bar" style="width:64%"></div>
+    </div>
+    <div class="scrim ${st.peek?'':'hidden'}" style="align-items:center">
+      <section class="panel peek" aria-label="Peek">
+        <div class="row" style="padding:10px 12px;border-bottom:1px solid rgba(127,127,127,.2);gap:8px">
+          <strong style="font-size:13px;flex:1">news.ycombinator.com/item</strong>
+          <button class="pill" data-act="expandPeek">Open as tab</button>
+          <button class="icon" aria-label="Close Peek" data-act="closePeek">${svg('<path d="m4 4 8 8M12 4l-8 8"/>')}</button>
+        </div>
+        <div style="padding:28px;display:flex;flex-direction:column;gap:14px"><h2 style="margin:0">Linked page, previewed</h2><div class="bar"></div><div class="bar" style="width:88%"></div><div class="bar" style="width:64%"></div></div>
+      </section>
+    </div>
+  </main>
+  <div class="scrim ${st.cmd?'':'hidden'}" data-act="closeCmd">
+    <section class="panel cmd" aria-label="Command bar">
+      <div class="row" style="padding:14px 16px;gap:10px;border-bottom:1px solid rgba(127,127,127,.2)">
+        ${svg('<circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/>')}
+        <label for="q" class="sr">Search tabs, the web, or a command</label>
+        <input id="q" placeholder="Search tabs, the web, or a command" value="${esc(st.query)}" autocomplete="off">
+      </div>
+      <div id="results" class="list" style="padding:6px;max-height:360px">${results()}</div>
+    </section>
+  </div>`;
+  if (st.cmd) { const q = document.getElementById('q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+}
+
+const acts = {
+  hideSidebar: () => st.sidebar = false, showSidebar: () => st.sidebar = true,
+  openCmd: () => st.cmd = true, closeCmd: () => { st.cmd = false; st.query = ''; },
+  openPeek: () => st.peek = true, closePeek: () => st.peek = false,
+  expandPeek: () => { const id = 'peek' + Date.now(); (st.added[st.space] ||= []).push({id, title:'Linked page, previewed', host:'news.ycombinator.com'}); Object.assign(st, {peek:false, active:id, fav:null}); },
+  clearToday: () => { st.archived += todayOf(st.space).length; st.cleared[st.space] = true; st.added[st.space] = []; },
+};
+
+document.getElementById('app').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab],[data-fav],[data-switch],[data-act]');
+  if (!b || (b.classList.contains('scrim') && e.target !== b)) return;
+  if (b.dataset.tab) Object.assign(st, {active:b.dataset.tab, space:+b.dataset.space, fav:null}, b.hasAttribute('data-close') ? {cmd:false, query:''} : {});
+  else if (b.dataset.fav) st.fav = +b.dataset.fav;
+  else if (b.dataset.switch) { const i = +b.dataset.switch, first = SPACES[i].pinned.concat(todayOf(i))[0]; Object.assign(st, {space:i, fav:null, active: first ? first.id : st.active}); }
+  else acts[b.dataset.act]?.();
+  render();
+});
+document.getElementById('app').addEventListener('input', e => {
+  if (e.target.id !== 'q') return;
+  st.query = e.target.value;
+  document.getElementById('results').innerHTML = results();
+});
+document.addEventListener('keydown', e => {
+  if (e.metaKey && e.key === 't') { e.preventDefault(); st.cmd = true; render(); }
+  if (e.key === 'Escape') { st.cmd = false; st.peek = false; st.query = ''; render(); }
+});
+document.getElementById('darkBtn').onclick = () => { st.dark = !st.dark; render(); };
+render();
+</script>
+</body>
+</html>

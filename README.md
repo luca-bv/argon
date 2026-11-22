@@ -1,68 +1,98 @@
 # Argon
 
-A personal fork of [Helium](https://github.com/imputnet/helium) (ungoogled-chromium based, GPL-3.0) that rebuilds
-automatically on every Helium release, adding Arc's workflow and a stricter tab policy for lower memory use.
-Argon sits next to helium in the periodic table (and starts with "Ar", for Arc).
+A browser for people who miss Arc: spaces, pinned and temporary tabs that archive themselves, a quiet sidebar and a
+command bar. It's built on [Helium](https://github.com/imputnet/helium), an ungoogled-chromium browser, so it keeps
+Helium's privacy work, and it adds a stricter tab policy so it uses less memory.
 
-Status: plan only. No patches or builds yet.
+The name comes from the periodic table: argon sits next to helium, and its symbol, Ar, is the start of Arc.
 
-## How it builds
+> **Status: early, not usable yet.** No build has been compiled, and there are no downloads. macOS on Apple silicon
+> only, for now.
 
-1. A scheduled GitHub Actions job watches `imputnet/helium-macos` for a new release tag.
-2. It checks out that tag, appends `patches/series` from this repo to Helium's series, and applies it.
-3. If everything applies, it runs Helium's own macOS build workflow unchanged (10 chained jobs on `macos-latest`;
-   free for public repos). arm64 only, to halve build time.
-4. If a patch fails to apply, it opens an issue instead of releasing.
+## What it will do
 
-Personal use only, so: ad-hoc signed, no notarization, no Sparkle update server; builds are downloaded from
-Releases. Helium's name and icons are non-free and can't be reused, so the app is rebranded.
+- **Spaces.** Each space is its own set of tabs. You switch with an edge pill or the keyboard, and a space can be
+  tied to a profile.
+- **Kept and loose tabs.** Kept tabs stay. Loose tabs close after 12 hours unused (or 24 hours, 7 days, never), and
+  "Clear" closes them all at once, with undo.
+- **A quiet sidebar.** One column with the space name, kept tabs, a divider and loose tabs, and nothing else until
+  you hover. Designs are in [`design_handoff_argon_browser/`](design_handoff_argon_browser/README.md): open the
+  `.dc.html` files in a browser to click through them.
+- **A command bar** (⌘K) for tabs, spaces, history, commands and search.
+- **Lower memory use.** Only the few most recently used background tabs stay loaded. The rest are discarded at once,
+  and fewer stay loaded on battery or under memory pressure.
+- **Helium underneath.** No Google services, bundled uBlock Origin, fingerprinting noise, and Helium's privacy
+  defaults.
 
-Developing a patch needs a Mac with 32 GB+ RAM and 200 GB+ free disk (rented while working on a feature);
-CI is only for release builds.
+## How it works
 
-## Arc features
+Argon isn't a full copy of Chromium. It's a set of patches on top of Helium's:
 
-Helium already has: vertical tabs, compact toolbar, minimal address bar, split view, zen mode, and an Arc importer
-(pinned tabs become bookmark folders).
+1. [`ci/assemble.sh`](ci/assemble.sh) takes a Helium macOS release and removes Helium's interface patches. What's
+   left is Chromium's stock interface with all of Helium's features underneath.
+2. It adds Argon's patches from [`patches/`](patches/series): the interface (native C++ Chromium Views in
+   `chrome/browser/ui/views/argon/`) and the memory changes.
+3. [GitHub Actions](.github/workflows/build.yml) checks for a new Helium release every 6 hours, assembles the tree
+   on a `build/<tag>` branch, and builds it on GitHub's macOS runners. Any failure opens an issue, such as a patch
+   that no longer applies.
 
-To add:
+So Argon follows Helium releases automatically. When a Helium update breaks a patch, that patch gets fixed.
 
-- [ ] Spaces: separate sidebars, each with its own pinned tabs, color and optionally profile
-- [ ] Pinned / unpinned sidebar sections, unpinned tabs archived after a while
-- [ ] Arc import that keeps spaces and pinned tabs (from `StorableSidebar.json`)
-- [ ] Command bar, Peek, Little Arc (later, maybe)
+## Repository layout
 
-Risk: Spaces edits the same tab-strip code as Helium's `helium/ui/layout/vertical.patch` (1,711 lines), so
-Helium sidebar changes will break it and need manual rebases.
+| Path | What it is |
+|---|---|
+| `patches/argon/` | Argon's patches, applied after Helium's ([`patches/series`](patches/series) sets the order) |
+| `ci/` | Assembles the build tree from a Helium release |
+| `.github/workflows/` | The automatic build |
+| `dev/` | Sets up a development Mac and copies patches back into this repo |
+| `design_handoff_argon_browser/` | The interface design: HTML prototypes and the tokens and specs |
+| `extension/` | A temporary side-panel extension that mimics the sidebar on stock Helium, until the native one builds |
+| `docs/notes.md` | Development notes: decisions, patch checks and the plan for each feature |
 
-## Weight
+## Building
 
-Benchmark (LeanBrowser's `scripts/bench.sh`, 10 sites, M1 8 GB, 2026-11-15): Helium 0.21.3.1 used 1,950–2,247 MB
-and 16–22 s of idle CPU per minute; LeanBrowser (WebKit, aggressive tab budget) used 426–490 MB. The gap is tab
-policy, not the engine.
+Chromium is big. Building it needs a Mac with 32 GB+ of RAM and about 200 GB of free disk, and it takes hours.
+On such a Mac:
 
-Helium already: Memory Saver on, infinite tab freezing, lazy session restore.
+```bash
+git clone https://github.com/luca-bv/argon && cd argon
+dev/setup.sh
+```
 
-Try first on stock Helium (no patch): Memory Saver at Maximum, "Preload pages" off, Battery Saver always on,
-an h264ify-style extension to avoid AV1 software decoding. Benchmark with a 10-minute idle.
+This installs the build tools, assembles `~/argon-tree` from the latest Helium release plus Argon's patches, and
+builds it once. After that, work happens with Helium's `he` tool and `quilt`. See
+[docs/notes.md](docs/notes.md#developing-on-a-rented-ec2-mac) for the full loop.
 
-Patches, biggest saving first:
+Builds are still named Helium and use Helium's profile folder. If you have Helium installed, run a test build with
+its own profile:
 
-- [ ] Live-tab budget: keep only the 2 / 5 / 10 (by RAM) most recent background tabs loaded, discard the rest at once
-- [ ] Discard on battery, Low Power Mode, memory pressure and high thermal state
-- [ ] Throttle background tabs immediately instead of after 5 minutes (check the feature param exists)
-- [ ] No spare renderer process (check it's a feature flag)
+```bash
+Helium.app/Contents/MacOS/Helium --user-data-dir="$HOME/argon-test-profile"
+```
 
-Not worth it: removing features (saves download size, not RAM), V8 lite mode (slow JS), weakening site isolation
-(security).
+## Trying the stopgap extension
 
-Expected: around 1 GB in the same test (a guess); LeanBrowser's ~430 MB is out of reach because Chromium's
-browser, GPU, network and uBlock processes stay resident.
+`extension/` runs on Helium or any Chromium browser. Open `chrome://extensions`, turn on Developer mode, click "Load
+unpacked" and choose the `extension` folder. `node --test extension/` runs its tests.
 
-## Fingerprinting
+## Roadmap
 
-Helium Noise is on by default: per-site, per-session noise on canvas, audio and `hardwareConcurrency`, with
-per-site exceptions. Off by default but in `chrome://flags`: `#fingerprinting-client-rects-noise`,
-`#fingerprinting-canvas-measuretext-noise`, `#spoof-webgl-info`, `#remove-client-hints`. Not covered: fonts,
-screen size, time zone, language. New noise sources can follow `helium/core/noise/hardware-concurrency.patch`
-(170 lines) as a template.
+- [ ] First compiled build
+- [ ] Native sidebar (written, not compiled)
+- [ ] Spaces, then pins, colors, profile per space and auto-archive
+- [ ] Command bar, Peek, Little Arc
+- [ ] Arc import that keeps spaces and pinned tabs
+- [ ] Own name and icons, Developer ID signing, notarization, updates
+
+The plan for each item is in [docs/notes.md](docs/notes.md).
+
+## Credits
+
+Argon is built on [Helium](https://github.com/imputnet/helium) and
+[helium-macos](https://github.com/imputnet/helium-macos) by imput, which are built on
+[ungoogled-chromium](https://github.com/ungoogled-software/ungoogled-chromium) and
+[Chromium](https://www.chromium.org/). Helium is GPL-3.0, and Chromium is under a BSD-style license. The interface
+font is [Allo](https://github.com/joshpuckett/allo) (SIL Open Font License, in `extension/fonts/`).
+
+Argon isn't affiliated with The Browser Company (Arc) or with imput (Helium).

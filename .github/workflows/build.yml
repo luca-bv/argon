@@ -1,0 +1,214 @@
+# Builds Argon for every new imputnet/helium-macos release: assembles build/<tag> (Helium + Argon patches),
+# then runs Helium's chained macOS build (arm64 only) and drafts a release.
+# The retrieve-resources and build_NN jobs mirror helium-macos .github/workflows/building.yml.
+name: Build Argon
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: helium-macos tag to (re)build; empty = latest release if not built yet
+        required: false
+
+permissions:
+  contents: read
+
+concurrency: build
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      ref: ${{ steps.assemble.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: assemble
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          tag=${TAG:-$(gh release list -R imputnet/helium-macos -L 1 --exclude-drafts --json tagName -q '.[0].tagName')}
+          ref=build/$tag
+          if [ -z "$TAG" ] && git ls-remote --exit-code origin "refs/heads/$ref" >/dev/null; then
+            echo "$ref already exists, nothing to do"
+            exit 0
+          fi
+          ci/assemble.sh "$tag" tree
+          cd tree
+          git checkout -q --orphan "$ref"
+          git add -A
+          git -c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+            commit -qm "Helium $tag + Argon $GITHUB_SHA"
+          git push -f "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY" "HEAD:refs/heads/$ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+  retrieve-resources:
+    needs: assemble
+    if: needs.assemble.outputs.ref
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.assemble.outputs.ref }}
+          submodules: true
+          persist-credentials: false
+      - uses: ./.github/actions/prepare-environment
+      - name: Download, unpack and patch sources
+        run: |
+          set -o pipefail
+          source ./devutils/shared.sh
+          prepare_sources | tee -a github_actions_retrieve_resources.log
+          rm -rf build/download_cache
+      - run: ./github_pack_resources.sh | tee -a github_actions_retrieve_resources.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: helium_macos_resources_arm64
+          path: upload_build_resources/
+
+  build_01:
+    needs: [assemble, retrieve-resources]
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+
+  build_02:
+    needs: [assemble, build_01]
+    if: needs.build_01.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_03:
+    needs: [assemble, build_02]
+    if: needs.build_02.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_04:
+    needs: [assemble, build_03]
+    if: needs.build_03.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_05:
+    needs: [assemble, build_04]
+    if: needs.build_04.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_06:
+    needs: [assemble, build_05]
+    if: needs.build_05.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_07:
+    needs: [assemble, build_06]
+    if: needs.build_06.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_08:
+    needs: [assemble, build_07]
+    if: needs.build_07.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_09:
+    needs: [assemble, build_08]
+    if: needs.build_08.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  build_10:
+    needs: [assemble, build_09]
+    if: needs.build_09.outputs.status == 'running'
+    uses: ./.github/workflows/build-phase.yml
+    secrets: inherit
+    with:
+      arch: arm64
+      os: macos-latest
+      ref: ${{ needs.assemble.outputs.ref }}
+      resume: true
+
+  release:
+    needs: [assemble, build_01, build_02, build_03, build_04, build_05, build_06, build_07, build_08, build_09, build_10]
+    if: ${{ !failure() && !cancelled() && contains(needs.*.outputs.status, 'finished') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: helium_*_arm64-macos.dmg
+          merge-multiple: true
+      # Draft = visible only to repo collaborators, until the app is rebranded (Helium's name and icons are non-free).
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ needs.assemble.outputs.ref }}
+        run: |
+          tag=argon-${REF#build/}
+          gh release delete "$tag" -R "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$tag" -R "$GITHUB_REPOSITORY" --draft --target "$REF" --title "$tag" \
+            --notes "Helium ${REF#build/} with Argon patches. Ad-hoc signed: right-click > Open on first launch." \
+            $(find . -name '*.dmg') $(find . -name '*.hashes.md')
+
+  report-failure:
+    needs: [assemble, retrieve-resources, build_01, build_02, build_03, build_04, build_05, build_06, build_07, build_08, build_09, build_10, release]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ needs.assemble.outputs.ref }}
+        run: |
+          gh issue create -R "$GITHUB_REPOSITORY" --title "Build failed: ${REF:-assemble}" \
+            --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

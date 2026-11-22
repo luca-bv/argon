@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Argon",
+  "version": "0.1.0",
+  "description": "Argon’s sidebar: spaces, kept and loose tabs, auto-archive and a command bar.",
+  "minimum_chrome_version": "121",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "sidePanel",
+    "storage",
+    "favicon",
+    "sessions",
+    "search",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "action": {
+    "default_title": "Argon"
+  },
+  "commands": {
+    "command-bar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Command bar"
+    },
+    "next-space": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Period"
+      },
+      "description": "Next space"
+    },
+    "previous-space": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Comma"
+      },
+      "description": "Previous space"
+    }
+  }
+}

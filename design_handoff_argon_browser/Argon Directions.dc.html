@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>@font-face{font-family:'Allo';src:url('https://cdn.jsdelivr.net/gh/joshpuckett/allo@main/fonts/webfonts/AlloVariable.woff2') format('woff2'),url('https://cdn.jsdelivr.net/npm/allo-font/fonts/webfonts/AlloVariable.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}body{margin:0;background:#e9e6e0;font-family:'Instrument Sans',system-ui,sans-serif;color:#1d1c1a}a{color:#3d5fa8}a:hover{color:#2a4580}button{font:inherit;color:inherit;border:0;background:transparent;cursor:pointer;padding:0}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}.dv-opts{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.6)}.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.06),0 20px 50px rgba(0,0,0,.08);overflow:hidden}.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}button:focus-visible,[tabindex]:focus-visible{outline:2px solid oklch(0.56 0.13 300);outline-offset:2px}.dv-next{margin:24px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.55)}</style></helmet>
+
+<section class="dv-turn" id="t5">
+<div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Type test: <a class="dv-oid" href="#3a">3a</a> and <a class="dv-oid" href="#3b">3b</a> set in Allo, used for both the interface text and the small labels</span></div>
+<div style="max-width:1120px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 28px">
+  <div style="background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"><div style="font:500 10.5px 'IBM Plex Mono',monospace;color:#7a766e;margin-bottom:8px">INSTRUMENT SANS · rounds 1–4</div><div style="font-family:'Instrument Sans';font-size:34px;font-weight:600;line-height:1.1">Argon spaces</div><div style="font-family:'Instrument Sans';font-size:15px;margin-top:6px;color:#3f3c37">Amazon EC2 Mac instances · 12h</div></div>
+  <div style="background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"><div style="font:500 10.5px 'IBM Plex Mono',monospace;color:#7a766e;margin-bottom:8px">ALLO · ROUNDNESS 50 · 5b</div><div style="font-family:'Allo';font-variation-settings:'ROND' 50;font-feature-settings:'ss01';font-size:34px;font-weight:600;line-height:1.1">Argon spaces</div><div style="font-family:'Allo';font-variation-settings:'ROND' 50;font-feature-settings:'ss01';font-size:15px;margin-top:6px;color:#3f3c37">Amazon EC2 Mac instances · 12h</div></div>
+  <div style="background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"><div style="font:500 10.5px 'IBM Plex Mono',monospace;color:#7a766e;margin-bottom:8px">ALLO · ROUNDNESS 100 · 5a</div><div style="font-family:'Allo';font-variation-settings:'ROND' 100;font-feature-settings:'ss01';font-size:34px;font-weight:600;line-height:1.1">Argon spaces</div><div style="font-family:'Allo';font-variation-settings:'ROND' 100;font-feature-settings:'ss01';font-size:15px;margin-top:6px;color:#3f3c37">Amazon EC2 Mac instances · 12h</div></div>
+</div>
+<div class="dv-opts">
+
+<!-- 5a -->
+<div class="dv-opt" id="5a">
+<div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a><b style="color:#1a1a1a">Roundness 100 · single-storey a</b> ·Edge pill: a slim handle on the window edge. Hover it to open a column of space icons; the name shows on hover.</div>
+<div class="dv-card" style="font-family:'Allo',system-ui,sans-serif;font-feature-settings:'tnum','ss01';font-variation-settings:'ROND' 100;width:1120px;height:700px;display:flex;background:#ecebe7;position:relative">
+  <aside style="width:256px;flex:none;display:flex;flex-direction:column;gap:14px;padding:14px 10px 10px 22px">
+    <div style="display:flex;align-items:center;gap:2px;height:28px">
+      <div style="display:flex;gap:7px;padding:0 6px 0 0"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+      <span style="flex:1"></span>
+      <button aria-label="Back" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#a19d95"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:0 4px">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="{{ pCur.accent }}" stroke-width="1.6" stroke-linejoin="round"><path d="{{ pCur.icon }}"></path></svg>
+      <span style="font-weight:700;font-size:16px">{{ pCur.name }}</span>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.7);font-size:13px;color:#3f3c37;text-align:left" style-hover="background:#fff">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pCur.host }}</span>
+      <span style="font:500 11px 'Allo',system-ui,sans-serif;color:#7a766e">⌘L</span>
+    </button>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font:500 10.5px 'Allo',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;padding:0 8px 4px">Kept</div>
+      <sc-for list="{{ pCur.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;padding:0 2px 4px 8px"><span style="font:500 10.5px 'Allo',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;flex:1">Loose</span><button style="font-size:12px;font-weight:500;color:#3f3c37;padding:5px 10px;border-radius:6px" style-hover="background:rgba(29,28,26,.08)">Clear</button></div>
+      <sc-for list="{{ pCur.loose }}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 6px 0 8px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          <button aria-label="Close tab" style="width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#7a766e" style-hover="background:rgba(29,28,26,.1);color:#1d1c1a"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+        </div>
+      </sc-for>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;background:#fff;border-radius:10px;box-shadow:0 0 0 1px rgba(29,28,26,.07),0 2px 10px rgba(29,28,26,.06);overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center">
+    <span style="font:500 12px 'Allo',system-ui,sans-serif;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · {{ pCur.title }}</span>
+  </main>
+  <div onMouseEnter="{{ openPillA }}" onMouseLeave="{{ closePillA }}" style="position:absolute;left:0;top:50%;transform:translateY(-50%);padding:12px 12px 12px 6px;display:flex;align-items:center">
+    <sc-if value="{{ pillAClosed }}" hint-placeholder-val="{{ true }}">
+      <div aria-label="Spaces" style="width:6px;height:56px;border-radius:999px;background:rgba(29,28,26,.16);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px">
+        <sc-for list="{{ pillSpaces }}" as="s" hint-placeholder-count="3"><span style="width:4px;height:{{ s.dot }};border-radius:999px;background:{{ s.dotBg }}"></span></sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ pillAOpen }}" hint-placeholder-val="{{ false }}">
+      <nav aria-label="Spaces" style="display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.08),0 10px 30px rgba(29,28,26,.16)">
+        <sc-for list="{{ pillSpaces }}" as="s" hint-placeholder-count="3">
+          <button onClick="{{ s.pick }}" title="{{ s.name }}" aria-label="{{ s.name }}" aria-pressed="{{ s.on }}" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }}" style-hover="background:rgba(29,28,26,.07)">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.icon }}"></path></svg>
+          </button>
+        </sc-for>
+        <div style="height:1px;background:rgba(29,28,26,.1);margin:2px 6px"></div>
+        <button title="New space" aria-label="New space" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></button>
+      </nav>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+<!-- 5b -->
+<div class="dv-opt" id="5b">
+<div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a><b style="color:#1a1a1a">Roundness 50 · single-storey a</b> ·Footer pill: at rest it shows only the current space's icon. Hover and it widens to show every space.</div>
+<div class="dv-card" style="font-family:'Allo',system-ui,sans-serif;font-feature-settings:'tnum','ss01';font-variation-settings:'ROND' 50;width:1120px;height:700px;display:flex;background:#ecebe7">
+  <aside style="width:256px;flex:none;display:flex;flex-direction:column;gap:14px;padding:14px 10px 12px 12px">
+    <div style="display:flex;align-items:center;gap:2px;height:28px">
+      <div style="display:flex;gap:7px;padding:0 6px"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+      <span style="flex:1"></span>
+      <button aria-label="Back" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#a19d95"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.7);font-size:13px;color:#3f3c37;text-align:left" style-hover="background:#fff">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pCur.host }}</span>
+      <span style="font:500 11px 'Allo',system-ui,sans-serif;color:#7a766e">⌘L</span>
+    </button>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font:500 10.5px 'Allo',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;padding:0 8px 4px">Kept</div>
+      <sc-for list="{{ pCur.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;padding:0 2px 4px 8px"><span style="font:500 10.5px 'Allo',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;flex:1">Loose</span><button style="font-size:12px;font-weight:500;color:#3f3c37;padding:5px 10px;border-radius:6px" style-hover="background:rgba(29,28,26,.08)">Clear</button></div>
+      <sc-for list="{{ pCur.loose }}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 6px 0 8px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div onMouseEnter="{{ openPillB }}" onMouseLeave="{{ closePillB }}" style="display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:{{ pillBBg }};box-shadow:{{ pillBShadow }}">
+        <sc-for list="{{ pillBSpaces }}" as="s" hint-placeholder-count="1">
+          <button onClick="{{ s.pick }}" title="{{ s.name }}" aria-label="{{ s.name }}" aria-pressed="{{ s.on }}" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }}" style-hover="background:rgba(29,28,26,.07)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.icon }}"></path></svg>
+          </button>
+        </sc-for>
+        <sc-if value="{{ pillBOpen }}" hint-placeholder-val="{{ false }}">
+          <button title="New space" aria-label="New space" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></button>
+        </sc-if>
+      </div>
+      <sc-if value="{{ pillBClosed }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;font-weight:600;color:#3f3c37">{{ pCur.name }}</span></sc-if>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;background:#fff;border-radius:10px;box-shadow:0 0 0 1px rgba(29,28,26,.07),0 2px 10px rgba(29,28,26,.06);overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center">
+    <span style="font:500 12px 'Allo',system-ui,sans-serif;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · {{ pCur.title }}</span>
+  </main>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "push roundness to 100 on <a class="dv-oid" href="#5a">5a</a>" · "use Allo across every direction" · "compare Allo with Instrument Sans side by side"</p>
+</section>
+
+<section class="dv-turn" id="t4">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Ultra minimal: only tab titles and the page are visible; everything else appears on hover or by shortcut</span></div>
+<div class="dv-opts">
+
+<!-- 4a -->
+<div class="dv-opt" id="4a">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Quiet sidebar: just text, no search bar, buttons, icons or headers. The space dots in the bottom left switch spaces.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:#f3f1ed">
+  <aside style="width:216px;flex:none;display:flex;flex-direction:column;gap:22px;padding:52px 14px 18px 22px">
+    <div style="display:flex;flex-direction:column;gap:1px">
+      <sc-for list="{{ pCur.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="height:30px;padding:0 8px;margin:0 -8px;border-radius:7px;font-size:13px;color:#3f3c37;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="background:rgba(29,28,26,.05);color:#1d1c1a">{{ t.title }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1px">
+      <sc-for list="{{ minLoose }}" as="t" hint-placeholder-count="3">
+        <button style="height:30px;padding:0 8px;margin:0 -8px;border-radius:7px;font-size:13px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ t.ink }};font-weight:{{ t.weight }}" style-hover="background:rgba(29,28,26,.05);color:#1d1c1a">{{ t.title }}</button>
+      </sc-for>
+      <button style="height:30px;padding:0 8px;margin:0 -8px;border-radius:7px;font-size:13px;color:#8a857c;text-align:left" style-hover="background:rgba(29,28,26,.05);color:#3f3c37">+ New</button>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;gap:2px;margin-left:-6px">
+      <sc-for list="{{ pillSpaces }}" as="s" hint-placeholder-count="3">
+        <button onClick="{{ s.pick }}" title="{{ s.name }}" aria-label="{{ s.name }}" aria-pressed="{{ s.on }}" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center"><span style="width:7px;height:7px;border-radius:50%;background:{{ s.dotBg }}"></span></button>
+      </sc-for>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(29,28,26,.05)">
+    <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px">web page · ⌘L for address · ⌘[ ] back/forward</span>
+  </main>
+</div>
+</div>
+
+<!-- 4b -->
+<div class="dv-opt" id="4b">
+<div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Ticks: no sidebar at all. Each tab is a short tick on the left edge. Hover the ticks to see titles.</div>
+<div class="dv-card" style="width:1120px;height:700px;position:relative;background:#fbfaf8">
+  <main style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center">
+    <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px">web page · edge to edge</span>
+  </main>
+  <div onMouseEnter="{{ openTicks }}" onMouseLeave="{{ closeTicks }}" style="position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;padding:0 16px 0 10px">
+    <sc-if value="{{ ticksClosed }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <sc-for list="{{ minAll }}" as="t" hint-placeholder-count="5"><span style="height:2px;border-radius:2px;width:{{ t.tick }};background:{{ t.tickBg }}"></span></sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ticksOpen }}" hint-placeholder-val="{{ false }}">
+      <nav aria-label="Tabs" style="width:228px;display:flex;flex-direction:column;gap:1px;padding:10px;border-radius:12px;background:rgba(255,255,255,.97);box-shadow:0 0 0 1px rgba(29,28,26,.07),0 18px 50px rgba(29,28,26,.16)">
+        <sc-for list="{{ minAll }}" as="t" hint-placeholder-count="5">
+          <button style="height:30px;padding:0 8px;border-radius:7px;font-size:13px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ t.ink }};font-weight:{{ t.weight }}" style-hover="background:rgba(29,28,26,.05);color:#1d1c1a">{{ t.title }}</button>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:2px;padding:8px 2px 0;margin-top:6px;border-top:1px solid rgba(29,28,26,.07)">
+          <sc-for list="{{ pillSpaces }}" as="s" hint-placeholder-count="3">
+            <button onClick="{{ s.pick }}" title="{{ s.name }}" aria-label="{{ s.name }}" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center"><span style="width:7px;height:7px;border-radius:50%;background:{{ s.dotBg }}"></span></button>
+          </sc-for>
+          <span style="flex:1"></span>
+          <span style="font:500 10.5px 'IBM Plex Mono',monospace;color:#8a857c">{{ pCur.name }}</span>
+        </div>
+      </nav>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "<a class="dv-oid" href="#4a">4a</a> with favicons back" · "dark mode of <a class="dv-oid" href="#4b">4b</a>" · "show the ⌘L address overlay for <a class="dv-oid" href="#4a">4a</a>"</p>
+</section>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Space switcher as a minimal pill that opens on hover, refining <a class="dv-oid" href="#1b">1b</a></span></div>
+<div class="dv-opts">
+
+<!-- 3a -->
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Edge pill: a slim handle on the window edge. Hover it to open a column of space icons; the name shows on hover.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:#ecebe7;position:relative">
+  <aside style="width:256px;flex:none;display:flex;flex-direction:column;gap:14px;padding:14px 10px 10px 22px">
+    <div style="display:flex;align-items:center;gap:2px;height:28px">
+      <div style="display:flex;gap:7px;padding:0 6px 0 0"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+      <span style="flex:1"></span>
+      <button aria-label="Back" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#a19d95"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:0 4px">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="{{ pCur.accent }}" stroke-width="1.6" stroke-linejoin="round"><path d="{{ pCur.icon }}"></path></svg>
+      <span style="font-weight:700;font-size:16px">{{ pCur.name }}</span>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.7);font-size:13px;color:#3f3c37;text-align:left" style-hover="background:#fff">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pCur.host }}</span>
+      <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">⌘L</span>
+    </button>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;padding:0 8px 4px">Kept</div>
+      <sc-for list="{{ pCur.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;padding:0 2px 4px 8px"><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;flex:1">Loose</span><button style="font-size:12px;font-weight:500;color:#3f3c37;padding:5px 10px;border-radius:6px" style-hover="background:rgba(29,28,26,.08)">Clear</button></div>
+      <sc-for list="{{ pCur.loose }}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 6px 0 8px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          <button aria-label="Close tab" style="width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#7a766e" style-hover="background:rgba(29,28,26,.1);color:#1d1c1a"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+        </div>
+      </sc-for>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;background:#fff;border-radius:10px;box-shadow:0 0 0 1px rgba(29,28,26,.07),0 2px 10px rgba(29,28,26,.06);overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center">
+    <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · {{ pCur.title }}</span>
+  </main>
+  <div onMouseEnter="{{ openPillA }}" onMouseLeave="{{ closePillA }}" style="position:absolute;left:0;top:50%;transform:translateY(-50%);padding:12px 12px 12px 6px;display:flex;align-items:center">
+    <sc-if value="{{ pillAClosed }}" hint-placeholder-val="{{ true }}">
+      <div aria-label="Spaces" style="width:6px;height:56px;border-radius:999px;background:rgba(29,28,26,.16);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px">
+        <sc-for list="{{ pillSpaces }}" as="s" hint-placeholder-count="3"><span style="width:4px;height:{{ s.dot }};border-radius:999px;background:{{ s.dotBg }}"></span></sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ pillAOpen }}" hint-placeholder-val="{{ false }}">
+      <nav aria-label="Spaces" style="display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.08),0 10px 30px rgba(29,28,26,.16)">
+        <sc-for list="{{ pillSpaces }}" as="s" hint-placeholder-count="3">
+          <button onClick="{{ s.pick }}" title="{{ s.name }}" aria-label="{{ s.name }}" aria-pressed="{{ s.on }}" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }}" style-hover="background:rgba(29,28,26,.07)">
+            <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.icon }}"></path></svg>
+          </button>
+        </sc-for>
+        <div style="height:1px;background:rgba(29,28,26,.1);margin:2px 6px"></div>
+        <button title="New space" aria-label="New space" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></button>
+      </nav>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+<!-- 3b -->
+<div class="dv-opt" id="3b">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Footer pill: at rest it shows only the current space's icon. Hover and it widens to show every space.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:#ecebe7">
+  <aside style="width:256px;flex:none;display:flex;flex-direction:column;gap:14px;padding:14px 10px 12px 12px">
+    <div style="display:flex;align-items:center;gap:2px;height:28px">
+      <div style="display:flex;gap:7px;padding:0 6px"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+      <span style="flex:1"></span>
+      <button aria-label="Back" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#a19d95"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.7);font-size:13px;color:#3f3c37;text-align:left" style-hover="background:#fff">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pCur.host }}</span>
+      <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">⌘L</span>
+    </button>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;padding:0 8px 4px">Kept</div>
+      <sc-for list="{{ pCur.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;padding:0 2px 4px 8px"><span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;flex:1">Loose</span><button style="font-size:12px;font-weight:500;color:#3f3c37;padding:5px 10px;border-radius:6px" style-hover="background:rgba(29,28,26,.08)">Clear</button></div>
+      <sc-for list="{{ pCur.loose }}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 6px 0 8px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div onMouseEnter="{{ openPillB }}" onMouseLeave="{{ closePillB }}" style="display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:{{ pillBBg }};box-shadow:{{ pillBShadow }}">
+        <sc-for list="{{ pillBSpaces }}" as="s" hint-placeholder-count="1">
+          <button onClick="{{ s.pick }}" title="{{ s.name }}" aria-label="{{ s.name }}" aria-pressed="{{ s.on }}" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }}" style-hover="background:rgba(29,28,26,.07)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.icon }}"></path></svg>
+          </button>
+        </sc-for>
+        <sc-if value="{{ pillBOpen }}" hint-placeholder-val="{{ false }}">
+          <button title="New space" aria-label="New space" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></button>
+        </sc-if>
+      </div>
+      <sc-if value="{{ pillBClosed }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;font-weight:600;color:#3f3c37">{{ pCur.name }}</span></sc-if>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;background:#fff;border-radius:10px;box-shadow:0 0 0 1px rgba(29,28,26,.07),0 2px 10px rgba(29,28,26,.06);overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center">
+    <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · {{ pCur.title }}</span>
+  </main>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "put the <a class="dv-oid" href="#3a">3a</a> pill into compact mode <a class="dv-oid" href="#2a">2a</a>" · "let ⌃1–3 flash the <a class="dv-oid" href="#3a">3a</a> pill open" · "custom icon picker for spaces"</p>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Zen-inspired: calmer and more compact, with the page floating in the frame</span></div>
+<div style="max-width:1120px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin:0 0 32px;font-size:13px;line-height:1.55;color:#3f3c37">
+  <div><div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:6px">What we borrowed</div>The ideas, not the look: a compact mode that hides the browser, an "essentials" grid shared by every space, the page as a floating card, and side actions on link previews.</div>
+  <div><div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:6px">What stays Argon</div>Warm neutrals, Instrument Sans, space initials, ageing rings from <a class="dv-oid" href="#1a">1a</a>, and grain in place of Zen's gradients.</div>
+  <div><div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:6px">Rename</div>Zen already calls its link preview "Glance", so ours becomes <b>Preview</b>. Favorites become <b>Essentials</b>, with their own icon treatment.</div>
+</div>
+<div class="dv-opts">
+
+<!-- 2a -->
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Compact mode: no browser on screen. Hover the left edge and the sidebar floats in. Hover it now.</div>
+<div class="dv-card" style="width:1120px;height:700px;position:relative;background:#e6e3dd;padding:6px;box-sizing:border-box">
+  <main style="width:100%;height:100%;border-radius:10px;overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(29,28,26,.06)">
+    <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · full width</span>
+  </main>
+  <div onMouseEnter="{{ openCompact }}" style="position:absolute;left:0;top:0;bottom:0;width:14px;cursor:e-resize"></div>
+  <div style="position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 0 0 1px rgba(29,28,26,.08),0 6px 20px rgba(29,28,26,.1);font-size:12px;color:#3f3c37">
+    <span style="width:8px;height:8px;border-radius:50%;background:oklch(0.56 0.13 300)"></span>docs.aws.amazon.com
+    <span style="font:500 10.5px 'IBM Plex Mono',monospace;color:#7a766e;padding:2px 6px;border-radius:4px;background:rgba(29,28,26,.06)">⌘⌥C exit compact</span>
+  </div>
+  <sc-if value="{{ compactOpen }}" hint-placeholder-val="{{ false }}">
+    <aside onMouseLeave="{{ closeCompact }}" style="position:absolute;left:12px;top:12px;bottom:12px;width:264px;display:flex;flex-direction:column;gap:14px;padding:14px 12px 10px;background:rgba(246,244,240,.97);border-radius:14px;box-shadow:0 0 0 1px rgba(29,28,26,.08),0 24px 60px rgba(29,28,26,.22)">
+      <div style="display:flex;align-items:center;gap:4px;height:28px">
+        <div style="display:flex;gap:7px;padding:0 6px"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+        <span style="flex:1"></span>
+        <button onClick="{{ pinCompact }}" style="font-size:12px;font-weight:500;padding:5px 9px;border-radius:6px;color:#3f3c37" style-hover="background:rgba(29,28,26,.08)">{{ pinLabel }}</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+        <sc-for list="{{ essentials }}" as="f" hint-placeholder-count="6">
+          <button title="{{ f.name }}" style="height:48px;border-radius:10px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.06);display:flex;align-items:center;justify-content:center" style-hover="box-shadow:0 0 0 1px rgba(29,28,26,.16)"><span style="width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:11px;background:{{ f.color }}">{{ f.glyph }}</span></button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+        <div style="display:flex;align-items:center;gap:8px;padding:0 8px 6px"><span style="width:20px;height:20px;border-radius:6px;background:oklch(0.56 0.13 300);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">A</span><span style="font-weight:600;font-size:14px">Argon</span></div>
+        <sc-for list="{{ argon.loose }}" as="t" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+            <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+            <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+            <span style="width:14px;height:14px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:{{ t.ring }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.ringHole }}"></span></span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:11.5px;line-height:1.45;color:#5c5953;padding:8px 10px;border-radius:8px;background:rgba(29,28,26,.04)">Move the pointer away and the sidebar slides out. Pin it to keep it open.</div>
+    </aside>
+  </sc-if>
+  <sc-if value="{{ compactHint }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:72px;border-radius:0 4px 4px 0;background:oklch(0.56 0.13 300)"></div>
+  </sc-if>
+</div>
+</div>
+
+<!-- 2b -->
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Essentials and grain: a shared grid of essentials, and each space tints the frame with grain. Switch spaces at the bottom.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:{{ ws.frame }};background-image:{{ grain }}">
+  <aside style="width:268px;flex:none;display:flex;flex-direction:column;gap:14px;padding:14px 10px 10px 12px">
+    <div style="display:flex;align-items:center;gap:2px;height:28px">
+      <div style="display:flex;gap:7px;padding:0 6px"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+      <span style="flex:1"></span>
+      <button aria-label="Back" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#3f3c37" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#8a857c"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#3f3c37" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.6);font-size:13px;color:#3f3c37;text-align:left" style-hover="background:rgba(255,255,255,.85)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ws.host }}</span>
+      <span style="font:500 11px 'IBM Plex Mono',monospace;color:#5c5953">⌘L</span>
+    </button>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5c5953;padding:0 8px">Essentials · every space</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+        <sc-for list="{{ essentials }}" as="f" hint-placeholder-count="6">
+          <button title="{{ f.name }}" style="height:52px;border-radius:12px;background:rgba(255,255,255,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px" style-hover="background:rgba(255,255,255,.85)"><span style="width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:10px;background:{{ f.color }}">{{ f.glyph }}</span><span style="font-size:10.5px;color:#3f3c37">{{ f.name }}</span></button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-height:0">
+      <div style="display:flex;align-items:center;gap:8px;padding:0 8px 6px"><span style="font-weight:700;font-size:15px;flex:1">{{ ws.name }}</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:#5c5953">{{ ws.count }}</span></div>
+      <sc-for list="{{ ws.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(255,255,255,.45)">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </button>
+      </sc-for>
+      <div style="height:1px;background:rgba(29,28,26,.1);margin:6px 10px"></div>
+      <sc-for list="{{ ws.loose }}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;background:{{ t.wsBg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          <span style="font:500 10px 'IBM Plex Mono',monospace;color:#5c5953">{{ t.left }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;padding:6px 4px 0">
+      <sc-for list="{{ wsChips }}" as="s" hint-placeholder-count="3">
+        <button onClick="{{ s.pick }}" aria-pressed="{{ s.on }}" style="height:30px;padding:0 10px 0 4px;border-radius:9px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:{{ s.weight }};background:{{ s.cell }}" style-hover="background:rgba(255,255,255,.5)">
+          <span style="width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:{{ s.bg }};color:{{ s.fg }}">{{ s.initial }}</span>{{ s.label }}
+        </button>
+      </sc-for>
+      <span style="flex:1"></span>
+      <button aria-label="New space" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3f3c37" style-hover="background:rgba(255,255,255,.5)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></button>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:10px 10px 10px 2px;background:#fff;border-radius:14px;box-shadow:0 0 0 1px rgba(29,28,26,.06),0 8px 30px rgba(29,28,26,.1);overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center">
+    <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · {{ ws.title }}</span>
+  </main>
+</div>
+</div>
+
+<!-- 2c -->
+<div class="dv-opt" id="2c">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Preview: ⌥-click a link and it floats over the page, with actions in a pill beside it. Try the buttons.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:#ece9e3;position:relative">
+  <aside style="width:232px;flex:none;display:flex;flex-direction:column;gap:12px;padding:14px 10px 10px 12px">
+    <div style="display:flex;gap:7px;padding:6px"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+      <sc-for list="{{ essentialsShort }}" as="f" hint-placeholder-count="3">
+        <button title="{{ f.name }}" style="height:44px;border-radius:10px;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center" style-hover="background:#fff"><span style="width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:10px;background:{{ f.color }}">{{ f.glyph }}</span></button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ previewTabs }}" as="t" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:10px 10px 10px 2px;border-radius:14px;overflow:hidden;position:relative;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.06),0 8px 30px rgba(29,28,26,.08);display:flex;gap:8px;padding:{{ splitPad }}">
+    <div style="flex:1;min-width:0;border-radius:10px;padding:44px 48px;display:flex;flex-direction:column;gap:14px;background:#fff">
+      <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">news.ycombinator.com</span>
+      <span style="font-size:26px;font-weight:700;letter-spacing:-.01em">Hacker News</span>
+      <div style="height:11px;border-radius:6px;background:#efede9"></div><div style="height:11px;width:86%;border-radius:6px;background:#efede9"></div>
+      <p style="margin:6px 0;font-size:14px;line-height:1.55;color:#3f3c37">⌥-click any link to preview it. <button onClick="{{ openPreview }}" style="color:#3d5fa8;text-decoration:underline">Show HN: a Chromium fork for Arc refugees</button></p>
+      <div style="height:11px;width:70%;border-radius:6px;background:#efede9"></div><div style="height:11px;width:80%;border-radius:6px;background:#efede9"></div>
+    </div>
+    <sc-if value="{{ isSplit }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-width:0;border-radius:10px;box-shadow:0 0 0 2px oklch(0.56 0.13 300);display:flex;flex-direction:column;overflow:hidden">
+        <div style="height:34px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid #efede9;font-size:12px;color:#5c5953;gap:8px"><span style="flex:1">github.com/argon-browser</span><button onClick="{{ resetPreview }}" style="font-size:12px;padding:4px 8px;border-radius:6px" style-hover="background:rgba(29,28,26,.07)">Unsplit</button></div>
+        <div style="flex:1;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px)"></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isPreview }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;inset:0;background:rgba(29,28,26,.22);display:flex;align-items:center;justify-content:center;gap:10px">
+        <section aria-label="Preview" style="width:72%;height:84%;background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.28);overflow:hidden;display:flex;flex-direction:column">
+          <div style="height:38px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid #efede9;font-size:12px;color:#3f3c37"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#2f7a4b" stroke-width="1.6"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg><span style="flex:1">github.com/argon-browser</span><span style="font:500 10.5px 'IBM Plex Mono',monospace;color:#7a766e">esc closes</span></div>
+          <div style="flex:1;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center"><span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">previewed page</span></div>
+        </section>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:12px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.2);align-self:flex-start;margin-top:8%">
+          <button onClick="{{ closePreview }}" title="Close · esc" aria-label="Close preview" style="width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3f3c37" style-hover="background:rgba(29,28,26,.07)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+          <button onClick="{{ tabPreview }}" title="Open as tab · ⌘↵" aria-label="Open as tab" style="width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3f3c37" style-hover="background:rgba(29,28,26,.07)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2.5h4.5V7M13.5 2.5 8 8M11.5 9.5v3a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3"></path></svg></button>
+          <button onClick="{{ splitPreview }}" title="Open in split · ⌘⇧↵" aria-label="Open in split" style="width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3f3c37" style-hover="background:rgba(29,28,26,.07)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M8 2.5v11"></path></svg></button>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "build out <a class="dv-oid" href="#2b">2b</a> with the rail from <a class="dv-oid" href="#1b">1b</a>" · "make compact mode <a class="dv-oid" href="#2a">2a</a> the default" · "dark mode for <a class="dv-oid" href="#2b">2b</a>"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Argon: three ways to keep Arc's features but stop looking like Arc</span></div>
+
+<div style="max-width:1120px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin:0 0 32px;font-size:13px;line-height:1.55;color:#3f3c37">
+  <div><div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:6px">Shared system</div>Warm neutral frame, no pastel tint per space. Each space has one accent (same lightness and chroma, different hue) plus an initial and a name, so colour is never the only cue. Typeface: Instrument Sans, not Inter.</div>
+  <div><div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:6px">Renamed terms</div>Today → <b>Loose</b> · Pinned → <b>Kept</b> · Peek → <b>Glance</b> · Little Arc → <b>Quick window</b>. Same behaviour, our own words.</div>
+  <div><div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;margin-bottom:6px">Fixes from review</div>Tabs can be closed, favorites have labels, "Clear" can be undone, the archive opens, focus rings show, the command bar works by keyboard, and hide sidebar sits away from Back.</div>
+</div>
+
+<div class="dv-opts">
+
+<!-- 1a -->
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Ageing tabs: loose tabs show a ring for the time left before they're archived. Click "Clear" to see undo.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:#f3f1ed">
+  <aside style="width:272px;flex:none;display:flex;flex-direction:column;gap:14px;padding:14px 12px 10px">
+    <div style="display:flex;align-items:center;gap:4px;height:28px">
+      <div style="display:flex;gap:7px;padding:0 6px"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+      <span style="flex:1"></span>
+      <button aria-label="Back" style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#a19d95"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:10px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.08);font-size:13px;color:#3f3c37;text-align:left">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#2f7a4b" stroke-width="1.6"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">docs.aws.amazon.com</span>
+      <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">⌘L</span>
+    </button>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px 6px">
+      <sc-for list="{{ favs }}" as="f" hint-placeholder-count="8">
+        <button style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 4px;border-radius:10px" style-hover="background:rgba(29,28,26,.06)">
+          <span style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:12px;background:{{ f.color }}">{{ f.glyph }}</span>
+          <span style="font-size:11px;color:#5c5953">{{ f.name }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:0 6px">
+      <span style="width:22px;height:22px;border-radius:6px;background:oklch(0.56 0.13 300);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">A</span>
+      <span style="font-weight:600;font-size:14px;flex:1">Argon</span>
+      <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">2 / 3</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;padding:0 10px 4px">Kept</div>
+      <sc-for list="{{ argon.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          <sc-if value="{{ t.drift }}" hint-placeholder-val="{{ false }}"><span title="Navigated away from kept URL" style="width:6px;height:6px;border-radius:50%;background:oklch(0.56 0.13 300)"></span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-height:0">
+      <div style="display:flex;align-items:center;padding:0 4px 4px 10px">
+        <span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;flex:1">Loose · archive after 12h</span>
+        <button onClick="{{ clearA }}" style="font-size:12px;font-weight:500;color:#3f3c37;padding:5px 10px;border-radius:6px" style-hover="background:rgba(29,28,26,.08)">Clear</button>
+      </div>
+      <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;color:#5c5953;text-align:left" style-hover="background:rgba(29,28,26,.06)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg><span style="flex:1">New tab</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">⌘T</span></button>
+      <sc-if value="{{ looseVisible }}" hint-placeholder-val="{{ true }}">
+        <sc-for list="{{ argon.loose }}" as="t" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;height:36px;padding:0 6px 0 10px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+            <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+            <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+            <span title="{{ t.left }}" style="font:500 10px 'IBM Plex Mono',monospace;color:#7a766e">{{ t.left }}</span>
+            <span style="width:14px;height:14px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:{{ t.ring }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.ringHole }}"></span></span>
+            <button aria-label="Close tab" style="width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#7a766e" style-hover="background:rgba(29,28,26,.1);color:#1d1c1a"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ looseEmpty }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:6px 10px;font-size:12px;line-height:1.5;color:#5c5953">No loose tabs. Anything you open lands here and is archived after 12 hours, not deleted.</p>
+      </sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;padding-top:6px;border-top:1px solid rgba(29,28,26,.08)">
+      <button aria-label="Hide sidebar" style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="11" rx="2"></rect><path d="M6 2.5v11"></path></svg></button>
+      <button onClick="{{ toggleArchive }}" aria-expanded="{{ archiveOpen }}" style="display:flex;align-items:center;gap:6px;height:30px;padding:0 8px;border-radius:8px;font-size:12px;color:#3f3c37" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"></rect><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"></path></svg>Archive <span style="font-family:'IBM Plex Mono',monospace">{{ archived }}</span></button>
+      <span style="flex:1"></span>
+      <sc-for list="{{ spaceChips }}" as="s" hint-placeholder-count="3">
+        <button aria-label="{{ s.name }}" title="{{ s.name }}" style="width:26px;height:26px;border-radius:7px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }};box-shadow:{{ s.ring }}">{{ s.initial }}</button>
+      </sc-for>
+      <button aria-label="New space" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></button>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;background:#fff;border-radius:10px;box-shadow:0 0 0 1px rgba(29,28,26,.07),0 2px 10px rgba(29,28,26,.06);position:relative;overflow:hidden;display:flex;flex-direction:column">
+    <div style="flex:1;margin:0;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center">
+      <span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · Amazon EC2 Mac instances</span>
+    </div>
+    <sc-if value="{{ archiveOpen }}" hint-placeholder-val="{{ false }}">
+      <section aria-label="Archive" style="position:absolute;left:12px;bottom:12px;width:340px;background:#fff;border-radius:12px;box-shadow:0 0 0 1px rgba(29,28,26,.08),0 16px 40px rgba(29,28,26,.18);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #efede9">
+          <span style="font-weight:600;font-size:14px;flex:1">Archive</span>
+          <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">{{ archived }} tabs</span>
+          <button onClick="{{ toggleArchive }}" aria-label="Close archive" style="width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.08)"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+        </div>
+        <div style="padding:6px;display:flex;flex-direction:column;gap:2px;max-height:260px;overflow:auto">
+          <sc-for list="{{ archiveRows }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:10px;height:38px;padding:0 6px 0 10px;border-radius:8px;font-size:13px" style-hover="background:rgba(29,28,26,.05)">
+              <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ r.color }}">{{ r.glyph }}</span>
+              <div style="flex:1;min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div><div style="font-size:11px;color:#5c5953">{{ r.when }}</div></div>
+              <button style="font-size:12px;font-weight:500;padding:5px 9px;border-radius:6px;color:#3f3c37" style-hover="background:rgba(29,28,26,.08)">Restore</button>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ toastA }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:10px 10px 10px 16px;background:#1d1c1a;color:#f3f1ed;border-radius:10px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.25)">
+        <span>{{ toastText }}</span>
+        <button onClick="{{ undoA }}" style="color:#fff;font-weight:600;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.12)" style-hover="background:rgba(255,255,255,.2)">Undo</button>
+        <span style="font:500 11px 'IBM Plex Mono',monospace;color:#a19d95">⌘Z</span>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</div>
+
+<!-- 1b -->
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Space rail: spaces move to a labelled column on the left edge. Click one to switch.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:#ecebe7">
+  <nav aria-label="Spaces" style="width:72px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0 12px;background:#e3e1dc">
+    <div style="display:flex;gap:6px;margin-bottom:14px"><i style="width:11px;height:11px;border-radius:50%;background:#ff5f57"></i><i style="width:11px;height:11px;border-radius:50%;background:#febc2e"></i><i style="width:11px;height:11px;border-radius:50%;background:#28c840"></i></div>
+    <sc-for list="{{ railSpaces }}" as="s" hint-placeholder-count="3">
+      <button onClick="{{ s.pick }}" aria-pressed="{{ s.on }}" style="width:60px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 0;border-radius:10px;background:{{ s.cellBg }}" style-hover="background:rgba(29,28,26,.06)">
+        <span style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;background:{{ s.bg }};color:{{ s.fg }}">{{ s.initial }}</span>
+        <span style="font-size:11px;font-weight:{{ s.weight }};color:#3f3c37">{{ s.name }}</span>
+      </button>
+    </sc-for>
+    <button aria-label="New space" style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#5c5953;box-shadow:inset 0 0 0 1.5px rgba(29,28,26,.18);margin-top:4px" style-hover="background:rgba(29,28,26,.06)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v10M3 8h10"></path></svg></button>
+    <span style="flex:1"></span>
+    <button style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;border-radius:8px;font-size:10.5px;color:#5c5953" style-hover="background:rgba(29,28,26,.06)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"></rect><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"></path></svg>Archive</button>
+  </nav>
+  <aside style="width:244px;flex:none;display:flex;flex-direction:column;gap:14px;padding:14px 10px 10px 12px">
+    <div style="display:flex;align-items:center;gap:2px;height:28px">
+      <span style="font-weight:700;font-size:17px;flex:1;padding-left:4px;color:{{ railCur.ink }}">{{ railCur.name }}</span>
+      <button aria-label="Back" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#a19d95"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5c5953" style-hover="background:rgba(29,28,26,.07)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+    <button style="display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:9px;background:rgba(255,255,255,.7);font-size:13px;color:#3f3c37;text-align:left" style-hover="background:#fff">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ railCur.host }}</span>
+      <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">⌘L</span>
+    </button>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;padding:0 8px 4px">Kept</div>
+      <sc-for list="{{ railCur.pinned }}" as="t" hint-placeholder-count="2">
+        <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;padding:0 8px 4px">Folders</div>
+      <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#5c5953" stroke-width="1.5"><path d="M1.5 4.5a1 1 0 0 1 1-1h3.5l1.5 1.5h6a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"></path></svg><span style="flex:1">Research</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">4</span></button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;padding:0 2px 4px 8px">
+        <span style="font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7a766e;flex:1">Loose</span>
+        <button style="font-size:12px;font-weight:500;color:#3f3c37;padding:5px 10px;border-radius:6px" style-hover="background:rgba(29,28,26,.08)">Clear</button>
+      </div>
+      <sc-for list="{{ railCur.loose }}" as="t" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 6px 0 8px;border-radius:8px;font-size:13px;background:{{ t.bg }};box-shadow:{{ t.shadow }};font-weight:{{ t.weight }}">
+          <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          <button aria-label="Close tab" style="width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#7a766e" style-hover="background:rgba(29,28,26,.1);color:#1d1c1a"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+        </div>
+      </sc-for>
+    </div>
+    <span style="flex:1"></span>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.6)">
+      <span style="width:28px;height:28px;border-radius:6px;background:repeating-linear-gradient(45deg,#d8d5ce 0 4px,#e6e3dd 4px 8px);flex:none"></span>
+      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lo-fi beats to code to</div><div style="font-size:11px;color:#5c5953">youtube.com</div></div>
+      <button aria-label="Pause" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(29,28,26,.08)"><svg width="12" height="12" viewBox="0 0 16 16" fill="#1d1c1a"><rect x="3" y="2" width="3.5" height="12" rx="1"></rect><rect x="9.5" y="2" width="3.5" height="12" rx="1"></rect></svg></button>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;display:flex;gap:8px">
+    <div style="flex:1;min-width:0;background:#fff;border-radius:10px;box-shadow:0 0 0 2px {{ railCur.accent }},0 2px 10px rgba(29,28,26,.06);overflow:hidden;display:flex;flex-direction:column">
+      <div style="height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid #efede9;font-size:12px;color:#5c5953"><span style="flex:1">{{ railCur.host }}</span><span style="font:500 10.5px 'IBM Plex Mono',monospace">split · left</span></div>
+      <div style="flex:1;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center"><span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">web page · {{ railCur.title }}</span></div>
+    </div>
+    <div style="flex:1;min-width:0;background:#fff;border-radius:10px;box-shadow:0 0 0 1px rgba(29,28,26,.07),0 2px 10px rgba(29,28,26,.06);overflow:hidden;display:flex;flex-direction:column">
+      <div style="height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid #efede9;font-size:12px;color:#5c5953"><span style="flex:1">notes · {{ railCur.name }}</span><span style="font:500 10.5px 'IBM Plex Mono',monospace">split · right</span></div>
+      <div style="flex:1;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px);display:flex;align-items:center;justify-content:center"><span style="font:500 12px 'IBM Plex Mono',monospace;color:#8a857c;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 0 0 1px rgba(29,28,26,.08)">board / note</span></div>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- 1c -->
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Texture identity: each space gets a pattern as well as a hue. Shown with the command bar open and a row selected by keyboard.</div>
+<div class="dv-card" style="width:1120px;height:700px;display:flex;background:#f3f1ed;position:relative">
+  <aside style="width:268px;flex:none;display:flex;flex-direction:column">
+    <div style="padding:14px 12px 14px;display:flex;flex-direction:column;gap:12px;background:repeating-linear-gradient(-45deg,oklch(0.93 0.035 300) 0 2px,oklch(0.96 0.015 300) 2px 9px);border-bottom:1px solid rgba(29,28,26,.08)">
+      <div style="display:flex;align-items:center;gap:6px"><div style="display:flex;gap:7px;padding:0 6px"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div><span style="flex:1"></span><span style="font:500 10.5px 'IBM Plex Mono',monospace;color:#3f3c37;background:rgba(255,255,255,.8);padding:3px 7px;border-radius:5px">⌃2</span></div>
+      <div style="display:flex;align-items:baseline;gap:8px;padding:0 4px"><span style="font-weight:700;font-size:22px;letter-spacing:-.01em">Argon</span><span style="font-size:12px;color:#3f3c37">work profile</span></div>
+    </div>
+    <div style="padding:12px;display:flex;flex-direction:column;gap:14px;flex:1">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ argon.pinned }}" as="t" hint-placeholder-count="2">
+          <button style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;text-align:left" style-hover="background:rgba(29,28,26,.06)">
+            <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+            <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="height:1px;background:rgba(29,28,26,.1);margin:0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ argon.loose }}" as="t" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;font-size:13px;background:{{ t.bg }};font-weight:{{ t.weight }}">
+            <span style="width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:600;background:{{ t.color }}">{{ t.glyph }}</span>
+            <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <span style="flex:1"></span>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+        <button style="height:40px;border-radius:8px;font-size:12px;font-weight:600;background:radial-gradient(oklch(0.84 0.06 250) 1.2px,oklch(0.96 0.015 250) 1.4px) 0 0/7px 7px;color:#1d1c1a">Personal</button>
+        <button style="height:40px;border-radius:8px;font-size:12px;font-weight:700;background:repeating-linear-gradient(-45deg,oklch(0.86 0.06 300) 0 2px,oklch(0.96 0.015 300) 2px 9px);box-shadow:0 0 0 2px oklch(0.56 0.13 300);color:#1d1c1a">Argon</button>
+        <button style="height:40px;border-radius:8px;font-size:12px;font-weight:600;background:linear-gradient(oklch(0.88 0.05 155) 1px,transparent 1px) 0 0/8px 8px,linear-gradient(90deg,oklch(0.88 0.05 155) 1px,oklch(0.96 0.015 155) 1px) 0 0/8px 8px;color:#1d1c1a">School</button>
+      </div>
+    </div>
+  </aside>
+  <main style="flex:1;min-width:0;margin:8px 8px 8px 0;background:#fff;border-radius:10px;box-shadow:0 0 0 1px rgba(29,28,26,.07);overflow:hidden;background:repeating-linear-gradient(135deg,#fbfaf8 0 14px,#f5f3ef 14px 15px)"></main>
+  <div style="position:absolute;inset:0;background:rgba(29,28,26,.28);display:flex;justify-content:center;align-items:flex-start">
+    <section aria-label="Command bar" tabindex="0" onKeyDown="{{ cmdKey }}" style="outline:none;margin-top:120px;width:640px;background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.3);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #efede9">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#5c5953" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3 3"></path></svg>
+        <span style="font-size:18px;flex:1">chromium<span style="display:inline-block;width:1.5px;height:20px;background:#1d1c1a;vertical-align:-4px;margin-left:1px"></span></span>
+        <span style="font:500 11px 'IBM Plex Mono',monospace;color:#7a766e">esc</span>
+      </div>
+      <div style="padding:6px;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ cmdRows }}" as="r" hint-placeholder-count="5">
+          <div onMouseEnter="{{ r.hover }}" onClick="{{ r.open }}" style="cursor:pointer;display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:9px;background:{{ r.bg }}">
+            <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;background:{{ r.color }}">{{ r.glyph }}</span>
+            <span style="flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span>
+            <span style="font-size:12px;color:#5c5953">{{ r.meta }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:16px;padding:10px 18px;border-top:1px solid #efede9;background:#faf9f7;font:500 11px 'IBM Plex Mono',monospace;color:#5c5953">
+        <span style="color:#1d1c1a">{{ cmdStatus }}</span><span>↑↓ move</span><span>↵ open</span><span>⌘↵ open in split</span><span>⇧↵ glance</span><span style="flex:1"></span><span>⌘K commands</span>
+      </div>
+    </section>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "combine the ageing rings from <a class="dv-oid" href="#1a">1a</a> with the rail from <a class="dv-oid" href="#1b">1b</a>" · "dark mode of <a class="dv-oid" href="#1c">1c</a>" · "show Glance and the quick window"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { rail: 1, cleared: false, toast: false, archiveOpen: false, sel: 0, opened: '', compact: false, compactPinned: false, ws: 1, preview: 'open', ps: 1, pillA: false, pillB: false, ticks: false };
+  renderVals() {
+    const acc = h => `oklch(0.56 0.13 ${h})`;
+    const tone = ['#3d5fa8','#a8453d','#24292f','#a83d64','#7d6516','#2f7a4b','#2a6b85','#8e4a2c','#5a4a9a'];
+    const mk = (title, host, i, extra = {}) => ({ title, host, glyph: title[0].toUpperCase(), color: tone[i % tone.length], ...extra });
+    const spaces = [
+      { name: 'Personal', initial: 'P', hue: 250, pinned: [mk('Inbox','mail.icloud.com',0), mk('Calendar','calendar.icloud.com',1)], loose: [mk('Hacker News','news.ycombinator.com',7,{age:.3}), mk('Watch later','youtube.com',3,{age:.75})] },
+      { name: 'Argon', initial: 'A', hue: 300, pinned: [mk('imputnet/helium','github.com',2,{drift:true}), mk('Chromium Code Search','source.chromium.org',6)], loose: [mk('Amazon EC2 Mac instances','docs.aws.amazon.com',7,{age:.1}), mk('memory_saver_mode_policy.cc','source.chromium.org',6,{age:.55}), mk('Building Helium for macOS','github.com',2,{age:.88})] },
+      { name: 'School', initial: 'S', hue: 155, pinned: [mk('Course dashboard','canvas.instructure.com',1)], loose: [mk('Essay draft','docs.google.com',0,{age:.2}), mk('Derivative of arctan(x)','wolframalpha.com',4,{age:.6})] },
+    ];
+    const deco = (s) => ({
+      ...s, accent: acc(s.hue), ink: '#1d1c1a',
+      loose: s.loose.map((t, i) => {
+        const on = i === 0, a = t.age ?? 0, hrs = Math.max(1, Math.round(12 * (1 - a)));
+        const ringCol = a > .8 ? 'oklch(0.6 0.15 40)' : acc(s.hue);
+        return { ...t, bg: on ? '#fff' : 'transparent', shadow: on ? '0 1px 2px rgba(29,28,26,.08),0 0 0 1px rgba(29,28,26,.05)' : 'none', weight: on ? 600 : 400,
+          left: `${hrs}h`, ring: `conic-gradient(${ringCol} ${Math.round((1 - a) * 100)}%, rgba(29,28,26,.12) 0)`, ringHole: on ? '#fff' : '#f3f1ed' };
+      }),
+    });
+    const all = spaces.map(deco);
+    const argon = all[1];
+    const cur = all[this.state.rail];
+    return {
+      favs: [['Mail','#3d5fa8'],['Calendar','#a8453d'],['GitHub','#24292f'],['Music','#a83d64'],['Notes','#7d6516'],['Maps','#2f7a4b'],['Drive','#2a6b85'],['Claude','#8e4a2c']].map(([name, color]) => ({ name, color, glyph: name.slice(0, 2) })),
+      argon,
+      looseVisible: !this.state.cleared, looseEmpty: this.state.cleared,
+      archived: this.state.cleared ? 17 : 14,
+      toastA: this.state.toast, toastText: '3 loose tabs archived',
+      clearA: () => { this.setState({ cleared: true, toast: true }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: false }), 6000); },
+      undoA: () => this.setState({ cleared: false, toast: false }),
+      spaceChips: all.map((s, i) => ({ name: s.name, initial: s.initial, bg: i === 1 ? s.accent : 'transparent', fg: i === 1 ? '#fff' : s.accent, ring: i === 1 ? 'none' : `inset 0 0 0 1.5px ${s.accent}` })),
+      railSpaces: all.map((s, i) => { const on = i === this.state.rail; return { name: s.name, initial: s.initial, on, pick: () => this.setState({ rail: i }), bg: on ? s.accent : '#fff', fg: on ? '#fff' : s.accent, cellBg: on ? 'rgba(255,255,255,.55)' : 'transparent', weight: on ? 700 : 500 }; }),
+      railCur: { ...cur, host: cur.loose[0].host, title: cur.loose[0].title },
+      ...(() => {
+        const ess = [['Mail','#3d5fa8'],['Calendar','#a8453d'],['GitHub','#24292f'],['Music','#a83d64'],['Claude','#8e4a2c'],['Maps','#2f7a4b']].map(([name, color]) => ({ name, color, glyph: name.slice(0, 2) }));
+        const w = all[this.state.ws], st = this.state;
+        const grain = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`;
+        return {
+          essentials: ess, essentialsShort: ess.slice(0, 3),
+          compactOpen: st.compact || st.compactPinned, compactHint: !(st.compact || st.compactPinned),
+          openCompact: () => this.setState({ compact: true }),
+          closeCompact: () => this.setState({ compact: false }),
+          pinCompact: () => this.setState(s => ({ compactPinned: !s.compactPinned })),
+          pinLabel: st.compactPinned ? 'Unpin' : 'Pin open',
+          grain,
+          ws: { ...w, frame: `oklch(0.9 0.035 ${w.hue})`, host: w.loose[0].host, title: w.loose[0].title, count: `${w.pinned.length + w.loose.length} tabs`, loose: w.loose.map(t => ({ ...t, wsBg: t.weight === 600 ? 'rgba(255,255,255,.8)' : 'transparent' })) },
+          wsChips: all.map((s, i) => { const on = i === st.ws; return { initial: s.initial, label: on ? s.name : '', on, pick: () => this.setState({ ws: i }), bg: on ? s.accent : 'rgba(255,255,255,.7)', fg: on ? '#fff' : s.accent, cell: on ? 'rgba(255,255,255,.55)' : 'transparent', weight: on ? 600 : 500 }; }),
+          previewTabs: [all[0].loose[0], ...argon.loose].map((t, i) => ({ ...t, bg: i === 0 ? '#fff' : 'transparent', shadow: i === 0 ? '0 1px 2px rgba(29,28,26,.08)' : 'none', weight: i === 0 ? 600 : 400 })),
+          isPreview: st.preview === 'open', isSplit: st.preview === 'split', splitPad: st.preview === 'split' ? '8px' : '0',
+          openPreview: () => this.setState({ preview: 'open' }),
+          closePreview: () => this.setState({ preview: 'closed' }),
+          tabPreview: () => this.setState({ preview: 'closed' }),
+          splitPreview: () => this.setState({ preview: 'split' }),
+          resetPreview: () => this.setState({ preview: 'closed' }),
+        };
+      })(),
+      ...(() => {
+        const st = this.state;
+        const icons = ['M2.5 7.5 8 3l5.5 4.5V13a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5z', 'm5.5 4.5-3.5 3.5 3.5 3.5M10.5 4.5 14 8l-3.5 3.5', 'M2 3.5h4a2 2 0 0 1 2 2v8a1.5 1.5 0 0 0-1.5-1.5H2zM14 3.5h-4a2 2 0 0 0-2 2v8a1.5 1.5 0 0 1 1.5-1.5H14z'];
+        const p = all[st.ps];
+        const items = all.map((s, i) => { const on = i === st.ps; return { name: s.name, icon: icons[i], on, pick: () => this.setState({ ps: i }), bg: on ? s.accent : 'transparent', fg: on ? '#fff' : '#3f3c37', dot: on ? '14px' : '4px', dotBg: on ? s.accent : 'rgba(29,28,26,.35)' }; });
+        return {
+          pCur: { ...p, icon: icons[st.ps], host: p.loose[0].host, title: p.loose[0].title },
+          pillSpaces: items,
+          pillAOpen: st.pillA, pillAClosed: !st.pillA,
+          openPillA: () => this.setState({ pillA: true }), closePillA: () => this.setState({ pillA: false }),
+          pillBSpaces: st.pillB ? items : items.filter(s => s.on),
+          pillBOpen: st.pillB, pillBClosed: !st.pillB,
+          pillBBg: st.pillB ? '#fff' : 'rgba(255,255,255,.55)',
+          pillBShadow: st.pillB ? '0 0 0 1px rgba(29,28,26,.08),0 8px 24px rgba(29,28,26,.14)' : 'none',
+          openPillB: () => this.setState({ pillB: true }), closePillB: () => this.setState({ pillB: false }),
+          minLoose: p.loose.map((t, i) => ({ ...t, ink: i === 0 ? '#1d1c1a' : '#5c5953', weight: i === 0 ? 600 : 400 })),
+          minAll: [...p.pinned.map(t => ({ ...t, on: false })), ...p.loose.map((t, i) => ({ ...t, on: i === 0 }))].map(t => ({ ...t, ink: t.on ? '#1d1c1a' : '#5c5953', weight: t.on ? 600 : 400, tick: t.on ? '18px' : '10px', tickBg: t.on ? p.accent : 'rgba(29,28,26,.3)' })),
+          ticksOpen: st.ticks, ticksClosed: !st.ticks,
+          openTicks: () => this.setState({ ticks: true }), closeTicks: () => this.setState({ ticks: false }),
+        };
+      })(),
+      archiveOpen: this.state.archiveOpen,
+      toggleArchive: () => this.setState(s => ({ archiveOpen: !s.archiveOpen })),
+      archiveRows: [
+        ...(this.state.cleared ? argon.loose.map(t => ({ ...t, when: 'Cleared just now' })) : []),
+        mk('Chromium release schedule','chromiumdash.appspot.com',6,{ when: 'Yesterday · Argon' }),
+        mk('Sparkle updater docs','sparkle-project.org',8,{ when: 'Yesterday · Argon' }),
+        mk('Notarizing macOS software','developer.apple.com',2,{ when: '2 days ago · Argon' }),
+        mk('V8 flags list','v8.dev',5,{ when: '3 days ago · Argon' }),
+      ],
+      cmdRows: (() => {
+        const rows = [
+          { ...argon.pinned[1], meta: 'Kept · switch' },
+          { ...argon.loose[1], meta: 'Loose · switch' },
+          mk('Chromium blog','blog.chromium.org',6,{ meta: 'History' }),
+          { title: 'Search the web for “chromium”', glyph: '?', color: '#6b6760', meta: '↵' },
+          { title: 'Move tab to School', glyph: 'S', color: acc(155), meta: 'Command' },
+        ];
+        this._rows = rows;
+        return rows.map((r, i) => ({ ...r, bg: i === this.state.sel ? '#f0eef9' : 'transparent', hover: () => this.setState({ sel: i }), open: () => this.setState({ sel: i, opened: r.title }) }));
+      })(),
+      cmdStatus: this.state.opened ? `Opened: ${this.state.opened}` : 'Click, then use the keys →',
+      cmdKey: e => {
+        const n = this._rows.length;
+        if (e.key === 'ArrowDown') { e.preventDefault(); this.setState(s => ({ sel: (s.sel + 1) % n })); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState(s => ({ sel: (s.sel - 1 + n) % n })); }
+        else if (e.key === 'Enter') { e.preventDefault(); this.setState(s => ({ opened: this._rows[s.sel].title })); }
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

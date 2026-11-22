@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="pointer-events:{{ ctx.pe }};flex:1;min-width:0;width:100%;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center">
+  <sc-if value="{{ item.isSpaceName }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;font-weight:600;color:{{ ctx.muted }};padding:4px 8px;white-space:nowrap">{{ ctx.spaceName }}</div></sc-if>
+  <sc-if value="{{ item.isDivider }}" hint-placeholder-val="{{ false }}"><div style="width:{{ item.dw }};height:{{ item.dh }};background:{{ ctx.line }};align-self:center;margin:{{ item.dm }}"></div></sc-if>
+  <sc-if value="{{ item.spacerEdit }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;color:{{ ctx.muted }};padding:0 8px">Spacer</div></sc-if>
+  <sc-if value="{{ item.isTabs }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:{{ item.dir }};gap:1px;min-width:0;overflow:hidden">
+      <sc-for list="{{ item.tabs }}" as="t" hint-placeholder-count="2">
+        <div onMouseEnter="{{ t.enter }}" onMouseLeave="{{ ctx.leave }}" style="display:flex;align-items:center;flex:none;min-width:0;max-width:{{ item.tabMax }};border-radius:7px;background:{{ t.bg }}">
+          <button onClick="{{ t.open }}" style="flex:1;min-width:0;height:{{ ctx.rowH }};padding:0 8px;display:flex;align-items:center;gap:9px;font-size:{{ ctx.fs }};color:{{ t.ink }};font-weight:{{ t.weight }};text-align:left">
+            <sc-if value="{{ ctx.iconTile }}" hint-placeholder-val="{{ true }}"><span style="width:16px;height:16px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:#fff;background:{{ t.iconBg }}">{{ t.letter }}</span></sc-if>
+            <sc-if value="{{ ctx.iconDot }}" hint-placeholder-val="{{ false }}"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:{{ t.iconBg }}"></span></sc-if>
+            <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span>
+          </button>
+          <sc-if value="{{ t.showTime }}" hint-placeholder-val="{{ false }}"><span title="{{ t.tip }}" style="flex:none;padding-right:9px;font-size:11px;color:{{ t.timeC }}">{{ t.time }}</span></sc-if>
+          <sc-if value="{{ t.closable }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ t.close }}" aria-label="Close tab" style="width:22px;height:22px;flex:none;margin-right:4px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:{{ ctx.dim }};opacity:{{ t.xOp }}"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ item.emptyTabs }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:{{ ctx.muted }};padding:6px 8px;white-space:nowrap">Nothing here</div></sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ item.isFav }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:{{ item.favCols }};gap:6px">
+      <sc-for list="{{ ctx.favs }}" as="f" hint-placeholder-count="8">
+        <button title="{{ f.n }}" aria-label="{{ f.n }}" style="height:{{ item.favH }};border-radius:9px;background:{{ ctx.field }};display:flex;align-items:center;justify-content:center"><span style="width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;background:{{ f.c }}">{{ f.l }}</span></button>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ item.isNav }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:2px;color:{{ ctx.dim }}">
+      <button aria-label="Back" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"></path></svg></button>
+      <button aria-label="Forward" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"></path></svg></button>
+      <button aria-label="Reload" style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 8a5 5 0 1 1-1.5-3.6"></path><path d="M13 2.5V5h-2.5"></path></svg></button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ item.isAddr }}" hint-placeholder-val="{{ false }}">
+    <button style="width:{{ item.addrW }};height:32px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:9px;background:{{ ctx.field }};color:{{ ctx.dim }};font-size:12.5px;text-align:left"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"></rect><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"></path></svg><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ctx.host }}</span></button>
+  </sc-if>
+  <sc-if value="{{ item.isNew }}" hint-placeholder-val="{{ false }}"><button onClick="{{ ctx.onNew }}" style="height:{{ ctx.rowH }};padding:0 8px;border-radius:7px;font-size:{{ ctx.fs }};color:{{ ctx.muted }};text-align:left;white-space:nowrap">+ New tab</button></sc-if>
+  <sc-if value="{{ item.isClear }}" hint-placeholder-val="{{ false }}"><button onClick="{{ ctx.onClear }}" style="align-self:flex-start;height:26px;padding:0 8px;border-radius:6px;font-size:12px;color:{{ ctx.dim }};white-space:nowrap">Clear loose</button></sc-if>
+  <sc-if value="{{ item.isArchive }}" hint-placeholder-val="{{ false }}"><button aria-label="Archive" title="{{ ctx.archiveTip }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;border-radius:7px;font-size:12px;color:{{ ctx.dim }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="13" height="3.5" rx="1"></rect><path d="M2.5 6v6.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6M6.5 9h3"></path></svg>{{ ctx.archived }}</button></sc-if>
+  <sc-if value="{{ item.isSpaces }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:4px;align-items:center;justify-content:{{ item.spJustify }}">
+      <sc-for list="{{ ctx.spaces }}" as="s" hint-placeholder-count="3">
+        <button onClick="{{ s.pick }}" title="{{ s.tip }}" aria-label="{{ s.label }}" style="height:28px;min-width:28px;padding:{{ s.pad }};border-radius:999px;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.fg }};font-size:12px;font-weight:600;white-space:nowrap">
+          <sc-if value="{{ s.icon }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.d }}"></path></svg></sc-if>
+          <sc-if value="{{ s.dot }}" hint-placeholder-val="{{ false }}"><span style="width:{{ s.ds }};height:{{ s.ds }};border-radius:50%;background:{{ s.dc }}"></span></sc-if>
+          <sc-if value="{{ s.name }}" hint-placeholder-val="{{ false }}"><span>{{ s.label }}</span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;item&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;ctx&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}"></script>
+</body>
+</html>

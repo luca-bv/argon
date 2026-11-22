@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>@font-face{font-family:'Allo';src:url('https://cdn.jsdelivr.net/gh/joshpuckett/allo@main/fonts/webfonts/AlloVariable.woff2') format('woff2'),url('https://cdn.jsdelivr.net/npm/allo-font/fonts/webfonts/AlloVariable.woff2') format('woff2');font-weight:100 900;font-display:swap}html,body{margin:0;height:100%;background:#e4e1db}body{font-family:'Allo',system-ui,sans-serif;color:#1d1c1a;-webkit-font-smoothing:antialiased}a{color:#3d5fa8}a:hover{color:#2a4580}button,input{font:inherit;color:inherit;border:0;background:transparent;padding:0;font-variation-settings:inherit;font-feature-settings:inherit}button{cursor:pointer}button:focus-visible{outline:2px solid #8a857c;outline-offset:2px}input:focus{outline:none}</style></helmet>
+<div style="position:fixed;inset:0;display:flex;background:#e4e1db;font-feature-settings:'ss01','tnum';font-variation-settings:'ROND' {{ cfg.rond }}">
+
+  <div style="flex:1;min-width:0;padding:18px 24px 24px;display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#6e6a62;min-height:20px">
+      <span style="font-weight:600;color:#1d1c1a">{{ modeTitle }}</span><span>{{ modeHint }}</span>
+    </div>
+    <div style="flex:1;min-height:0;position:relative;display:flex;flex-direction:{{ win.dir }};border-radius:12px;overflow:hidden;background:{{ tone.bg }};box-shadow:0 0 0 1px rgba(0,0,0,.08),0 20px 60px rgba(40,30,10,.18);transition:background .25s">
+      <div aria-hidden="true" style="position:absolute;left:16px;top:16px;display:flex;gap:7px;z-index:8"><i style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></i><i style="width:12px;height:12px;border-radius:50%;background:#febc2e"></i><i style="width:12px;height:12px;border-radius:50%;background:#28c840"></i></div>
+
+      <aside onMouseLeave="{{ sbLeave }}" aria-label="Sidebar" style="display:{{ sb.display }};position:{{ sb.pos }};top:{{ sb.top }};bottom:{{ sb.top }};left:{{ sb.l }};right:{{ sb.r }};z-index:{{ sb.z }};width:{{ sb.w }};flex:none;box-sizing:border-box;flex-direction:column;gap:10px;padding:{{ sb.pad }};background:{{ sb.bg }};box-shadow:{{ sb.shadow }};border-radius:{{ sb.br }};transform:translateX({{ sb.tx }});transition:transform .22s cubic-bezier(.2,.8,.2,1)">
+        <sc-if value="{{ sbNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:{{ tone.muted }};padding:0 8px">{{ sbNoteText }}</div></sc-if>
+        <div onDragOver="{{ sideOver }}" onDrop="{{ sideDrop }}" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:{{ ctx.gap }}">
+          <sc-for list="{{ sideItems }}" as="it" hint-placeholder-count="5">
+            <div draggable="{{ editing }}" onDragStart="{{ it.dragStart }}" onDragOver="{{ it.over }}" onDragEnd="{{ dragEnd }}" style="position:relative;display:flex;min-width:0;flex:{{ it.flex }};min-height:{{ it.minH }};border-radius:8px;outline:{{ it.outline }};outline-offset:1px;cursor:{{ it.cursor }};opacity:{{ it.op }}">
+              <sc-if value="{{ it.before }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:{{ it.iL }};right:{{ it.iR }};top:{{ it.iT }};bottom:{{ it.iB }};width:{{ it.iW }};height:{{ it.iH }};border-radius:2px;background:#d4572a;z-index:2"></span></sc-if>
+              <div style="flex:1;min-width:0;width:100%;overflow:hidden;display:flex;flex-direction:column"><dc-import name="ArgonModule" item="{{ it }}" ctx="{{ ctx }}" hint-size="100%,30px" style="flex:1;min-width:0;display:flex"></dc-import></div>
+              <sc-if value="{{ it.removable }}" hint-placeholder-val="{{ false }}"><button onClick="{{ it.remove }}" aria-label="Remove module" style="position:absolute;top:-7px;right:-7px;width:16px;height:16px;border-radius:50%;background:#1d1c1a;color:#fff;display:flex;align-items:center;justify-content:center;z-index:3;box-shadow:0 0 0 2px {{ tone.bg }}"><svg width="7" height="7" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="3"><path d="m3 3 10 10M13 3 3 13"></path></svg></button></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ sideEnd }}" hint-placeholder-val="{{ false }}"><span style="height:2px;flex:none;border-radius:2px;background:#d4572a"></span></sc-if>
+          <sc-if value="{{ sideEmpty }}" hint-placeholder-val="{{ false }}"><div style="flex:1;min-height:80px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;border-radius:10px;border:1px dashed {{ tone.edit }};font-size:12px;color:{{ tone.muted }}">Drop modules here</div></sc-if>
+        </div>
+      </aside>
+
+      <sc-if value="{{ ticksShow }}" hint-placeholder-val="{{ false }}">
+        <div onMouseEnter="{{ reveal }}" style="position:absolute;top:0;bottom:0;left:{{ edge.l }};right:{{ edge.r }};width:26px;display:flex;align-items:center;justify-content:center;z-index:5">
+          <div style="display:flex;flex-direction:column;gap:7px;align-items:{{ edge.align }}">
+            <sc-for list="{{ tickRows }}" as="t" hint-placeholder-count="5"><span style="height:2px;border-radius:2px;width:{{ t.w }};background:{{ t.c }};margin-top:{{ t.gap }}"></span></sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ pillShow }}" hint-placeholder-val="{{ false }}">
+        <div onMouseEnter="{{ pillEnter }}" onMouseLeave="{{ pillLeave }}" style="position:absolute;left:{{ pill.l }};right:{{ pill.r }};top:50%;transform:translateY(-50%);padding:14px 8px;z-index:7">
+          <sc-if value="{{ pillClosed }}" hint-placeholder-val="{{ true }}">
+            <div style="width:6px;height:56px;border-radius:999px;background:{{ tone.line }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+              <sc-for list="{{ pillDots }}" as="d" hint-placeholder-count="3"><span style="width:4px;border-radius:999px;height:{{ d.h }};background:{{ d.c }}"></span></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ pillOpen }}" hint-placeholder-val="{{ false }}">
+            <nav aria-label="Spaces" style="display:flex;flex-direction:column;gap:4px;padding:5px;border-radius:999px;background:{{ tone.card }};box-shadow:0 0 0 1px {{ tone.line }},0 10px 30px rgba(0,0,0,.16)">
+              <sc-for list="{{ ctx.spaces }}" as="s" hint-placeholder-count="3">
+                <button onClick="{{ s.pick }}" title="{{ s.tip }}" aria-label="{{ s.label }}" style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.pillBg }};color:{{ s.pillFg }}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="{{ s.d }}"></path></svg></button>
+              </sc-for>
+            </nav>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:{{ col.gap }};padding:{{ col.pad }}">
+        <sc-if value="{{ topVisible }}" hint-placeholder-val="{{ false }}">
+          <div onDragOver="{{ topOver }}" onDrop="{{ topDrop }}" style="height:40px;flex:none;display:flex;align-items:center;gap:6px;padding:0 4px 0 {{ col.topPadL }};min-width:0">
+            <sc-for list="{{ topItems }}" as="it" hint-placeholder-count="0">
+              <div draggable="{{ editing }}" onDragStart="{{ it.dragStart }}" onDragOver="{{ it.over }}" onDragEnd="{{ dragEnd }}" style="position:relative;display:flex;align-items:center;flex:{{ it.flex }};min-width:{{ it.minW }};height:34px;border-radius:8px;outline:{{ it.outline }};outline-offset:1px;cursor:{{ it.cursor }};opacity:{{ it.op }}">
+                <sc-if value="{{ it.before }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:{{ it.iL }};right:{{ it.iR }};top:{{ it.iT }};bottom:{{ it.iB }};width:{{ it.iW }};height:{{ it.iH }};border-radius:2px;background:#d4572a;z-index:2"></span></sc-if>
+                <div style="flex:1;min-width:0;overflow:hidden;display:flex;align-items:center"><dc-import name="ArgonModule" item="{{ it }}" ctx="{{ ctx }}" hint-size="80px,30px" style="flex:1;min-width:0;display:flex"></dc-import></div>
+                <sc-if value="{{ it.removable }}" hint-placeholder-val="{{ false }}"><button onClick="{{ it.remove }}" aria-label="Remove module" style="position:absolute;top:-7px;right:-7px;width:16px;height:16px;border-radius:50%;background:#1d1c1a;color:#fff;display:flex;align-items:center;justify-content:center;z-index:3;box-shadow:0 0 0 2px {{ tone.bg }}"><svg width="7" height="7" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="3"><path d="m3 3 10 10M13 3 3 13"></path></svg></button></sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{ topEnd }}" hint-placeholder-val="{{ false }}"><span style="width:2px;height:22px;flex:none;border-radius:2px;background:#d4572a"></span></sc-if>
+            <sc-if value="{{ topEmpty }}" hint-placeholder-val="{{ false }}"><div style="flex:1;height:32px;display:flex;align-items:center;padding:0 12px;border-radius:9px;border:1px dashed {{ tone.edit }};font-size:12px;color:{{ tone.muted }}">Drop modules here to add a top bar</div></sc-if>
+          </div>
+        </sc-if>
+        <main style="flex:1;min-height:0;border-radius:{{ col.radius }};background:{{ tone.page }};box-shadow:{{ tone.pageSh }};overflow:auto;display:flex;justify-content:center;transition:background .25s">
+          <article style="width:100%;max-width:620px;padding:72px 40px 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;color:{{ tone.ink }}">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:{{ tone.muted }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ accent }}"></span>{{ page.host }}</div>
+            <h1 style="margin:0;font-size:42px;line-height:1.05;font-weight:650;letter-spacing:-.015em;text-wrap:pretty">{{ page.title }}</h1>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+              <div style="height:12px;border-radius:6px;background:{{ tone.bar }}"></div><div style="height:12px;width:92%;border-radius:6px;background:{{ tone.bar }}"></div><div style="height:12px;width:78%;border-radius:6px;background:{{ tone.bar }}"></div><div style="height:12px;width:85%;border-radius:6px;background:{{ tone.bar }};margin-top:12px"></div><div style="height:12px;width:60%;border-radius:6px;background:{{ tone.bar }}"></div>
+            </div>
+            <div style="margin-top:24px;font-size:12px;color:{{ tone.muted }}">Stand-in for the web page</div>
+          </article>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <aside aria-label="Customize" style="width:320px;flex:none;background:#faf9f7;box-shadow:-1px 0 0 rgba(29,28,26,.08);overflow:auto;display:flex;flex-direction:column;gap:22px;padding:18px 18px 24px;box-sizing:border-box;font-size:12.5px;color:#3f3c37">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-size:16px;font-weight:650;color:#1d1c1a">Customize</span><span style="font-size:11.5px;color:#8a857c">⌃⇧E edit / use</span></div>
+      <div style="display:flex;padding:2px;border-radius:9px;background:#ece9e3">
+        <sc-for list="{{ segMode }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="flex:1;height:30px;border-radius:7px;font-size:12.5px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:11px;font-weight:600;color:#8a857c">Start from</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px">
+        <sc-for list="{{ presets }}" as="p" hint-placeholder-count="4"><button onClick="{{ p.pick }}" style="height:34px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.1);font-size:12.5px;color:#1d1c1a" style-hover="box-shadow:0 0 0 1px rgba(29,28,26,.3)">{{ p.label }}</button></sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:#8a857c"><span>Modules</span><span style="font-weight:400">drag in · click to add</span></div>
+      <div onDragOver="{{ trayOver }}" onDrop="{{ trayDrop }}" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;min-height:44px;border-radius:10px;background:{{ trayBg }};box-shadow:0 0 0 1px {{ trayRing }}">
+        <sc-if value="{{ trayHot }}" hint-placeholder-val="{{ false }}"><div style="width:100%;text-align:center;font-size:12px;font-weight:600;color:#a8431f;padding:4px 0">Drop here to remove</div></sc-if>
+        <sc-for list="{{ tray }}" as="m" hint-placeholder-count="6">
+          <button draggable="true" onDragStart="{{ m.dragStart }}" onDragEnd="{{ dragEnd }}" onClick="{{ m.add }}" style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 7px;border-radius:7px;background:#fff;box-shadow:0 0 0 1px rgba(29,28,26,.12);font-size:12px;color:#1d1c1a;cursor:grab" style-hover="box-shadow:0 0 0 1px rgba(29,28,26,.35)"><svg width="8" height="12" viewBox="0 0 8 12" fill="#a19d95"><circle cx="2" cy="2" r="1"></circle><circle cx="6" cy="2" r="1"></circle><circle cx="2" cy="6" r="1"></circle><circle cx="6" cy="6" r="1"></circle><circle cx="2" cy="10" r="1"></circle><circle cx="6" cy="10" r="1"></circle></svg>{{ m.label }}</button>
+        </sc-for>
+        <sc-if value="{{ trayEmpty }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8a857c">Every module is placed</span></sc-if>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11px;font-weight:600;color:#8a857c">Sidebar</div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Side</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segSide }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Behavior</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segBehavior }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      <label style="display:grid;grid-template-columns:72px minmax(0,1fr) 30px;align-items:center;gap:10px"><span>Width</span><input type="range" min="180" max="320" step="4" value="{{ cfg.width }}" onChange="{{ setWidth }}" style="accent-color:#1d1c1a;min-width:0"><span style="text-align:right;color:#8a857c">{{ cfg.width }}</span></label>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11px;font-weight:600;color:#8a857c">Tabs</div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Icons</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segIcon }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Density</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segDensity }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Archive after</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segArchive }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Close ×</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segClose }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11px;font-weight:600;color:#8a857c">Spaces</div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Switcher</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segSwitcher }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Edge pill</span><div style="display:flex;padding:2px;border-radius:8px;background:#ece9e3"><sc-for list="{{ segPill }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="flex:1;height:26px;border-radius:6px;font-size:12px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for></div></div>
+      <sc-for list="{{ spaceColors }}" as="r" hint-placeholder-count="3">
+        <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>{{ r.name }}</span><div style="display:flex;gap:8px"><sc-for list="{{ r.sw }}" as="w" hint-placeholder-count="6"><button onClick="{{ w.pick }}" aria-label="Space colour" style="width:20px;height:20px;border-radius:50%;background:{{ w.c }};box-shadow:{{ w.ring }}"></button></sc-for></div></div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:11px;font-weight:600;color:#8a857c">Window</div>
+      <div style="display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:10px"><span>Tone</span><div style="display:flex;gap:6px"><sc-for list="{{ tones }}" as="t" hint-placeholder-count="4"><button onClick="{{ t.pick }}" title="{{ t.label }}" style="flex:1;height:30px;border-radius:7px;background:{{ t.c }};color:{{ t.fg }};font-size:11px;box-shadow:{{ t.ring }}">{{ t.label }}</button></sc-for></div></div>
+      <label style="display:grid;grid-template-columns:72px minmax(0,1fr) 30px;align-items:center;gap:10px"><span>Frame gap</span><input type="range" min="0" max="16" step="1" value="{{ cfg.gap }}" onChange="{{ setGap }}" style="accent-color:#1d1c1a;min-width:0"><span style="text-align:right;color:#8a857c">{{ cfg.gap }}</span></label>
+      <label style="display:grid;grid-template-columns:72px minmax(0,1fr) 30px;align-items:center;gap:10px"><span>Corners</span><input type="range" min="0" max="20" step="1" value="{{ cfg.radius }}" onChange="{{ setRadius }}" style="accent-color:#1d1c1a;min-width:0"><span style="text-align:right;color:#8a857c">{{ cfg.radius }}</span></label>
+      <label style="display:grid;grid-template-columns:72px minmax(0,1fr) 30px;align-items:center;gap:10px"><span>Roundness</span><input type="range" min="0" max="100" step="5" value="{{ cfg.rond }}" onChange="{{ setRond }}" style="accent-color:#1d1c1a;min-width:0"><span style="text-align:right;color:#8a857c">{{ cfg.rond }}</span></label>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;border-top:1px solid rgba(29,28,26,.08)">
+      <span style="font-size:11.5px;color:#8a857c;padding-top:10px">Saved automatically</span>
+      <button onClick="{{ reset }}" style="margin-top:10px;height:28px;padding:0 10px;border-radius:7px;font-size:12px;color:#a8431f" style-hover="background:rgba(168,67,31,.08)">Reset</button>
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this._n = 0;
+    const AGE = { p3: 2, p4: 9, a3: 0.2, a4: 5, a5: 11.4, s2: 1, s3: 7 };
+    const T = (id, title, host) => ({ id, title, host, age: AGE[id] || 0 });
+    const saved = this.load(), base = saved || this.preset('Quiet');
+    this.state = {
+      editing: true, cur: 1, hover: null, reveal: false, pill: false, drop: null, dragId: null, dragFrom: null, archived: 14,
+      active: { 0: 'p3', 1: 'a3', 2: 's2' }, zones: base.zones, cfg: base.cfg,
+      spaces: [
+        { name: 'Personal', icon: 'M2.5 7.5 8 3l5.5 4.5V13a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5z',
+          kept: [T('p1','Inbox','mail.icloud.com'), T('p2','Calendar','calendar.icloud.com')],
+          loose: [T('p3','Hacker News','news.ycombinator.com'), T('p4','Watch later','youtube.com')] },
+        { name: 'Argon', icon: 'm5.5 4.5-3.5 3.5 3.5 3.5M10.5 4.5 14 8l-3.5 3.5',
+          kept: [T('a1','imputnet/helium','github.com'), T('a2','Chromium Code Search','source.chromium.org')],
+          loose: [T('a3','Amazon EC2 Mac instances','docs.aws.amazon.com'), T('a4','memory_saver_mode_policy.cc','source.chromium.org'), T('a5','Building Helium for macOS','github.com')] },
+        { name: 'School', icon: 'M2 3.5h4a2 2 0 0 1 2 2v8a1.5 1.5 0 0 0-1.5-1.5H2zM14 3.5h-4a2 2 0 0 0-2 2v8a1.5 1.5 0 0 1 1.5-1.5H14z',
+          kept: [T('s1','Course dashboard','canvas.instructure.com')],
+          loose: [T('s2','Essay draft','docs.google.com'), T('s3','Derivative of arctan(x)','wolframalpha.com')] },
+      ],
+    };
+  }
+  load() { try { const v = JSON.parse(localStorage.getItem('argon-customize-v1')); if (v && v.zones && v.cfg) { this._n = v.n || 200; return v; } } catch (e) {} return null; }
+  componentDidMount() { this._k = e => this.onKey(e); window.addEventListener('keydown', this._k); }
+  componentWillUnmount() { window.removeEventListener('keydown', this._k); }
+  componentDidUpdate(pp, ps) {
+    if (ps.zones !== this.state.zones || ps.cfg !== this.state.cfg)
+      try { localStorage.setItem('argon-customize-v1', JSON.stringify({ zones: this.state.zones, cfg: this.state.cfg, n: this._n })); } catch (e) {}
+  }
+  labels() { return { spaceName: 'Space name', nav: 'Back · Forward · Reload', address: 'Address', favorites: 'Favorites', pinned: 'Pinned tabs', loose: 'Loose tabs', newTab: 'New tab', clear: 'Clear loose', spaces: 'Space switcher', archive: 'Archive', divider: 'Divider', spacer: 'Spacer' }; }
+  mk(types) { return types.map(t => ({ id: t + '-' + (++this._n), type: t })); }
+  preset(name, keep) {
+    const d = { side: 'Left', behavior: 'Pinned', width: 224, rond: 100, density: 'Regular', icon: 'Tile', closeHover: true, switcher: 'Icons', edgePill: false, pillSide: 'Left', archive: '12h', tone: 'Paper', gap: 8, radius: 10, hues: [250, 300, 155] };
+    const P = {
+      Quiet: [['spaceName','divider','pinned','divider','loose','newTab'], [], { edgePill: true, pillSide: 'Left' }],
+      Ticks: [['spaceName','divider','pinned','divider','loose','newTab','spacer','spaces'], [], { behavior: 'Auto-hide', width: 248 }],
+      Classic: [['nav','address','favorites','spaceName','pinned','divider','newTab','loose','spacer','archive','spaces'], [], { width: 264, switcher: 'Dots' }],
+      'Top bar': [[], ['nav','pinned','divider','loose','newTab','spacer','address','spaces'], { behavior: 'Off', switcher: 'Dots' }],
+    }[name];
+    const k = keep ? { tone: keep.tone, hues: keep.hues, rond: keep.rond } : {};
+    return { zones: { side: this.mk(P[0]), top: this.mk(P[1]) }, cfg: { ...d, ...k, ...P[2] } };
+  }
+  setCfg(k, v) { this.setState(s => ({ cfg: { ...s.cfg, [k]: v } })); }
+  tone() {
+    const c = this.state.cfg, h = c.hues[this.state.cur];
+    const L = { bg: '#f3f1ed', ink: '#1d1c1a', dim: '#5c5953', muted: '#8a857c', line: 'rgba(29,28,26,.1)', active: 'rgba(29,28,26,.07)', hover: 'rgba(29,28,26,.04)', field: 'rgba(29,28,26,.05)', page: '#fff', bar: '#f1efeb', card: '#fbfaf8', edit: 'rgba(29,28,26,.25)', pageSh: '0 0 0 1px rgba(29,28,26,.06)' };
+    if (c.tone === 'Cool') return { ...L, bg: '#eceff3', card: '#f8f9fb' };
+    if (c.tone === 'Tinted') return { ...L, bg: `oklch(0.93 0.035 ${h})`, card: `oklch(0.975 0.012 ${h})`, field: 'rgba(29,28,26,.06)' };
+    if (c.tone === 'Dark') return { bg: '#1c1b19', ink: '#f1efe9', dim: '#c4bfb5', muted: '#8f8a80', line: 'rgba(255,255,255,.1)', active: 'rgba(255,255,255,.09)', hover: 'rgba(255,255,255,.05)', field: 'rgba(255,255,255,.07)', page: '#272623', bar: '#33312d', card: '#262522', edit: 'rgba(255,255,255,.28)', pageSh: '0 0 0 1px rgba(255,255,255,.06)' };
+    return L;
+  }
+  dragStart(src) {
+    return e => {
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', src.type); } catch (x) {}
+      this.drag = src;
+      setTimeout(() => this.setState({ dragId: src.id || null, dragFrom: src.from }), 0);
+    };
+  }
+  setDrop(zone, index) { const d = this.state.drop; if (!d || d.zone !== zone || d.index !== index) this.setState({ drop: { zone, index } }); }
+  itemOver(zone, i, hz) {
+    return e => {
+      if (!this.drag) return;
+      e.preventDefault(); e.stopPropagation();
+      const r = e.currentTarget.getBoundingClientRect();
+      const before = hz ? e.clientX < r.left + r.width / 2 : e.clientY < r.top + r.height / 2;
+      this.setDrop(zone, before ? i : i + 1);
+    };
+  }
+  zoneOver(zone) { return e => { if (!this.drag) return; e.preventDefault(); const d = this.state.drop; if (!d || d.zone !== zone) this.setDrop(zone, this.state.zones[zone].length); }; }
+  zoneDrop(zone) {
+    return e => {
+      e.preventDefault();
+      const src = this.drag, d = this.state.drop; if (!src) return;
+      const z = this.state.zones, zones = { side: [...z.side], top: [...z.top] };
+      let index = d && d.zone === zone ? d.index : zones[zone].length, item;
+      if (src.from === 'tray') item = { id: src.type + '-' + (++this._n), type: src.type };
+      else { const arr = zones[src.from], k = arr.findIndex(x => x.id === src.id); if (k < 0) return; item = arr.splice(k, 1)[0]; if (src.from === zone && k < index) index--; }
+      zones[zone].splice(index, 0, item);
+      this.drag = null;
+      this.setState({ zones, drop: null, dragId: null, dragFrom: null });
+    };
+  }
+  endDrag() { this.drag = null; this.setState({ drop: null, dragId: null, dragFrom: null }); }
+  removeItem(zone, id) { this.setState(s => ({ zones: { ...s.zones, [zone]: s.zones[zone].filter(x => x.id !== id) } })); }
+  addItem(type) { this.setState(s => ({ zones: { ...s.zones, side: [...s.zones.side, { id: type + '-' + (++this._n), type }] } })); }
+  activate(id) { this.setState(s => ({ active: { ...s.active, [s.cur]: id } })); }
+  closeTab(id) {
+    const s = this.state, si = s.cur, sp = s.spaces[si], idx = sp.loose.findIndex(t => t.id === id), loose = sp.loose.filter(t => t.id !== id);
+    let act = s.active[si];
+    if (act === id) { const n = loose[idx] || loose[idx - 1] || sp.kept[sp.kept.length - 1]; act = n ? n.id : null; }
+    this.setState({ spaces: s.spaces.map((x, i) => i === si ? { ...x, loose } : x), active: { ...s.active, [si]: act }, archived: s.archived + 1 });
+  }
+  clearLoose() {
+    const s = this.state, si = s.cur, sp = s.spaces[si];
+    const act = sp.loose.some(t => t.id === s.active[si]) ? (sp.kept[0] ? sp.kept[0].id : null) : s.active[si];
+    this.setState({ spaces: s.spaces.map((x, i) => i === si ? { ...x, loose: [] } : x), active: { ...s.active, [si]: act }, archived: s.archived + sp.loose.length });
+  }
+  newTab() {
+    const s = this.state, si = s.cur, t = { id: 'n' + Date.now(), title: 'New tab', host: 'argon://new', age: 0 };
+    this.setState({ spaces: s.spaces.map((x, i) => i === si ? { ...x, loose: [t, ...x.loose] } : x), active: { ...s.active, [si]: t.id } });
+  }
+  onKey(e) {
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyE') { e.preventDefault(); return this.setState(s => ({ editing: !s.editing, reveal: false })); }
+    if (e.ctrlKey && !e.shiftKey && /^Digit[1-3]$/.test(e.code)) { e.preventDefault(); this.setState({ cur: +e.code.slice(5) - 1 }); }
+  }
+  renderVals() {
+    const s = this.state, c = s.cfg, ed = s.editing, T = this.tone(), sp = s.spaces[s.cur], act = s.active[s.cur], L = this.labels();
+    const acc = h => `oklch(${c.tone === 'Dark' ? 0.68 : 0.56} 0.13 ${h})`, accent = acc(c.hues[s.cur]);
+    const D = { Compact: { h: '26px', fs: '12.5px', gap: '2px' }, Regular: { h: '30px', fs: '13px', gap: '6px' }, Roomy: { h: '36px', fs: '14px', gap: '10px' } }[c.density];
+    const LIM = { '12h': 12, '24h': 24, '7d': 168 }[c.archive];
+    const timer = (t, show) => { if (!LIM || !show) return { showTime: false }; const r = Math.max(LIM - t.age, 0); return { showTime: true, time: r < 1 ? Math.max(1, Math.round(r * 60)) + 'm' : r < 48 ? Math.round(r) + 'h' : Math.round(r / 24) + 'd', timeC: r < 2 ? (c.tone === 'Dark' ? 'oklch(0.75 0.13 65)' : 'oklch(0.55 0.14 55)') : T.muted, tip: `Archives in ${r < 1 ? Math.round(r * 60) + ' min' : r.toFixed(r < 10 ? 1 : 0) + ' h'}` }; };
+    const row = (t, closable) => {
+      const on = t.id === act, hv = s.hover === t.id, hh = [...t.host].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
+      return { title: t.title, letter: t.host.replace(/^www\./, '')[0].toUpperCase(), iconBg: `oklch(0.55 0.12 ${hh})`,
+        ink: on ? T.ink : T.dim, weight: on ? 600 : 400, bg: on ? T.active : hv ? T.hover : 'transparent',
+        open: () => this.activate(t.id), close: () => this.closeTab(t.id), enter: () => this.setState({ hover: t.id }),
+        closable: closable && c.closeHover && hv && !ed, xOp: 1, ...timer(t, closable && !(hv && c.closeHover && !ed)) };
+    };
+    const page = [...sp.kept, ...sp.loose].find(t => t.id === act);
+    const ctx = {
+      pe: ed ? 'none' : 'auto', muted: T.muted, dim: T.dim, line: T.line, field: T.field, fs: D.fs, rowH: D.h, gap: D.gap,
+      iconTile: c.icon === 'Tile', iconDot: c.icon === 'Dot', spaceName: sp.name, host: page ? page.host : 'Search or type a URL', archived: s.archived, archiveTip: LIM ? `Loose tabs archive after ${c.archive} idle` : 'Auto-archive off',
+      kept: sp.kept.map(t => row(t, false)), loose: sp.loose.map(t => row(t, true)),
+      favs: [['Mail','#2f5fb3'],['Calendar','#b3402f'],['GitHub','#24292f'],['Music','#b0305a'],['Notes','#8a6a12'],['Maps','#2c7a4b'],['Drive','#1a6b8a'],['Claude','#9a4a2c']].map(([n, col]) => ({ n, l: n[0], c: col })),
+      leave: () => this.setState({ hover: null }), onNew: () => this.newTab(), onClear: () => this.clearLoose(),
+      spaces: s.spaces.map((x, i) => { const on = i === s.cur, a = acc(c.hues[i]), sw = c.switcher;
+        return { pick: () => this.setState({ cur: i }), tip: `${x.name} · ⌃${i + 1}`, label: x.name, d: x.icon, icon: sw === 'Icons', dot: sw === 'Dots', name: sw === 'Names',
+          pad: sw === 'Names' ? '0 10px' : '0', bg: on && sw !== 'Dots' ? a : 'transparent', fg: on ? '#fff' : T.dim, ds: on ? '10px' : '7px', dc: on ? a : T.muted,
+          pillBg: on ? a : 'transparent', pillFg: on ? '#fff' : T.dim }; }),
+    };
+    const drop = s.drop;
+    const item = (x, zone, i) => {
+      const hz = zone === 'top', ty = x.type, tabs = ty === 'pinned' ? ctx.kept : ty === 'loose' ? ctx.loose : null;
+      return { ...x, isSpaceName: ty === 'spaceName', isDivider: ty === 'divider', spacerEdit: ty === 'spacer' && ed, isTabs: !!tabs, tabs: tabs || [], emptyTabs: !!tabs && !tabs.length,
+        isFav: ty === 'favorites', isNav: ty === 'nav', isAddr: ty === 'address', isNew: ty === 'newTab', isClear: ty === 'clear', isArchive: ty === 'archive', isSpaces: ty === 'spaces',
+        dir: hz ? 'row' : 'column', tabMax: hz ? '170px' : 'none', dw: hz ? '1px' : '100%', dh: hz ? '18px' : '1px', dm: hz ? '0 4px' : '2px 0',
+        favCols: hz ? 'repeat(8,30px)' : 'repeat(4,minmax(0,1fr))', favH: hz ? '30px' : '40px', addrW: hz ? '240px' : '100%', spJustify: hz ? 'flex-start' : 'center',
+        flex: ty === 'spacer' ? '1 1 0' : hz && tabs ? '0 1 auto' : '0 0 auto', minH: ty === 'spacer' && ed && !hz ? '28px' : '0', minW: ty === 'spacer' && ed && hz ? '56px' : '0',
+        outline: ed ? `1px dashed ${T.edit}` : 'none', cursor: ed ? 'grab' : 'auto', op: s.dragId === x.id ? 0.35 : 1,
+        before: !!drop && drop.zone === zone && drop.index === i,
+        iL: hz ? '-5px' : '0', iR: hz ? 'auto' : '0', iT: hz ? '0' : '-5px', iB: hz ? '0' : 'auto', iW: hz ? '2px' : 'auto', iH: hz ? 'auto' : '2px',
+        dragStart: this.dragStart({ from: zone, id: x.id, type: ty }), over: this.itemOver(zone, i, hz), removable: ed, remove: () => this.removeItem(zone, x.id) };
+    };
+    const left = c.side === 'Left', autoUse = c.behavior === 'Auto-hide' && !ed, off = c.behavior === 'Off' && !ed;
+    const inFlow = !off && !autoUse, pillLeft = (c.pillSide || 'Left') === 'Left', pillOnSide = c.edgePill && pillLeft === left, pillNudge = autoUse && pillLeft === left ? '24px' : '0';
+    const sidePad = pillOnSide && inFlow ? '26px' : '10px';
+    const sb = { display: off ? 'none' : 'flex', pos: autoUse ? 'absolute' : 'relative', top: autoUse ? '8px' : 'auto', l: autoUse && left ? '8px' : 'auto', r: autoUse && !left ? '8px' : 'auto',
+      z: autoUse ? 6 : 1, w: c.width + 'px', bg: autoUse ? T.card : 'transparent', br: autoUse ? '14px' : '0',
+      shadow: autoUse ? `0 0 0 1px ${T.line},0 18px 50px rgba(0,0,0,.18)` : 'none', tx: autoUse && !s.reveal ? (left ? '-110%' : '110%') : '0',
+      pad: `${left && inFlow ? '46px' : '14px'} ${left ? '10px' : sidePad} 14px ${left ? sidePad : '10px'}` };
+    const topVisible = ed || s.zones.top.length > 0, g = c.gap + 'px';
+    const leftFree = !(inFlow && left);
+    const col = { gap: g, radius: c.radius + 'px', topPadL: leftFree ? '72px' : '0',
+      pad: `${topVisible ? '4px' : leftFree ? '40px' : g} ${inFlow && !left ? '0' : g} ${g} ${inFlow && left ? '0' : g}` };
+    const seg = (cur, opts, fn) => opts.map(o => ({ label: o, pick: () => fn(o), bg: o === cur ? '#fff' : 'transparent', fg: o === cur ? '#1d1c1a' : '#6e6a62', sh: o === cur ? '0 1px 2px rgba(0,0,0,.12)' : 'none' }));
+    const placed = new Set([...s.zones.side, ...s.zones.top].map(x => x.type));
+    const tray = Object.keys(L).filter(t => t === 'divider' || t === 'spacer' || !placed.has(t)).map(t => ({ label: L[t], dragStart: this.dragStart({ from: 'tray', type: t }), add: () => this.addItem(t) }));
+    const trayHot = !!s.dragFrom && s.dragFrom !== 'tray';
+    const HUES = [250, 300, 155, 30, 75, 200];
+    const TONES = [['Paper', '#f3f1ed', '#1d1c1a'], ['Cool', '#eceff3', '#1d1c1a'], ['Tinted', `oklch(0.93 0.035 ${c.hues[s.cur]})`, '#1d1c1a'], ['Dark', '#1c1b19', '#f1efe9']];
+    return {
+      editing: ed, cfg: c, tone: T, accent, ctx, sb, col,
+      modeTitle: ed ? 'Editing layout' : 'Using Argon',
+      modeHint: ed ? 'Drag modules to reorder, between sidebar and top bar, or back to the tray to remove.' : (c.behavior === 'Auto-hide' ? 'Hover the edge ticks to open the sidebar.' : 'Click tabs and spaces. ⌃1–3 switches spaces.'),
+      win: { dir: left ? 'row' : 'row-reverse' },
+      sbLeave: () => { if (autoUse) this.setState({ reveal: false }); },
+      sbNote: ed && c.behavior !== 'Pinned', sbNoteText: c.behavior === 'Off' ? 'Hidden when using' : 'Auto-hides when using',
+      sideItems: s.zones.side.map((x, i) => item(x, 'side', i)), topItems: s.zones.top.map((x, i) => item(x, 'top', i)),
+      sideEnd: !!drop && drop.zone === 'side' && drop.index === s.zones.side.length && s.zones.side.length > 0,
+      topEnd: !!drop && drop.zone === 'top' && drop.index === s.zones.top.length && s.zones.top.length > 0,
+      sideEmpty: ed && !s.zones.side.length, topEmpty: ed && !s.zones.top.length, topVisible,
+      sideOver: this.zoneOver('side'), sideDrop: this.zoneDrop('side'), topOver: this.zoneOver('top'), topDrop: this.zoneDrop('top'),
+      dragEnd: () => this.endDrag(),
+      ticksShow: autoUse && !s.reveal, reveal: () => this.setState({ reveal: true }),
+      edge: { l: left ? '0' : 'auto', r: left ? 'auto' : '0', align: left ? 'flex-start' : 'flex-end' },
+      tickRows: [...sp.kept.map(t => [t, '0']), ...sp.loose.map((t, i) => [t, i === 0 ? '8px' : '0'])].map(([t, gap]) => ({ gap, w: t.id === act ? '16px' : '9px', c: t.id === act ? accent : T.edit })),
+      pillShow: c.edgePill, pillOpen: s.pill, pillClosed: !s.pill,
+      pill: { l: pillLeft ? pillNudge : 'auto', r: pillLeft ? 'auto' : pillNudge },
+      pillDots: s.spaces.map((x, i) => ({ h: i === s.cur ? '14px' : '4px', c: i === s.cur ? acc(c.hues[i]) : T.muted })),
+      pillEnter: () => this.setState({ pill: true }), pillLeave: () => this.setState({ pill: false }),
+      page: page || { title: 'No tab open', host: sp.name },
+      segMode: seg(ed ? 'Edit layout' : 'Use', ['Edit layout', 'Use'], o => this.setState({ editing: o === 'Edit layout', reveal: false })),
+      presets: ['Quiet', 'Ticks', 'Classic', 'Top bar'].map(n => ({ label: n, pick: () => { const p = this.preset(n, c); this.setState({ zones: p.zones, cfg: p.cfg }); } })),
+      tray, trayEmpty: !tray.length && !trayHot, trayHot,
+      trayBg: trayHot ? 'rgba(212,87,42,.08)' : '#f1efeb', trayRing: trayHot ? 'rgba(212,87,42,.5)' : 'rgba(29,28,26,.06)',
+      trayOver: e => { if (this.drag && this.drag.from !== 'tray') { e.preventDefault(); if (s.drop) this.setState({ drop: null }); } },
+      trayDrop: e => { e.preventDefault(); const src = this.drag; if (src && src.from !== 'tray') this.removeItem(src.from, src.id); this.endDrag(); },
+      segSide: seg(c.side, ['Left', 'Right'], o => this.setCfg('side', o)),
+      segBehavior: seg(c.behavior, ['Pinned', 'Auto-hide', 'Off'], o => this.setCfg('behavior', o)),
+      segIcon: seg(c.icon, ['Tile', 'Dot', 'None'], o => this.setCfg('icon', o)),
+      segDensity: seg(c.density, ['Compact', 'Regular', 'Roomy'], o => this.setCfg('density', o)),
+      segClose: seg(c.closeHover ? 'On hover' : 'Never', ['On hover', 'Never'], o => this.setCfg('closeHover', o === 'On hover')),
+      segSwitcher: seg(c.switcher, ['Icons', 'Dots', 'Names'], o => this.setCfg('switcher', o)),
+      segPill: seg(c.edgePill ? (c.pillSide || 'Left') : 'Off', ['Left', 'Right', 'Off'], o => this.setState(s => ({ cfg: { ...s.cfg, edgePill: o !== 'Off', pillSide: o === 'Off' ? s.cfg.pillSide : o } }))),
+      segArchive: seg(c.archive || '12h', ['12h', '24h', '7d', 'Never'], o => this.setCfg('archive', o)),
+      spaceColors: s.spaces.map((x, i) => ({ name: x.name, sw: HUES.map(h => ({ c: `oklch(0.56 0.13 ${h})`, ring: c.hues[i] === h ? '0 0 0 2px #faf9f7,0 0 0 3.5px #1d1c1a' : 'none',
+        pick: () => this.setCfg('hues', c.hues.map((v, j) => j === i ? h : v)) })) })),
+      tones: TONES.map(([label, col, fg]) => ({ label, c: col, fg, pick: () => this.setCfg('tone', label), ring: c.tone === label ? '0 0 0 2px #faf9f7,0 0 0 3.5px #1d1c1a' : '0 0 0 1px rgba(29,28,26,.12)' })),
+      setWidth: e => this.setCfg('width', +e.target.value), setGap: e => this.setCfg('gap', +e.target.value),
+      setRadius: e => this.setCfg('radius', +e.target.value), setRond: e => this.setCfg('rond', +e.target.value),
+      reset: () => { const p = this.preset('Quiet'); this.setState({ zones: p.zones, cfg: p.cfg, editing: true }); },
+    };
+  }
+}
+</script>
+</body>
+</html>

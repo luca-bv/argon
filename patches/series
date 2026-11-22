@@ -1,0 +1,6 @@
+# Argon patches, appended to helium-macos patches/series by ci/assemble.sh
+argon/core/memory-saver-maximum.patch
+argon/core/quick-intensive-throttling.patch
+argon/core/live-tab-budget.patch
+argon/ui/sidebar.patch
+argon/ui/vertical-tabs-default.patch
