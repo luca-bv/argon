@@ -20,10 +20,23 @@ drop() {  # drop <series> <patch>...  Fails if Helium renamed or removed one, so
   mv "$series.new" "$series"
 }
 core=helium-chromium/patches/series
+# sync-setup-contract only adds a mojom (nothing uses it yet) to a target the shortcuts page creates.
 drop "$core" $(grep '^helium/ui/' "$core") \
-  helium/core/custom-keyboard-shortcuts.patch helium/settings/custom-keyboard-shortcuts-page.patch
+  helium/core/custom-keyboard-shortcuts.patch helium/settings/custom-keyboard-shortcuts-page.patch \
+  helium/settings/sync-setup-contract.patch
 drop patches/series helium/macos/{helium-immersive-fullscreen,disable-chromium-immersive-fullscreen}.patch \
   helium/macos/native-frame-materials.patch helium/macos/move-macos-settings.patch
+
+trim() {  # trim <patch> <file>  Removes the patch's changes to a file that only a dropped patch creates.
+  local patch=$1 file=$2
+  grep -qxF -- "--- a/$file" "$patch" || { echo "assemble: $patch no longer changes $file" >&2; exit 1; }
+  awk -v hdr="--- a/$file" '$0 == hdr {skip = 1; next} skip && /^--- (a\/|\/dev\/null)/ {skip = 0} !skip' \
+    "$patch" > "$patch.new"
+  mv "$patch.new" "$patch"
+}
+# Force paste's entry in the keyboard-shortcuts list, which goes with custom-keyboard-shortcuts.
+trim helium-chromium/patches/helium/core/force-paste-action.patch \
+  chrome/browser/ui/browser_shortcuts/browser_shortcut_metadata.cc
 # CI commits this tree, and a submodule would be committed as a bare pointer, losing the edit above: keep plain files.
 git rm -q --cached helium-chromium .gitmodules
 rm -rf helium-chromium/.git .gitmodules

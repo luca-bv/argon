@@ -29,10 +29,17 @@ were kept (~50 MB), plus Helium's separate uBlock and Sparkle downloads.
 and `helium/settings/custom-keyboard-shortcuts-page` (built on Helium's layout commands), the
 `helium/macos/{helium,disable-chromium}-immersive-fullscreen` pair (Chromium's own fullscreen comes back),
 `helium/macos/native-frame-materials` (needs a file a UI patch creates) and `helium/macos/move-macos-settings` (no
-longer applies). The UI block is last in Helium's core series, so nothing before it can break. On Helium 0.22.2 /
-helium-macos 0.22.2.1 that keeps 280 of 394 (90 ungoogled base, 170 core and settings, 20 macOS); a scan of the kept
-patches for symbols and files only the dropped ones define finds nothing else. Argon's patches then target upstream
-Chromium code, which moves less than Helium's UI, and the sidebar applies as is. Not compiled yet.
+longer applies). It also drops `helium/settings/sync-setup-contract` (adds an unused mojom to the shortcuts page's
+mojom target) and trims `helium/core/force-paste-action`'s change to `browser_shortcut_metadata.cc` (a file only
+the shortcuts patch creates; force paste itself stays). On Helium 0.22.2 / helium-macos 0.22.2.1 that keeps 279 of
+394 (90 ungoogled base, 169 core and settings, 20 macOS). Argon's patches then target upstream Chromium code, which
+moves less than Helium's UI, and the sidebar applies as is.
+
+Replay check (2026-11-22): the assembled series applied in order with Helium's flags to the 1,208 files it touches
+from the Chromium 158.0.8127.36 tarball: everything applies except the three patches on uBlock's and Sparkle's
+separate downloads (not fetched; no dropped patch touches them). The first CI run had failed at force-paste-action,
+which a symbol scan and a replay of only the macOS patches' files both missed: always replay the whole series.
+Not compiled yet.
 
 What goes with it, besides Helium's look: on-screen controls for features that stay underneath (pins sidebar, bangs
 and translate UI, uBlock entry in Settings, noise indicator in page info, crash dialog), and cleanups in the UI block.
