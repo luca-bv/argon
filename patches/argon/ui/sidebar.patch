@@ -10,10 +10,9 @@
        "//chrome/browser/ui/views/autofill:at_memory_promo_bubble_view_impl",
 --- a/chrome/browser/ui/views/argon/BUILD.gn
 +++ b/chrome/browser/ui/views/argon/BUILD.gn
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,33 @@
 +# Copyright 2026 The Argon Authors
-+# Use of this source code is governed by a BSD-style license that can be
-+# found in the LICENSE file.
++# Licensed under the GNU General Public License v3.0; see Argon's LICENSE file.
 +
 +# Argon's own browser interface. Headers here, implementations in :impl (linked
 +# by //chrome/browser), like //chrome/browser/ui/views/tabs/vertical.
@@ -47,10 +46,9 @@
 +}
 --- a/chrome/browser/ui/views/argon/argon_sidebar_view.cc
 +++ b/chrome/browser/ui/views/argon/argon_sidebar_view.cc
-@@ -0,0 +1,372 @@
+@@ -0,0 +1,371 @@
 +// Copyright 2026 The Argon Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
++// Licensed under the GNU General Public License v3.0; see Argon's LICENSE file.
 +
 +#include "chrome/browser/ui/views/argon/argon_sidebar_view.h"
 +
@@ -422,10 +420,9 @@
 +END_METADATA
 --- a/chrome/browser/ui/views/argon/argon_sidebar_view.h
 +++ b/chrome/browser/ui/views/argon/argon_sidebar_view.h
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,84 @@
 +// Copyright 2026 The Argon Authors
-+// Use of this source code is governed by a BSD-style license that can be
-+// found in the LICENSE file.
++// Licensed under the GNU General Public License v3.0; see Argon's LICENSE file.
 +
 +#ifndef CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
 +#define CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_

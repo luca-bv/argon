@@ -96,3 +96,8 @@ Argon is built on [Helium](https://github.com/imputnet/helium) and
 font is [Allo](https://github.com/joshpuckett/allo) (SIL Open Font License, in `extension/fonts/`).
 
 Argon isn't affiliated with The Browser Company (Arc) or with imput (Helium).
+
+## License
+
+Argon is licensed under the [GNU General Public License v3.0](LICENSE), like Helium. Code Argon's patches change in
+Chromium keeps Chromium's own license.
