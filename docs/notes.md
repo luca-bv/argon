@@ -71,11 +71,13 @@ compiled yet. Spaces designed, not started.
 Rebuild a tag: Actions > Build Argon > Run workflow, with the tag.
 
 Resuming: a failed build still uploads its build directory (`ci/helium-macos.patch` makes do-build's upload steps
-run after a failure). A rerun looks for the newest failed run whose assembled tree differs only in
+run after a failure). A rerun looks for the newest finished run (failed or stopped early) whose assembled tree differs only in
 `patches/argon/` (`find-resume` compares a hash of everything else, stored in the `argon_state` artifact). If it
 finds one, it downloads that run's build directory instead of preparing the source, and `ci/swap-patches.sh` reverts
 the old Argon patches and applies the new ones. Files that come out unchanged keep their timestamps, so only the
 fixed files recompile. Tick "fresh" to build from scratch. Artifacts expire after 90 days.
+The phases after build_01 need `!failure() && !cancelled()` in their `if`: without it GitHub skips a job when any
+job upstream of it was skipped (find-resume on a fresh run, retrieve-resources on a resumed one).
 
 Phase handoff (2026-11-23): GitHub's free macOS runner (3 cores) needs ~17 h for a full build, so it takes 4 phases;
 upstream Helium builds on Depot runners in one ~4 h job and never resumes. Helium's build archive was plain ustar,

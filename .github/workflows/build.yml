@@ -77,7 +77,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for id in $(gh run list -R "$GITHUB_REPOSITORY" -w build.yml -s failure -L 20 --json databaseId -q '.[].databaseId'); do
+          for id in $(gh run list -R "$GITHUB_REPOSITORY" -w build.yml -s completed -L 20 --json databaseId -q '.[].databaseId'); do
             names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts" -q '.artifacts[] | select(.expired | not) | .name')
             grep -qx github_build_artifact_arm64 <<< "$names" && grep -qx argon_state <<< "$names" || continue
             gh run download "$id" -R "$GITHUB_REPOSITORY" -n argon_state -D "old/$id"
@@ -124,7 +124,7 @@ jobs:
 
   build_02:
     needs: [assemble, build_01]
-    if: needs.build_01.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_01.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -135,7 +135,7 @@ jobs:
 
   build_03:
     needs: [assemble, build_02]
-    if: needs.build_02.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_02.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -146,7 +146,7 @@ jobs:
 
   build_04:
     needs: [assemble, build_03]
-    if: needs.build_03.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_03.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -157,7 +157,7 @@ jobs:
 
   build_05:
     needs: [assemble, build_04]
-    if: needs.build_04.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_04.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -168,7 +168,7 @@ jobs:
 
   build_06:
     needs: [assemble, build_05]
-    if: needs.build_05.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_05.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -179,7 +179,7 @@ jobs:
 
   build_07:
     needs: [assemble, build_06]
-    if: needs.build_06.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_06.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -190,7 +190,7 @@ jobs:
 
   build_08:
     needs: [assemble, build_07]
-    if: needs.build_07.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_07.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -201,7 +201,7 @@ jobs:
 
   build_09:
     needs: [assemble, build_08]
-    if: needs.build_08.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_08.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
@@ -212,7 +212,7 @@ jobs:
 
   build_10:
     needs: [assemble, build_09]
-    if: needs.build_09.outputs.status == 'running'
+    if: ${{ !failure() && !cancelled() && needs.build_09.outputs.status == 'running' }}
     uses: ./.github/workflows/build-phase.yml
     secrets: inherit
     with:
