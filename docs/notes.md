@@ -77,6 +77,12 @@ finds one, it downloads that run's build directory instead of preparing the sour
 the old Argon patches and applies the new ones. Files that come out unchanged keep their timestamps, so only the
 fixed files recompile. Tick "fresh" to build from scratch. Artifacts expire after 90 days.
 
+Phase handoff (2026-11-23): GitHub's free macOS runner (3 cores) needs ~17 h for a full build, so it takes 4 phases;
+upstream Helium builds on Depot runners in one ~4 h job and never resumes. Helium's build archive was plain ustar,
+which rounds file times to whole seconds, and siso then found every object older than its deps log
+(`siso_explain`: "stale deps in depslog: output mtime older than log") and rebuilt everything in each phase.
+`ci/helium-macos.patch` makes it `tar --format=pax`. `siso_explain` in `out/Default` says why each step ran.
+
 For now ad-hoc signed, no notarization, no Sparkle update server; builds are downloaded from draft Releases.
 Before anyone else uses it: Developer ID signing and notarization, Sparkle updates, rebranding (Helium's name and
 icons are non-free), and its own or permitted use of Helium's services (updates, extension proxy, filter lists).

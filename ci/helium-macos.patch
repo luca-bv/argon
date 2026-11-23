@@ -1,5 +1,32 @@
+diff --git a/.github/actions/do-build/action.yml b/.github/actions/do-build/action.yml
+index f0cd6fa..27e9869 100644
+--- a/.github/actions/do-build/action.yml
++++ b/.github/actions/do-build/action.yml
+@@ -36,6 +36,7 @@ runs:
+       shell: bash
+ 
+     - name: Prepare archive of build as artifact
++      if: ${{ !cancelled() }}  # Argon: after a failed build too, so a fixed rerun can resume
+       id: bake
+       run: |
+         set -o pipefail
+@@ -52,12 +53,14 @@ runs:
+         PROD_MACOS_NOTARIZATION_PWD: ${{ inputs.PROD_MACOS_NOTARIZATION_PWD }}
+         PROD_MACOS_SPECIAL_ENTITLEMENTS_PROFILE_B64: ${{ inputs.PROD_MACOS_SPECIAL_ENTITLEMENTS_PROFILE_B64 }}
+     - name: Upload part build artifact
++      if: ${{ !cancelled() }}
+       uses: actions/upload-artifact@v4
+       with:
+         name: github_build_artifact_${{ inputs.arch }}
+         path: upload_part_build/
+         overwrite: true
+     - name: Upload logs
++      if: ${{ !cancelled() }}
+       uses: actions/upload-artifact@v4
+       with:
+         name: github_build_logs_${{ inputs.arch }}
 diff --git a/.github/scripts/github_prepare_artifacts.sh b/.github/scripts/github_prepare_artifacts.sh
-index 6b36180..4912ba6 100755
+index 6b36180..d619c08 100755
 --- a/.github/scripts/github_prepare_artifacts.sh
 +++ b/.github/scripts/github_prepare_artifacts.sh
 @@ -19,7 +19,8 @@ if [ -f "$_root_dir/build_finished_$_target_cpu.log" ]; then
@@ -37,30 +64,14 @@ index 6b36180..4912ba6 100755
  
    {
      echo 'deltas<<EOF'
-diff --git a/.github/actions/do-build/action.yml b/.github/actions/do-build/action.yml
-index f0cd6fa..27e9869 100644
---- a/.github/actions/do-build/action.yml
-+++ b/.github/actions/do-build/action.yml
-@@ -36,6 +36,7 @@ runs:
-       shell: bash
+@@ -79,7 +73,9 @@ fi
+ gsync --file-system "$_src_dir"
  
-     - name: Prepare archive of build as artifact
-+      if: ${{ !cancelled() }}  # Argon: after a failed build too, so a fixed rerun can resume
-       id: bake
-       run: |
-         set -o pipefail
-@@ -52,12 +53,14 @@ runs:
-         PROD_MACOS_NOTARIZATION_PWD: ${{ inputs.PROD_MACOS_NOTARIZATION_PWD }}
-         PROD_MACOS_SPECIAL_ENTITLEMENTS_PROFILE_B64: ${{ inputs.PROD_MACOS_SPECIAL_ENTITLEMENTS_PROFILE_B64 }}
-     - name: Upload part build artifact
-+      if: ${{ !cancelled() }}
-       uses: actions/upload-artifact@v4
-       with:
-         name: github_build_artifact_${{ inputs.arch }}
-         path: upload_part_build/
-         overwrite: true
-     - name: Upload logs
-+      if: ${{ !cancelled() }}
-       uses: actions/upload-artifact@v4
-       with:
-         name: github_build_logs_${{ inputs.arch }}
+ # Needs to be compressed to stay below GitHub's upload limit 2 GB (?!) 2020-11-24; used to be  5-8GB (?)
+-tar -C build -c -f - src | zstd -vv -11 -T0 -o build_src.tar.zst
++# Argon: pax keeps sub-second mtimes. Plain ustar rounds them to seconds, and siso then finds every object
++# older than its deps log, so each resumed phase rebuilt everything.
++tar --format=pax -C build -c -f - src | zstd -vv -11 -T0 -o build_src.tar.zst
+ 
+ sha256sum ./build_src.tar.zst | tee ./sums.txt
+ 
