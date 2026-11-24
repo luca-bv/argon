@@ -1,8 +1,16 @@
 --- a/chrome/browser/ui/tabs/tab_strip_prefs.cc
 +++ b/chrome/browser/ui/tabs/tab_strip_prefs.cc
-@@ -25,7 +25,8 @@
+@@ -21,11 +21,14 @@
+ namespace tabs {
+ 
+ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
+-  registry->RegisterBooleanPref(prefs::kTabSearchPinnedToTabstrip, true);
++  // Argon: the sidebar header holds only the collapse button; both buttons
++  // can still be pinned back from their context menus.
++  registry->RegisterBooleanPref(prefs::kTabSearchPinnedToTabstrip, false);
    registry->RegisterBooleanPref(prefs::kOrganizerPanelPinnedToTabstrip, true);
-   registry->RegisterBooleanPref(prefs::kEverythingMenuPinnedToTabstrip, true);
+-  registry->RegisterBooleanPref(prefs::kEverythingMenuPinnedToTabstrip, true);
++  registry->RegisterBooleanPref(prefs::kEverythingMenuPinnedToTabstrip, false);
    registry->RegisterBooleanPref(prefs::kTabScrollButtonsPinnedToTabstrip, true);
 -  registry->RegisterBooleanPref(prefs::kVerticalTabsEnabled, false);
 +  // Argon: on by default, the Argon sidebar lives in the vertical tab strip.

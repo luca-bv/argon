@@ -42,8 +42,10 @@ git rm -q --cached helium-chromium .gitmodules
 rm -rf helium-chromium/.git .gitmodules
 
 cp -R "$argon/patches/argon" patches/
+# Argon's own code lives as plain files in src/; the build gets it as one patch that creates them, applied first.
+"$argon/ci/src-patch.sh" "$argon/src" > patches/argon/src.patch
 [ -z "$(tail -c1 patches/series)" ] || echo >> patches/series  # no blank line: `he validate series` rejects them
-cat "$argon/patches/series" >> patches/series
+{ echo argon/src.patch; grep -v '^#' "$argon/patches/series"; } >> patches/series
 
 # Helium's own workflows don't run here (Argon's do), and GITHUB_TOKEN can't push workflow files.
 rm -rf .github/workflows

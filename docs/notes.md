@@ -101,10 +101,11 @@ CI is only for release builds.
 - `git clone` this repo, then inside `tmux`: `dev/setup.sh` (installs brew deps, assembles `~/argon-tree` from the
   latest Helium tag plus Argon's patches, `he setup`, first `he build`; hours).
 - Loop, in `~/argon-tree` after `source dev.sh`: `cd build/src && quilt new argon/ui/<name>.patch`, `quilt add`
-  files, edit, `he build && he run`, `quilt refresh`. Patch names must start with `argon/`.
+  files, edit, `he build && he run`, `quilt refresh`. Patch names must start with `argon/`. New files of Argon's own
+  go in `argon/src.patch` instead (`quilt pop` to it, `quilt add`, `quilt refresh`, `quilt push -a`).
 - Seeing the UI: enable Screen Sharing on the instance and connect over an SSH tunnel (port 5900).
 - Saving work: `he unmerge`, then `dev/pull-patches.sh` copies `patches/argon/` and the series back into this
-  repo; commit from here. Stop before releasing the host and check nothing is left only on the instance.
+  repo and unpacks `argon/src.patch` into `src/`; commit from here. Stop before releasing the host and check nothing is left only on the instance.
 
 ## Arc features
 
@@ -159,19 +160,27 @@ window stays open.
 
 ## Interface
 
-Native Views in `chrome/browser/ui/views/argon/`, one patch per piece, written against Chromium 158 without a
-checkout (uncompiled until the first EC2 session).
+Native Views, aimed at the Customize design: a layout is zones of modules plus settings, and each zone draws its
+modules in order. Argon's own code is plain files in `src/` (laid out like the Chromium tree); `ci/assemble.sh`
+turns them into `argon/src.patch` (`ci/src-patch.sh`), applied before Argon's other patches. Those other patches
+are only hooks into Chromium's files, kept small and one per area, since they're what breaks on a Chromium update.
+Compiled only by CI so far.
 
-- [ ] Sidebar (`argon/ui/sidebar.patch`, in `patches/series`): `ArgonSidebarView`, the Quiet sidebar's space
-      name, kept tabs, divider, loose tabs with a close button on hover, "+ New" and "Clear". It replaces the tab
-      list and new tab button inside upstream's `VerticalTabStripRegionView`, which keeps width, collapse, resize and
-      the window controls. Until Spaces and pins: the space is the focused group ("Home" if none), kept tabs are
-      Chromium-pinned tabs. Applies with `--fuzz=0` on the stripped Helium 0.22.2 series. On the Mac: `gn check`,
-      check it in the collapsed state.
-- [x] Vertical tabs on by default (`argon/ui/vertical-tabs-default.patch`: the `kVerticalTabsEnabled` pref default;
-      stock Chromium starts horizontal, and the sidebar only exists in vertical mode). Only affects profiles that
-      never set it.
-- [ ] Paper palette and Allo (color mixer for frame/sidebar/page tones, bundled font)
+- [x] Sidebar zone (`src/chrome/browser/ui/views/argon/`): `ArgonSidebarView` draws `kQuietSidebar`
+      (`argon_layout.h`: space name, divider, kept tabs, divider, loose tabs, "+ New" with "Clear"); collapsed, rows
+      show favicons only. Colors are `ArgonPalette` tokens derived from the frame color. Hook:
+      `argon/ui/sidebar.patch` puts it in place of the tab list inside upstream's `VerticalTabStripRegionView`,
+      which keeps width, collapse, resize and the window controls. Until Spaces and pins: the space is the focused
+      group ("Home" if none), kept tabs are Chromium-pinned tabs.
+- [x] Tab strip defaults (`argon/ui/tab-strip-defaults.patch`): vertical tabs on (the sidebar only exists in
+      vertical mode), and the tab-search and tab-groups buttons unpinned from the sidebar header (they can be
+      pinned back from their context menus). Only affects profiles that never set them.
+- [x] Paper and Dark tones (`src/chrome/browser/ui/color/argon_color_mixer.cc`, hook `argon/ui/colors.patch`):
+      frame `#f3f1ed` / `#1c1b19`, toolbar in the page color, so toolbar and page read as one card. Skipped under a
+      custom theme or high contrast.
+- [ ] Page card: 8px frame gap around the page and 10px corners (BrowserView layout)
+- [ ] Allo font (bundled, registered at startup; `ss01`/`tnum` and `ROND` need more than `gfx::FontList`)
+- [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
 - [ ] Edge-pill space switcher (after Spaces stage 1)
 - [ ] Archive timers on loose tabs (with auto-archive, stage 5)
 - [ ] Command bar, then Ticks layout and Customize

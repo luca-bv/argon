@@ -1,0 +1,40 @@
+# Copyright 2026 The Argon Authors
+# Licensed under the GNU General Public License v3.0; see Argon's LICENSE file.
+
+# Argon's own browser interface. Headers here, implementations in :impl (linked
+# by //chrome/browser), like //chrome/browser/ui/views/tabs/vertical.
+source_set("argon") {
+  public = [
+    "argon_layout.h",
+    "argon_palette.h",
+    "argon_sidebar_view.h",
+  ]
+  sources = [ "argon_palette.cc" ]
+  public_deps = [
+    "//base",
+    "//chrome/browser/ui/tabs:tab_strip",
+    "//skia",
+    "//ui/base/metadata",
+    "//ui/views",
+  ]
+  deps = [ "//ui/gfx:color_utils" ]
+}
+
+source_set("impl") {
+  sources = [ "argon_sidebar_view.cc" ]
+  deps = [
+    ":argon",
+    "//chrome/app:command_ids",
+    "//chrome/browser/ui:browser_commands",
+    "//chrome/browser/ui:tab_ui_helper",
+    "//chrome/browser/ui/browser_window",
+    "//chrome/browser/ui/tabs",
+    "//chrome/browser/ui/tabs:tab_enums",
+    "//chrome/browser/ui/tabs:tab_group",
+    "//components/tab_groups",
+    "//components/tabs:public",
+    "//components/vector_icons",
+    "//ui/color",
+    "//ui/gfx",
+  ]
+}
