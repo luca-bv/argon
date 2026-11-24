@@ -6,7 +6,7 @@
 
 namespace ui {
 class ColorProvider;
-class ColorProviderKey;
+struct ColorProviderKey;
 }  // namespace ui
 
 // Argon's window tones (design_handoff_argon_browser/README.md, "Design
