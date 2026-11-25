@@ -1,0 +1,41 @@
+--- a/chrome/browser/ui/ui_features.cc
++++ b/chrome/browser/ui/ui_features.cc
+@@ -555,9 +555,13 @@
+ BASE_FEATURE(kAiOverlayDisableNavigationContext,
+              base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+-BASE_FEATURE(kTabGroupsFocusing, base::FEATURE_DISABLED_BY_DEFAULT);
++// Argon: spaces are focused tab groups (chrome/browser/ui/views/argon/
++// argon_spaces.h).
++BASE_FEATURE(kTabGroupsFocusing, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+-BASE_FEATURE_PARAM(bool, kTabGroupsFocusFreezing, &kTabGroupsFocusing, true);
++// Argon: off until tested with spaces; the live-tab budget already unloads
++// background tabs.
++BASE_FEATURE_PARAM(bool, kTabGroupsFocusFreezing, &kTabGroupsFocusing, false);
+ 
+ BASE_FEATURE_PARAM(int, kTabGroupsFocusingIphMinTabs, &kTabGroupsFocusing, 10);
+ 
+--- a/chrome/browser/ui/tabs/tab_strip_model.cc
++++ b/chrome/browser/ui/tabs/tab_strip_model.cc
+@@ -2404,18 +2404,8 @@
+   NotifyTabGroupFocusChanged(old_focused_group);
+ 
+   const bool is_ephemeral = IsEphemeralTabGroup(old_focused_group.value());
+-  if (reason == TabGroupFocusExitReason::kTabOutsideGroupActivated) {
+-    if (ToastController* const toast_controller =
+-            ToastController::From(delegate_->GetBrowserWindowInterface())) {
+-      ToastParams params(ToastId::kTabGroupFocusExited);
+-      if (is_ephemeral) {
+-        params.body_string_override = l10n_util::GetPluralStringFUTF16(
+-            IDS_NON_GROUP_FOCUS_EXITED_TOAST_BODY,
+-            group_model_->GetTabGroup(old_focused_group.value())->tab_count());
+-      }
+-      toast_controller->MaybeShowToast(std::move(params));
+-    }
+-  }
++  // Argon: no "focus exited" toast; ArgonSpaces switches to the activated
++  // tab's space instead (chrome/browser/ui/views/argon/argon_spaces.h).
+ 
+   if (!closing_all_ && is_ephemeral) {
+     if (const gfx::Range tabs =

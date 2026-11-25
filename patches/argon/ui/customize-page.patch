@@ -1,0 +1,28 @@
+--- a/chrome/browser/ui/webui/BUILD.gn
++++ b/chrome/browser/ui/webui/BUILD.gn
+@@ -51,6 +51,7 @@
+     "//chrome/browser/browser_actuator/internals",
+     "//chrome/browser/contextual_tasks:ui",
+     "//chrome/browser/glic",
++    "//chrome/browser/ui/views/argon:customize_ui",
+     "//chrome/browser/ui/webui/about",
+     "//chrome/browser/ui/webui/accessibility",
+     "//chrome/browser/ui/webui/actor_internals",
+--- a/chrome/browser/ui/webui/chrome_web_ui_configs.cc
++++ b/chrome/browser/ui/webui/chrome_web_ui_configs.cc
+@@ -12,6 +12,7 @@
+ #include "chrome/browser/glic/experimental_opt_in/glic_experimental_opt_in_ui.h"
+ #include "chrome/browser/glic/host/glic_ui.h"
+ #include "chrome/browser/optimization_guide/optimization_guide_internals_ui.h"
++#include "chrome/browser/ui/views/argon/argon_customize_ui.h"
+ #include "chrome/browser/ui/webui/about/about_ui.h"
+ #include "chrome/browser/ui/webui/accessibility/accessibility_ui.h"
+ #include "chrome/browser/ui/webui/actor_internals/actor_internals_ui.h"
+@@ -314,6 +315,7 @@
+   map.AddWebUIConfig(std::make_unique<PasswordManagerInternalsUIConfig>());
+   map.AddWebUIConfig(std::make_unique<PolicyUIConfig>());
+   map.AddWebUIConfig(std::make_unique<PredictorsUIConfig>());
++  map.AddWebUIConfig(std::make_unique<argon::CustomizeUIConfig>());
+   map.AddWebUIConfig(
+       std::make_unique<private_ai::PrivateAiInternalsUIConfig>());
+   map.AddWebUIConfig(
