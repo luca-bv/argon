@@ -60,6 +60,9 @@ class ArgonWindowSet : public BrowserCollectionObserver {
   base::CallbackListSubscription Subscribe(ChangedCallback callback);
   void NotifyChanged(BrowserWindowInterface* browser);
 
+  // Hides a member (it stays open, recorded as hidden by the set).
+  void Hide(BrowserWindowInterface* browser);
+
   // Each window's ArgonSpaces registers itself.
   void Register(BrowserWindowInterface* browser, ArgonSpaces* spaces);
   void Unregister(BrowserWindowInterface* browser);
@@ -79,7 +82,6 @@ class ArgonWindowSet : public BrowserCollectionObserver {
   bool IsMember(BrowserWindowInterface* browser);
   // Keeps one member on screen: `shown`, at the frame of the member it hides.
   void HideOtherMembers(SessionID shown);
-  void Hide(BrowserWindowInterface* browser);
   void CloseWindows(std::vector<SessionID> ids);
 
   std::map<BrowserWindowInterface*, raw_ptr<ArgonSpaces>> spaces_;

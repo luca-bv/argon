@@ -31,6 +31,7 @@
 #include "chrome/browser/ui/views/argon/argon_layout.h"
 #include "chrome/browser/ui/views/argon/argon_pins.h"
 #include "chrome/browser/ui/views/argon/argon_space_menu.h"
+#include "chrome/browser/ui/views/argon/argon_tab_menu.h"
 #include "chrome/browser/ui/views/argon/argon_toast.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/sessions/core/tab_restore_service.h"
@@ -463,6 +464,7 @@ void ArgonSidebarView::Rebuild() {
   forward_ = nullptr;
   address_ = nullptr;
   space_buttons_.clear();
+  tab_rows_.clear();
   contents_->RemoveAllChildViews();
 
   bool any_loose = false;
@@ -593,9 +595,12 @@ bool ArgonSidebarView::AddTabRows(views::View* parent, RowKind kind) {
       close = base::BindRepeating(&ArgonSidebarView::Close,
                                   weak_factory_.GetWeakPtr(), weak_tab);
     }
-    parent->AddChildView(std::make_unique<ArgonTabRow>(
+    auto* row = parent->AddChildView(std::make_unique<ArgonTabRow>(
         tab, i == model_->active_index(), compact_, palette_, std::move(open),
         std::move(close)));
+    // Right-click: pin, unpin, Favorites, close (argon_tab_menu.h).
+    row->set_context_menu_controller(this);
+    tab_rows_.emplace(row, weak_tab);
     added = true;
   }
   return added;
@@ -743,6 +748,8 @@ void ArgonSidebarView::ShowContextMenuForViewImpl(
     ui::mojom::MenuSourceType source_type) {
   if (const auto it = space_buttons_.find(source); it != space_buttons_.end()) {
     ShowArgonSpaceMenu(source, it->second, point, source_type);
+  } else if (const auto row = tab_rows_.find(source); row != tab_rows_.end()) {
+    ShowArgonTabMenu(source, browser_, row->second, point, source_type);
   }
 }
 

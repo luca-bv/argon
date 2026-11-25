@@ -135,6 +135,8 @@ class ArgonSidebarView : public views::View,
   base::CallbackListSubscription window_set_subscription_;
   // The space each space button stands for, for its menu.
   std::map<views::View*, ArgonWindowSet::Space> space_buttons_;
+  // The tab each tab row stands for, for its menu.
+  std::map<views::View*, base::WeakPtr<tabs::TabInterface>> tab_rows_;
   bool rebuild_pending_ = false;
   base::WeakPtrFactory<ArgonSidebarView> weak_factory_{this};
 };

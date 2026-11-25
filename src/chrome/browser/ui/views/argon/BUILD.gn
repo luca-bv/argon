@@ -5,6 +5,7 @@
 # by //chrome/browser), like //chrome/browser/ui/views/tabs/vertical.
 source_set("argon") {
   public = [
+    "argon_arc_import.h",
     "argon_command_bar.h",
     "argon_features.h",
     "argon_layout.h",
@@ -13,6 +14,7 @@ source_set("argon") {
     "argon_sidebar_view.h",
     "argon_space_menu.h",
     "argon_spaces.h",
+    "argon_tab_menu.h",
     "argon_toast.h",
     "argon_window_set.h",
   ]
@@ -37,6 +39,7 @@ source_set("argon") {
 
 source_set("impl") {
   sources = [
+    "argon_arc_import.cc",
     "argon_command_bar.cc",
     "argon_font.cc",
     "argon_font.h",
@@ -44,6 +47,7 @@ source_set("impl") {
     "argon_sidebar_view.cc",
     "argon_space_menu.cc",
     "argon_spaces.cc",
+    "argon_tab_menu.cc",
     "argon_toast.cc",
     "argon_window_set.cc",
   ]
@@ -58,6 +62,7 @@ source_set("impl") {
     "//chrome/browser/profiles",
     "//chrome/browser/profiles:profile",
     "//chrome/browser/profiles:profile_util",
+    "//chrome/browser/ui:browser_tabrestore",
     "//chrome/browser/ui:browser_tabstrip",
     "//components/prefs",
     "//chrome/browser/sessions",

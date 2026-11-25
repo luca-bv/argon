@@ -148,8 +148,9 @@ Stages, one patch each:
         a pin back to its URL, or hands activation to the space's last used tab. Pins come first in their group
         (`Enforce`), get their own sidebar section (`kSpacePins`), never archive, are skipped by Clear, and move
         with their space between profiles. ⌘D (taken from Bookmark This Tab) and the command bar pin/unpin.
-      - [ ] Step 2: row menu (pin, unpin, reset, use current URL, add to Favorites).
-      - [ ] Step 3: the Arc import.
+      - [x] Step 2 (`argon_tab_menu.*`): right-click a tab row: pin in this space / unpin, go back to the pinned
+        page, pin this page instead, add to or remove from Favorites, close.
+      - [x] Step 3 (`argon_arc_import.*`, command bar "Import from Arc"): see "Arc import" below.
 - [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`).
       Done so far: a space's accent is its group's color (set in the group editor); the current space's button is
       filled with it, the others drawn in it.
@@ -173,11 +174,14 @@ Stages, one patch each:
 - [x] 5. Auto-archive: `ArgonSpaces` checks every minute and closes unpinned, inactive, silent tabs unused for 12 h
       (`kArchiveAfter`, from `WebContents::GetLastActiveTime`); they land in Recently Closed/History. Not yet: the
       12 h / 24 h / 7 d / never setting, an Archive list.
-- [ ] Arc import that keeps spaces and pinned tabs, in the browser process (command bar "Import from Arc"; reads
+- [x] Arc import that keeps spaces and pinned tabs, in the browser process (command bar "Import from Arc"; reads
       `~/Library/Application Support/Arc/StorableSidebar.json`, format as in Helium's `add-arc-importer.patch`).
       Decided (2026-11-25), copying Arc throughout profiles and spaces: each Arc profile maps to an Argon profile
       of the same name (created or reused) holding its spaces and Favorites; pinned folders are flattened into the
       space's pins; closing a pin works as in Arc (back to its URL, then away); ⌘D pins/unpins in the space.
+      Built: read and parsed on the thread pool; Arc profile names from Arc's `User Data/Local State`; tabs added
+      unloaded (Helium's `chrome::AddDeferredTab`); space colors mapped to the nearest group color; spaces whose name
+      exists are skipped. Not imported: logins, history, folder names, Little Arc/Peek state.
 - [ ] Command bar, Peek, Little Arc
 
 First thing on the EC2 Mac, before any code: run the first Argon build (stock Chromium interface) with

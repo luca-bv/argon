@@ -29,6 +29,7 @@
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
+#include "chrome/browser/ui/views/argon/argon_arc_import.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
 #include "chrome/browser/ui/views/argon/argon_pins.h"
@@ -325,6 +326,11 @@ class CommandBarView : public views::View, public views::TextfieldController {
     // Commands on the current space.
     if (model_->SupportsTabGroups() &&
         base::FeatureList::IsEnabled(features::kTabGroupsFocusing)) {
+      if (matches(u"import from arc")) {
+        results_.push_back(CommandResult{
+            u"Import from Arc", u"Command",
+            base::BindRepeating(&ImportFromArc, base::Unretained(browser_.get()))});
+      }
       if (matches(u"new space")) {
         results_.push_back(CommandResult{
             u"New space", u"Command",
