@@ -1,72 +1,84 @@
 --- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
 +++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
-@@ -291,8 +291,12 @@
+@@ -291,7 +291,9 @@
      case WindowState::kNormal:
      case WindowState::kMaximized: {
        // In content-height mode, split view outline serves as shadow box.
-+      // Argon: with vertical tabs the page is always a card on the frame.
++      // Argon: with vertical tabs the page card (below) takes the overlay.
        info.shadow_box =
--          has_side_panel && (has_infobar || !is_split_view || !is_force_to_top);
-+          (has_side_panel &&
-+           (has_infobar || !is_split_view || !is_force_to_top)) ||
-+          (layout_data_->tab_strip_type == TabStripType::kVertical &&
-+           !is_split_view);
++          layout_data_->tab_strip_type != TabStripType::kVertical &&
+           has_side_panel && (has_infobar || !is_split_view || !is_force_to_top);
        const bool suppress_separator = info.shadow_box && is_force_to_top;
        info.multi_contents_separator = !suppress_separator && !has_infobar;
-       info.top_container_separator = !suppress_separator && has_infobar;
-@@ -1092,7 +1096,11 @@
-     } else {
-       main_background_bounds = params.visual_client_area;
-     }
--    const bool main_background_visibility = horizontal_layout.has_side_panel();
-+    // Argon: the frame shows around the page card, so no toolbar-colored
-+    // background behind it.
-+    const bool main_background_visibility =
-+        horizontal_layout.has_side_panel() &&
-+        layout_data_->tab_strip_type != TabStripType::kVertical;
-     main_background_layout =
-         &layout.AddChild(views().main_background_region, main_background_bounds,
-                          main_background_visibility);
-@@ -1160,16 +1168,27 @@
-   if (layout_data_->separator_info.shadow_box) {
-     // As the side panel animates in, the main panel shrinks and moves over to
-     // accommodate the panel.
--    const int scaled_main_area_padding = base::ClampRound(
--        side_panel_reveal_amount * horizontal_layout.side_panel_padding);
-+    // Argon: without a side panel, the page card keeps a fixed gap from the
-+    // frame, except on the sidebar's side.
+@@ -997,6 +999,21 @@
+         in_glass_mode() && features::kGlassExpandOnHoverEnabled.Get() &&
+             layout_data_->vertical_tab_strip_animation.expand_on_hover_width >
+                 0.0f);
++  }
++
++  // Argon: the page (toolbar, infobars, contents, side panel) is a card on the
++  // frame, 8px from it except on the sidebar's side.
++  const bool argon_card =
++      layout_data_->tab_strip_type == TabStripType::kVertical &&
++      !is_fullscreen(layout_data_->window_state);
++  gfx::Rect argon_card_bounds;
++  if (argon_card) {
 +    constexpr int kArgonPageGap = 8;
-+    const bool argon_card =
-+        layout_data_->tab_strip_type == TabStripType::kVertical;
-+    const int scaled_main_area_padding =
-+        argon_card && !horizontal_layout.has_side_panel()
-+            ? kArgonPageGap
-+            : base::ClampRound(side_panel_reveal_amount *
-+                               horizontal_layout.side_panel_padding);
-     const int scaled_top_padding =
-         layout_data_->separator_info.side_panel_top_padding
-             ? scaled_main_area_padding
-             : views::Separator::kThickness;
-     shadow_overlay_insets = gfx::Insets::TLBR(
--        scaled_top_padding, side_panel_leading ? 0 : scaled_main_area_padding,
-+        scaled_top_padding,
-+        side_panel_leading || argon_card ? 0 : scaled_main_area_padding,
-         scaled_main_area_padding,
--        side_panel_leading ? scaled_main_area_padding : 0);
-+        side_panel_leading || (argon_card && !horizontal_layout.has_side_panel())
-+            ? scaled_main_area_padding
-+            : 0);
-     params.Inset(shadow_overlay_insets);
-     if (!side_panel_is_animating) {
-       unclipped_contents_region.Inset(shadow_overlay_insets);
++    params.Inset(gfx::Insets::TLBR(kArgonPageGap, 0, kArgonPageGap,
++                                   kArgonPageGap));
++    unclipped_contents_region.Inset(
++        gfx::Insets::TLBR(0, 0, 0, kArgonPageGap));
++    argon_card_bounds = params.visual_client_area;
+   }
+ 
+   // Position the vertical tabstrip top corner.
+@@ -1006,7 +1023,7 @@
+     const double top_corner = layout_data_->vertical_tabs_top_corner();
+     const bool top_corner_visible =
+         layout_data_->tab_strip_type == TabStripType::kVertical &&
+-        top_corner > 0.0;
++        top_corner > 0.0 && !argon_card;
+ 
+     // The top corner is drawn when the tabstrip goes all the way to the top.
+     if (top_corner_visible) {
+@@ -1029,7 +1046,7 @@
+     const double bottom_corner = layout_data_->vertical_tabs_bottom_corner();
+     const bool bottom_corner_visible =
+         layout_data_->tab_strip_type == TabStripType::kVertical &&
+-        bottom_corner > 0.0;
++        bottom_corner > 0.0 && !argon_card;
+     if (bottom_corner_visible) {
+       auto preferred =
+           views().vertical_tab_strip_bottom_corner->GetPreferredSize();
+@@ -1065,7 +1082,7 @@
+     // Possibly bump the leading margin of the top container out to cover the
+     // caption buttons, leaving all of the child views in the same absolute
+     // position.
+-    if (collapsed_vertical_tab_strip_adjustment > 0) {
++    if (collapsed_vertical_tab_strip_adjustment > 0 && !argon_card) {
+       top_container_layout.bounds.Outset(
+           gfx::Outsets::TLBR(0, collapsed_vertical_tab_strip_adjustment, 0, 0));
+       for (auto& [child, child_layout] : top_container_layout.children) {
+@@ -1177,8 +1194,9 @@
+   }
+ 
+   // Lay out the shadow overlay.
+-  layout.AddChild(views().main_shadow_overlay, params.visual_client_area,
+-                  layout_data_->separator_info.shadow_box);
++  layout.AddChild(views().main_shadow_overlay,
++                  argon_card ? argon_card_bounds : params.visual_client_area,
++                  argon_card || layout_data_->separator_info.shadow_box);
+ 
+   // Lay out top container. The top container is laid out after the
+   // toolbar-height side panel with a horizontal tabstrip if the browser is wide
 --- a/chrome/browser/ui/views/frame/shadow_overlay_view.cc
 +++ b/chrome/browser/ui/views/frame/shadow_overlay_view.cc
 @@ -48,8 +48,10 @@
    static constexpr float kCornerSubpixelOverpaint = 0.5f;
  
    CornerView(Corner corner, BrowserView& browser_view) : corner_(corner) {
-+    // Argon: the corners sit on the frame (vertical tabs never show the
-+    // toolbar-colored main background; see browser_view_tabbed_layout_impl.cc).
++    // Argon: the corners sit on the frame around the page card
++    // (browser_view_tabbed_layout_impl.cc).
      SetBackground(std::make_unique<ThemedBackground>(
 -        &browser_view, ThemedBackground::ThemeChoice::kToolbarTheme));
 +        &browser_view, ThemedBackground::ThemeChoice::kFrameTheme));

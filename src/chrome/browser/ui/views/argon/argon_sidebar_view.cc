@@ -3,6 +3,7 @@
 
 #include "chrome/browser/ui/views/argon/argon_sidebar_view.h"
 
+#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -33,6 +34,7 @@
 #include "ui/views/background.h"
 #include "ui/views/border.h"
 #include "ui/views/controls/button/button.h"
+#include "ui/views/controls/button/button_controller.h"
 #include "ui/views/controls/button/image_button.h"
 #include "ui/views/controls/button/image_button_factory.h"
 #include "ui/views/controls/button/label_button.h"
@@ -42,6 +44,7 @@
 #include "ui/views/layout/box_layout.h"
 #include "ui/views/layout/box_layout_view.h"
 #include "ui/views/layout/fill_layout.h"
+#include "ui/views/view_utils.h"
 
 namespace {
 
@@ -55,8 +58,9 @@ constexpr int kIconTitleGap = 9;
 constexpr int kFaviconSize = 16;
 constexpr int kCloseSize = 24;
 constexpr int kCloseIconSize = 10;
-// Narrower than this (the collapsed strip), rows show only their favicon.
-constexpr int kCompactWidth = 120;
+// Narrower than this (the collapsed strip, ~32px; the narrowest expanded one is
+// ~100px), rows show only their favicon.
+constexpr int kCompactWidth = 64;
 
 // ponytail: fixed until Spaces (stage 1) names spaces; then the space's name.
 constexpr char16_t kDefaultSpaceName[] = u"Home";
@@ -77,17 +81,23 @@ class ArgonTabRow : public views::Button {
               const ArgonPalette& palette,
               PressedCallback open,
               PressedCallback close)
-      : views::Button(std::move(open)), active_(active), palette_(palette) {
+      : views::Button(std::move(open)),
+        tab_(tab->GetWeakPtr()),
+        active_(active),
+        compact_(compact),
+        palette_(palette) {
     SetNotifyEnterExitOnChild(true);
-    const std::u16string title = TabUIHelper::From(tab)->GetTitle();
-    GetViewAccessibility().SetName(title);
-    if (compact) {
-      SetTooltipText(title);
-    }
+    // Like real tabs: activate on press, so a click still lands when the row
+    // is rebuilt before the mouse comes up.
+    button_controller()->set_notify_action(
+        views::ButtonController::NotifyAction::kOnPress);
 
+    // Compact rows are barely wider than the favicon, so they center it with
+    // no padding.
     auto* layout = SetLayoutManager(std::make_unique<views::BoxLayout>(
         views::BoxLayout::Orientation::kHorizontal,
-        gfx::Insets::TLBR(0, kRowPadding, 0, close && !compact ? 3 : kRowPadding),
+        compact ? gfx::Insets()
+                : gfx::Insets::TLBR(0, kRowPadding, 0, close ? 3 : kRowPadding),
         kIconTitleGap));
     layout->set_cross_axis_alignment(
         views::BoxLayout::CrossAxisAlignment::kCenter);
@@ -96,15 +106,15 @@ class ArgonTabRow : public views::Button {
                 : views::BoxLayout::MainAxisAlignment::kStart);
     layout->set_minimum_cross_axis_size(kRowHeight);
 
-    auto* icon = AddChildView(std::make_unique<views::ImageView>());
-    icon->SetImage(TabUIHelper::From(tab)->GetFavicon());
-    icon->SetImageSize(gfx::Size(kFaviconSize, kFaviconSize));
+    icon_ = AddChildView(std::make_unique<views::ImageView>());
+    icon_->SetImageSize(gfx::Size(kFaviconSize, kFaviconSize));
     if (compact) {
+      UpdateFromTab();
       UpdateLook();
       return;
     }
 
-    title_ = AddChildView(std::make_unique<views::Label>(title));
+    title_ = AddChildView(std::make_unique<views::Label>());
     title_->SetHorizontalAlignment(gfx::ALIGN_LEFT);
     title_->SetElideBehavior(gfx::ELIDE_TAIL);
     title_->SetAutoColorReadabilityEnabled(false);
@@ -120,11 +130,31 @@ class ArgonTabRow : public views::Button {
       close_->SetPreferredSize(gfx::Size(kCloseSize, kCloseSize));
       close_->GetViewAccessibility().SetName(u"Close tab");
     }
+    UpdateFromTab();
     UpdateLook();
   }
   ArgonTabRow(const ArgonTabRow&) = delete;
   ArgonTabRow& operator=(const ArgonTabRow&) = delete;
   ~ArgonTabRow() override = default;
+
+  const tabs::TabInterface* tab() const { return tab_.get(); }
+
+  // Title and favicon, which change while a page loads.
+  void UpdateFromTab() {
+    if (!tab_) {
+      return;
+    }
+    TabUIHelper* helper = TabUIHelper::From(tab_.get());
+    const std::u16string title = helper->GetTitle();
+    GetViewAccessibility().SetName(title);
+    if (compact_) {
+      SetTooltipText(title);
+    }
+    if (title_) {
+      title_->SetText(title);
+    }
+    icon_->SetImage(helper->GetFavicon());
+  }
 
  protected:
   void StateChanged(ButtonState old_state) override {
@@ -151,8 +181,11 @@ class ArgonTabRow : public views::Button {
     }
   }
 
+  const base::WeakPtr<tabs::TabInterface> tab_;
   const bool active_;
+  const bool compact_;
   const ArgonPalette palette_;
+  raw_ptr<views::ImageView> icon_ = nullptr;
   raw_ptr<views::Label> title_ = nullptr;
   raw_ptr<views::ImageButton> close_ = nullptr;
 };
@@ -209,6 +242,9 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
   scroll->SetHorizontalScrollBarMode(views::ScrollView::ScrollBarMode::kDisabled);
   scroll->SetBackgroundColor(std::nullopt);
   scroll->SetDrawOverflowIndicator(false);
+  // Bounded, so the contents get the viewport's width and their own height,
+  // and scroll once the tabs outgrow the window.
+  scroll->ClipHeightTo(0, std::numeric_limits<int>::max());
 
   auto* contents =
       scroll->SetContents(std::make_unique<views::BoxLayoutView>());
@@ -248,9 +284,19 @@ void ArgonSidebarView::OnTabStripModelChanged(
   ScheduleRebuild();
 }
 
+// Fires over and over while pages load: update that tab's row in place, so
+// rows under the pointer aren't torn down mid-click.
 void ArgonSidebarView::OnTabChangedAt(tabs::TabInterface* tab,
                                       TabChangeType change_type) {
-  ScheduleRebuild();
+  for (views::View* list : contents_->children()) {
+    for (views::View* child : list->children()) {
+      if (auto* row = views::AsViewClass<ArgonTabRow>(child);
+          row && row->tab() == tab) {
+        row->UpdateFromTab();
+        return;
+      }
+    }
+  }
 }
 
 void ArgonSidebarView::OnTabPinnedStateChanged(tabs::TabInterface* tab,
@@ -287,8 +333,9 @@ void ArgonSidebarView::ScheduleRebuild() {
                                 weak_factory_.GetWeakPtr()));
 }
 
-// ponytail: rebuilds every module on any change; diff rows if long tab lists
-// make this show up in profiles.
+// ponytail: rebuilds every module on structural changes (tabs added, closed,
+// moved, pinned, grouped, activated); diff rows if long tab lists make this
+// show up in profiles.
 void ArgonSidebarView::Rebuild() {
   rebuild_pending_ = false;
   contents_->RemoveAllChildViews();
@@ -360,10 +407,12 @@ void ArgonSidebarView::Rebuild() {
 
 bool ArgonSidebarView::InSpace(int index) const {
   // Focus mode hides the other groups' tabs; so does the sidebar. Kept tabs
-  // show in every space.
+  // show in every space, and the active tab always shows, so it can't end up
+  // unreachable outside the space.
   const std::optional<tab_groups::TabGroupId> focused =
       model_->GetFocusedGroup();
   return model_->IsTabPinned(index) || !focused ||
+         index == model_->active_index() ||
          model_->GetTabGroupForTab(index) == focused;
 }
 
