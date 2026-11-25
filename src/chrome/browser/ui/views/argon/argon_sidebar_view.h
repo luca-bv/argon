@@ -9,6 +9,7 @@
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
+#include "base/timer/timer.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
@@ -66,6 +67,8 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   // synchronously), and bursts of changes during page loads coalesce.
   void ScheduleRebuild();
   void Rebuild();
+  // Updates every tab row in place (titles, favicons, archive timers).
+  void RefreshRows();
 
   // Whether the tab at `index` is shown in the current space.
   bool InSpace(int index) const;
@@ -88,6 +91,7 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   ArgonPalette palette_;
   bool compact_ = false;
 
+  base::RepeatingTimer refresh_timer_;
   bool rebuild_pending_ = false;
   base::WeakPtrFactory<ArgonSidebarView> weak_factory_{this};
 };

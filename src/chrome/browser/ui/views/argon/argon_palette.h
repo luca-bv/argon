@@ -21,6 +21,7 @@ struct ArgonPalette {
   SkColor line;       // Dividers.
   SkColor hover;      // Row background under the pointer.
   SkColor active;     // The active tab's row.
+  SkColor warning;    // Archive timers with less than two hours left.
 };
 
 #endif  // CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_PALETTE_H_

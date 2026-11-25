@@ -11,6 +11,8 @@
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
+#include "base/time/time.h"
+#include "base/timer/timer.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "components/tab_groups/tab_group_id.h"
 
@@ -28,8 +30,20 @@ class TabInterface;
 // group, closing a group, new tabs, ...); each exit is turned into a switch to
 // the active tab's space, or back to the last one, instead of patching the
 // exits one by one. Pinned tabs show in every space.
+//
+// It also archives loose tabs: one left unused for kArchiveAfter is closed,
+// and stays reopenable from History and ⌘⇧T.
 class ArgonSpaces : public TabStripModelObserver {
  public:
+  // ponytail: fixed until settings exist (12 h / 24 h / 7 d / never).
+  static constexpr base::TimeDelta kArchiveAfter = base::Hours(12);
+
+  // Time left before `tab` is archived, or nullopt if it isn't archived:
+  // pinned, active, on screen, playing sound, being captured, holding unsaved
+  // input, or the last tab of its space (a space dies with its last tab).
+  static std::optional<base::TimeDelta> TimeUntilArchive(
+      const tabs::TabInterface* tab);
+
   explicit ArgonSpaces(BrowserWindowInterface* browser);
   ArgonSpaces(const ArgonSpaces&) = delete;
   ArgonSpaces& operator=(const ArgonSpaces&) = delete;
@@ -63,6 +77,7 @@ class ArgonSpaces : public TabStripModelObserver {
   void Enforce();
   tab_groups::TabGroupId NewSpace(const std::vector<int>& indices,
                                   std::u16string name);
+  void ArchiveIdleTabs();
 
   const raw_ptr<BrowserWindowInterface> browser_;
   const raw_ptr<TabStripModel> model_;
@@ -73,6 +88,7 @@ class ArgonSpaces : public TabStripModelObserver {
   std::map<tab_groups::TabGroupId, base::WeakPtr<tabs::TabInterface>>
       last_active_;
 
+  base::RepeatingTimer archive_timer_;
   bool enforce_pending_ = false;
   base::WeakPtrFactory<ArgonSpaces> weak_factory_{this};
 };

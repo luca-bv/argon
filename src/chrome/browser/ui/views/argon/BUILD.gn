@@ -5,6 +5,7 @@
 # by //chrome/browser), like //chrome/browser/ui/views/tabs/vertical.
 source_set("argon") {
   public = [
+    "argon_command_bar.h",
     "argon_layout.h",
     "argon_palette.h",
     "argon_sidebar_view.h",
@@ -24,6 +25,7 @@ source_set("argon") {
 
 source_set("impl") {
   sources = [
+    "argon_command_bar.cc",
     "argon_font.cc",
     "argon_font.h",
     "argon_sidebar_view.cc",
@@ -33,19 +35,28 @@ source_set("impl") {
   deps = [
     ":allo_font",
     ":argon",
+    "//base:i18n",
     "//chrome/app:command_ids",
+    "//chrome/browser/autocomplete",
     "//chrome/browser/ui:browser_commands",
     "//chrome/browser/ui:tab_ui_helper",
     "//chrome/browser/ui/browser_window",
+    "//chrome/browser/ui/navigator",
     "//chrome/browser/ui/tabs",
     "//chrome/browser/ui/tabs:tab_enums",
     "//chrome/browser/ui/tabs:tab_group",
     "//chrome/browser/ui:ui_features",
+    "//components/omnibox/browser",
     "//components/tab_groups",
     "//components/tabs:public",
     "//components/vector_icons",
+    "//content/public/browser",
+    "//third_party/metrics_proto",
+    "//ui/base",
     "//ui/color",
+    "//ui/events",
     "//ui/gfx",
+    "//url",
   ]
 }
 

@@ -138,12 +138,15 @@ Stages, one patch each:
       turns on `kTabGroupsFocusing` and drops the "focus exited" toast. Switcher: a row of first-letter
       buttons and "+" at the bottom of the sidebar (`ArgonModule::kSpaces`), hidden while collapsed. Not yet:
       ⌃1–9, renaming from Argon's UI (the group editor works), spaces in horizontal-tabs mode.
-- [ ] 2. Pins (`argon_pin_url`, sorted to the top of the group with a divider)
+- [ ] 2. Pins: Helium's `helium/core/pins/*` already gives Chromium-pinned tabs Arc's pin behavior (pinned URL,
+      hibernate instead of close, synced across windows, other-origin links open outside), and the sidebar shows them
+      in every space. Per-space pins (`argon_pin_url`) only if global pins aren't enough.
 - [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`)
 - [ ] 4. Profile per space: a profile-bound space lives in that profile's window; switching swaps windows at the
       same frame. Expect a visible swap.
-- [ ] 5. Auto-archive: a timer in the controller closes unpinned, non-pin, inactive, silent tabs idle for N hours;
-      they land in Recently Closed/History.
+- [x] 5. Auto-archive: `ArgonSpaces` checks every minute and closes unpinned, inactive, silent tabs unused for 12 h
+      (`kArchiveAfter`, from `WebContents::GetLastActiveTime`); they land in Recently Closed/History. Not yet: the
+      12 h / 24 h / 7 d / never setting, an Archive list.
 - [ ] Arc import that keeps spaces and pinned tabs (extend Helium's `add-arc-importer.patch`)
 - [ ] Command bar, Peek, Little Arc
 
@@ -191,8 +194,14 @@ Compiled only by CI so far.
       features or axes; ROND stays 50). The rest of Chromium's UI keeps the system font.
 - [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
 - [ ] Edge-pill space switcher (after Spaces stage 1)
-- [ ] Archive timers on loose tabs (with auto-archive, stage 5)
-- [ ] Command bar, then Ticks layout and Customize
+- [x] Archive timers on loose tabs: `Nm`/`Nh`/`Nd` left, amber under 2 h, replaced by × on hover; rows refresh in
+      place every minute.
+- [x] Command bar (`argon_command_bar.*`, hook `argon/ui/command-bar.patch`): ⌘T (`IDC_NEW_TAB`) opens it to start a
+      new tab, ⌘L (`IDC_FOCUS_LOCATION`) on the current URL to replace it; falls back to Chromium's behavior outside
+      normal windows. A `BubbleDialogDelegate` 14% from the window top: tabs in every space (substring match, max 6),
+      open/search through the omnibox classifier, "Go to <space>". Argon's own new-tab needs call `chrome::NewTab`.
+      Not yet: ranking, more commands (clear, new space), removing the toolbar.
+- [ ] Ticks layout and Customize
 
 Testing a build: the app is still named Helium and uses Helium's profile folder, so if Helium is installed, run it
 with its own profile: `<path>/Helium.app/Contents/MacOS/Helium --user-data-dir="$HOME/argon-test-profile"`.

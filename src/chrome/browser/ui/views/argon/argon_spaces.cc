@@ -3,29 +3,53 @@
 
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
 
+#include <algorithm>
+#include <map>
 #include <string>
 #include <utility>
 
 #include "base/feature_list.h"
 #include "base/functional/bind.h"
 #include "base/location.h"
+#include "base/no_destructor.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/task/sequenced_task_runner.h"
-#include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/tabs/tab_enums.h"
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "components/tab_groups/tab_group_visual_data.h"
 #include "components/tabs/public/tab_group.h"
 #include "components/tabs/public/tab_interface.h"
+#include "content/public/browser/visibility.h"
+#include "content/public/browser/web_contents.h"
 
 namespace {
 
 // ponytail: fixed names until spaces can be renamed from Argon's own UI; the
 // tab group editor (right-click a group) renames them meanwhile.
 constexpr char16_t kFirstSpaceName[] = u"Home";
+
+// After launch, every tab gets at least this long, so a session restored with
+// old tabs isn't archived a minute in.
+constexpr base::TimeDelta kLaunchGrace = base::Hours(1);
+
+base::Time LaunchTime() {
+  static const base::Time launched = base::Time::Now();
+  return launched;
+}
+
+// When each tab was last left. WebContents only records when it was last shown,
+// so a tab used for hours would otherwise count as idle since it was opened.
+// ponytail: keyed by pointer across windows, erased when a tab closes in a
+// window with spaces; a stale entry only makes a tab last longer.
+std::map<const tabs::TabInterface*, base::Time>& LeftAt() {
+  static base::NoDestructor<std::map<const tabs::TabInterface*, base::Time>>
+      left_at;
+  return *left_at;
+}
 
 bool Enabled(const TabStripModel* model) {
   return model->SupportsTabGroups() &&
@@ -37,7 +61,38 @@ bool Enabled(const TabStripModel* model) {
 ArgonSpaces::ArgonSpaces(BrowserWindowInterface* browser)
     : browser_(browser), model_(browser->GetTabStripModel()) {
   model_->AddObserver(this);
+  LaunchTime();
   ScheduleEnforce();
+  archive_timer_.Start(FROM_HERE, base::Minutes(1), this,
+                       &ArgonSpaces::ArchiveIdleTabs);
+}
+
+// static
+std::optional<base::TimeDelta> ArgonSpaces::TimeUntilArchive(
+    const tabs::TabInterface* tab) {
+  content::WebContents* contents = tab->GetContents();
+  if (tab->IsPinned() || tab->IsActivated() || !contents ||
+      contents->GetVisibility() == content::Visibility::VISIBLE ||
+      contents->IsCurrentlyAudible() || contents->IsBeingCaptured() ||
+      contents->NeedToFireBeforeUnload()) {
+    return std::nullopt;
+  }
+  if (const std::optional<tab_groups::TabGroupId> space = tab->GetGroup()) {
+    const BrowserWindowInterface* browser = tab->GetBrowserWindowInterface();
+    const TabGroup* group =
+        browser ? browser->GetTabStripModel()->group_model()->GetTabGroup(*space)
+                : nullptr;
+    if (!group || group->tab_count() <= 1) {
+      return std::nullopt;
+    }
+  }
+  base::Time idle_since = contents->GetLastActiveTime();
+  if (const auto it = LeftAt().find(tab); it != LeftAt().end()) {
+    idle_since = std::max(idle_since, it->second);
+  }
+  const base::Time deadline =
+      std::max(idle_since + kArchiveAfter, LaunchTime() + kLaunchGrace);
+  return deadline - base::Time::Now();
 }
 
 ArgonSpaces::~ArgonSpaces() {
@@ -94,7 +149,8 @@ void ArgonSpaces::Create() {
   // The new tab may land in the current space (or nowhere, if that exited
   // focus mode); either way it moves into a space of its own.
   const tabs::TabInterface* before = model_->GetActiveTab();
-  chrome::ExecuteCommand(browser_, IDC_NEW_TAB);
+  // Not IDC_NEW_TAB, which opens the command bar.
+  chrome::NewTab(browser_, NewTabTypes::kNewTabCommand);
   const int index = model_->active_index();
   // No new tab (the command was blocked): don't move the current one.
   if (index == TabStripModel::kNoTab || model_->GetActiveTab() == before ||
@@ -110,6 +166,14 @@ void ArgonSpaces::OnTabStripModelChanged(
     TabStripModel* tab_strip_model,
     const TabStripModelChange& change,
     const TabStripSelectionChange& selection) {
+  if (selection.active_tab_changed() && selection.old_tab) {
+    LeftAt()[selection.old_tab] = base::Time::Now();
+  }
+  if (change.type() == TabStripModelChange::kRemoved) {
+    for (const auto& removed : change.GetRemove()->contents) {
+      LeftAt().erase(removed.tab);
+    }
+  }
   if (selection.active_tab_changed() && selection.new_tab) {
     if (const std::optional<tab_groups::TabGroupId> group =
             selection.new_tab->GetGroup()) {
@@ -212,6 +276,29 @@ void ArgonSpaces::Enforce() {
       if (index != TabStripModel::kNoTab) {
         model_->ActivateTabAt(index);
       }
+    }
+  }
+}
+
+void ArgonSpaces::ArchiveIdleTabs() {
+  if (model_->closing_all()) {
+    return;
+  }
+  std::vector<base::WeakPtr<tabs::TabInterface>> idle;
+  for (int i = 0; i < model_->count(); ++i) {
+    tabs::TabInterface* tab = model_->GetTabAtIndex(i);
+    const std::optional<base::TimeDelta> left = TimeUntilArchive(tab);
+    if (left && !left->is_positive()) {
+      idle.push_back(tab->GetWeakPtr());
+    }
+  }
+  // The active tab is never archived, so the window never empties.
+  for (const auto& tab : idle) {
+    const int index = tab ? model_->GetIndexOfTab(tab.get())
+                          : TabStripModel::kNoTab;
+    if (index != TabStripModel::kNoTab) {
+      model_->CloseWebContentsAt(index,
+                                 TabCloseTypes::CLOSE_CREATE_HISTORICAL_TAB);
     }
   }
 }

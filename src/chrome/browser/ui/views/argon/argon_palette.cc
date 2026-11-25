@@ -17,4 +17,6 @@ ArgonPalette::ArgonPalette(SkColor frame) {
   line = over_frame(0.1f);
   hover = over_frame(0.05f);
   active = over_frame(0.065f);
+  // oklch(0.55 0.14 55), and L 0.68 in dark mode.
+  warning = dark ? SkColorSetRGB(0xd8, 0x84, 0x4c) : SkColorSetRGB(0xad, 0x5a, 0x1c);
 }

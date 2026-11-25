@@ -3,6 +3,7 @@
 
 #include "chrome/browser/ui/views/argon/argon_sidebar_view.h"
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <utility>
@@ -10,6 +11,8 @@
 
 #include "base/functional/bind.h"
 #include "base/location.h"
+#include "base/strings/string_number_conversions.h"
+#include "base/time/time.h"
 #include "base/task/sequenced_task_runner.h"
 #include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/ui/browser_commands.h"
@@ -59,6 +62,7 @@ constexpr int kIconTitleGap = 9;
 constexpr int kFaviconSize = 16;
 constexpr int kCloseSize = 24;
 constexpr int kCloseIconSize = 10;
+constexpr int kTimerTextSize = 11;
 // Narrower than this (the collapsed strip, ~32px; the narrowest expanded one is
 // ~100px), rows show only their favicon.
 constexpr int kCompactWidth = 64;
@@ -125,6 +129,12 @@ class ArgonTabRow : public views::Button {
     layout->SetFlexForView(title_, 1);
 
     if (close) {
+      // Loose tabs: time left before they're archived, replaced by the close
+      // button on hover.
+      timer_ = AddChildView(std::make_unique<views::Label>());
+      timer_->SetFontList(
+          ArgonFont(kTimerTextSize, gfx::Font::Weight::NORMAL));
+      timer_->SetAutoColorReadabilityEnabled(false);
       close_ = AddChildView(views::CreateVectorImageButton(std::move(close)));
       views::SetImageFromVectorIconWithColor(
           close_, vector_icons::kCloseIcon, kCloseIconSize,
@@ -156,6 +166,23 @@ class ArgonTabRow : public views::Button {
       title_->SetText(title);
     }
     icon_->SetImage(helper->GetFavicon());
+    if (timer_) {
+      left_ = ArgonSpaces::TimeUntilArchive(tab_.get());
+      if (left_) {
+        const base::TimeDelta left = std::max(*left_, base::TimeDelta());
+        // Nm under an hour, Nh under two days, else Nd.
+        timer_->SetText(
+            left < base::Hours(1)
+                ? base::NumberToString16(std::max<int64_t>(left.InMinutes(), 1)) +
+                      u"m"
+            : left < base::Hours(48)
+                ? base::NumberToString16(left.InHours()) + u"h"
+                : base::NumberToString16(left.InDays()) + u"d");
+        timer_->SetEnabledColor(left < base::Hours(2) ? palette_.warning
+                                                      : palette_.muted);
+      }
+      UpdateLook();
+    }
   }
 
  protected:
@@ -181,6 +208,9 @@ class ArgonTabRow : public views::Button {
     if (close_) {
       close_->SetVisible(active_ || hovered);
     }
+    if (timer_) {
+      timer_->SetVisible(!active_ && !hovered && left_.has_value());
+    }
   }
 
   const base::WeakPtr<tabs::TabInterface> tab_;
@@ -189,7 +219,9 @@ class ArgonTabRow : public views::Button {
   const ArgonPalette palette_;
   raw_ptr<views::ImageView> icon_ = nullptr;
   raw_ptr<views::Label> title_ = nullptr;
+  raw_ptr<views::Label> timer_ = nullptr;
   raw_ptr<views::ImageButton> close_ = nullptr;
+  std::optional<base::TimeDelta> left_;
 };
 
 BEGIN_METADATA(ArgonTabRow)
@@ -261,6 +293,9 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
 
   model_->AddObserver(this);
   Rebuild();
+  // Archive timers count down by the minute.
+  refresh_timer_.Start(FROM_HERE, base::Minutes(1), this,
+                       &ArgonSidebarView::RefreshRows);
 }
 
 ArgonSidebarView::~ArgonSidebarView() {
@@ -298,6 +333,16 @@ void ArgonSidebarView::OnTabChangedAt(tabs::TabInterface* tab,
           row && row->tab() == tab) {
         row->UpdateFromTab();
         return;
+      }
+    }
+  }
+}
+
+void ArgonSidebarView::RefreshRows() {
+  for (views::View* list : contents_->children()) {
+    for (views::View* child : list->children()) {
+      if (auto* row = views::AsViewClass<ArgonTabRow>(child)) {
+        row->UpdateFromTab();
       }
     }
   }
@@ -535,8 +580,9 @@ void ArgonSidebarView::CloseLooseTabs() {
     }
   }
   // Closing a window's last tab closes the window; Clear only empties the space.
+  // (Not IDC_NEW_TAB, which opens the command bar.)
   if (static_cast<int>(loose.size()) == model_->count()) {
-    NewTab();
+    chrome::NewTab(browser_, NewTabTypes::kNewTabCommand);
   }
   for (const auto& tab : loose) {
     Close(tab);
