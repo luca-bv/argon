@@ -26,7 +26,8 @@ else uses Argon.
   (bookmarks bar, collapsed corner, cross-profile switcher), 45549245685 (profile menu and moves, restore session,
   color menu, command bar commands, F6 focus, per-space pins, tab row menu, Arc import, Show/Hide toolbar, Not
   secure, 10px corners). Expect bugs: all of it was reviewed by reading, none of it tried.
-- Installed for the user (2026-11-25): run 45549245685, with the test profile; waiting on their reports.
+- Installed for the user (2026-11-25): run 45667532916 (edge pill, Helium cleanups, Allo UI font, Customize stages 1
+  and 2) over 45549245685, with the test profile; waiting on their reports from both.
 - Run 45564285997 (edge pill, eight Helium cleanups, Allo as the default UI font) failed in `swap-patches.sh`:
   `helium-noise-page-info`'s `page_info_strings.grdp` hunk used `</grit-part>` as context, which Helium's name
   substitution leaves without a final newline in a resumed tree (issue #5). The hunk now inserts before the
