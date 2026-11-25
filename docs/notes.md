@@ -178,7 +178,10 @@ Compiled only by CI so far.
 - [x] Paper and Dark tones (`src/chrome/browser/ui/color/argon_color_mixer.cc`, hook `argon/ui/colors.patch`):
       frame `#f3f1ed` / `#1c1b19`, toolbar in the page color, so toolbar and page read as one card. Skipped under a
       custom theme or high contrast.
-- [ ] Page card: 8px frame gap around the page and 10px corners (BrowserView layout)
+- [x] Page card (`argon/ui/page-card.patch`): with vertical tabs, Chromium's toolbar-height side panel "shadow box"
+      is always on, so toolbar and page form one card 8px from the frame (none on the sidebar side), with
+      frame-colored corners. Corner radius is Chromium's high-emphasis metric, not the handoff's 10px; no 1px ring yet.
+      Horizontal tabs with a side panel open would show frame-colored corners on the toolbar color.
 - [ ] Allo font (bundled, registered at startup; `ss01`/`tnum` and `ROND` need more than `gfx::FontList`)
 - [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
 - [ ] Edge-pill space switcher (after Spaces stage 1)

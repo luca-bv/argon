@@ -1,0 +1,75 @@
+--- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
++++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
+@@ -291,8 +291,12 @@
+     case WindowState::kNormal:
+     case WindowState::kMaximized: {
+       // In content-height mode, split view outline serves as shadow box.
++      // Argon: with vertical tabs the page is always a card on the frame.
+       info.shadow_box =
+-          has_side_panel && (has_infobar || !is_split_view || !is_force_to_top);
++          (has_side_panel &&
++           (has_infobar || !is_split_view || !is_force_to_top)) ||
++          (layout_data_->tab_strip_type == TabStripType::kVertical &&
++           !is_split_view);
+       const bool suppress_separator = info.shadow_box && is_force_to_top;
+       info.multi_contents_separator = !suppress_separator && !has_infobar;
+       info.top_container_separator = !suppress_separator && has_infobar;
+@@ -1092,7 +1096,11 @@
+     } else {
+       main_background_bounds = params.visual_client_area;
+     }
+-    const bool main_background_visibility = horizontal_layout.has_side_panel();
++    // Argon: the frame shows around the page card, so no toolbar-colored
++    // background behind it.
++    const bool main_background_visibility =
++        horizontal_layout.has_side_panel() &&
++        layout_data_->tab_strip_type != TabStripType::kVertical;
+     main_background_layout =
+         &layout.AddChild(views().main_background_region, main_background_bounds,
+                          main_background_visibility);
+@@ -1160,16 +1168,27 @@
+   if (layout_data_->separator_info.shadow_box) {
+     // As the side panel animates in, the main panel shrinks and moves over to
+     // accommodate the panel.
+-    const int scaled_main_area_padding = base::ClampRound(
+-        side_panel_reveal_amount * horizontal_layout.side_panel_padding);
++    // Argon: without a side panel, the page card keeps a fixed gap from the
++    // frame, except on the sidebar's side.
++    constexpr int kArgonPageGap = 8;
++    const bool argon_card =
++        layout_data_->tab_strip_type == TabStripType::kVertical;
++    const int scaled_main_area_padding =
++        argon_card && !horizontal_layout.has_side_panel()
++            ? kArgonPageGap
++            : base::ClampRound(side_panel_reveal_amount *
++                               horizontal_layout.side_panel_padding);
+     const int scaled_top_padding =
+         layout_data_->separator_info.side_panel_top_padding
+             ? scaled_main_area_padding
+             : views::Separator::kThickness;
+     shadow_overlay_insets = gfx::Insets::TLBR(
+-        scaled_top_padding, side_panel_leading ? 0 : scaled_main_area_padding,
++        scaled_top_padding,
++        side_panel_leading || argon_card ? 0 : scaled_main_area_padding,
+         scaled_main_area_padding,
+-        side_panel_leading ? scaled_main_area_padding : 0);
++        side_panel_leading || (argon_card && !horizontal_layout.has_side_panel())
++            ? scaled_main_area_padding
++            : 0);
+     params.Inset(shadow_overlay_insets);
+     if (!side_panel_is_animating) {
+       unclipped_contents_region.Inset(shadow_overlay_insets);
+--- a/chrome/browser/ui/views/frame/shadow_overlay_view.cc
++++ b/chrome/browser/ui/views/frame/shadow_overlay_view.cc
+@@ -48,8 +48,10 @@
+   static constexpr float kCornerSubpixelOverpaint = 0.5f;
+ 
+   CornerView(Corner corner, BrowserView& browser_view) : corner_(corner) {
++    // Argon: the corners sit on the frame (vertical tabs never show the
++    // toolbar-colored main background; see browser_view_tabbed_layout_impl.cc).
+     SetBackground(std::make_unique<ThemedBackground>(
+-        &browser_view, ThemedBackground::ThemeChoice::kToolbarTheme));
++        &browser_view, ThemedBackground::ThemeChoice::kFrameTheme));
+   }
+   ~CornerView() override = default;
+ 

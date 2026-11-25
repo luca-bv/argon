@@ -5,3 +5,4 @@ argon/core/live-tab-budget.patch
 argon/ui/sidebar.patch
 argon/ui/tab-strip-defaults.patch
 argon/ui/colors.patch
+argon/ui/page-card.patch
