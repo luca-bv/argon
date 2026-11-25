@@ -31,6 +31,12 @@ else uses Argon.
   `helium-noise-page-info`'s `page_info_strings.grdp` hunk used `</grit-part>` as context, which Helium's name
   substitution leaves without a final newline in a resumed tree (issue #5). The hunk now inserts before the
   enterprise strings; rerun after that.
+- Its rerun, run 45569481044, failed compiling `argon_edge_pill.cc` (issue #6): no `ui/compositor/layer.h`
+  for `layer()`, and the inner `PillButton` lacked `METADATA_HEADER`. Fixed; the next 0.22.2.1 build resumes from
+  it and carries Customize stage 1 too.
+- Helium 0.22.4.1 is out (2026-11-24). The 6-hourly schedule started a fresh build of it; the user chose to cancel
+  that and finish 0.22.2.1 first, moving to 0.22.4.1 after testing. `build/0.22.4.1` now exists, so the schedule
+  won't start it again: start it by hand (`-f tag=0.22.4.1`), a full ~17 h build.
 - Customize started (2026-11-25, the user lifted "wait until tested"), stage 1 first. Decided: layout and
   behaviour settings are global (Local State), colors (tone) are per profile. Assumed, not confirmed: each profile's
   tone defaults to Auto (Paper or Dark, following macOS).

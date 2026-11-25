@@ -11,9 +11,11 @@
 #include "cc/paint/paint_flags.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "ui/accessibility/ax_enums.mojom.h"
+#include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/color/color_id.h"
 #include "ui/color/color_provider.h"
+#include "ui/compositor/layer.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/geometry/rect_f.h"
 #include "ui/views/accessibility/view_accessibility.h"
@@ -35,10 +37,15 @@ constexpr int kButtonTextSize = 13;
 
 // LabelButton keeps label() protected; the font is set through it.
 class PillButton : public views::LabelButton {
+  METADATA_HEADER(PillButton, views::LabelButton)
+
  public:
   using LabelButton::LabelButton;
   using LabelButton::label;
 };
+
+BEGIN_METADATA(PillButton)
+END_METADATA
 
 }  // namespace
 
