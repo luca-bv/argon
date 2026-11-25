@@ -32,16 +32,15 @@ class TabInterface;
 // the active tab's space, or back to the last one, instead of patching the
 // exits one by one. Pinned tabs show in every space.
 //
-// It also archives loose tabs: one left unused for kArchiveAfter is closed,
-// and stays reopenable from History and ⌘⇧T.
+// It also archives loose tabs: one left unused for the "Archive after"
+// setting (argon_prefs.h) is closed, and stays reopenable from History and
+// ⌘⇧T.
 class ArgonSpaces : public TabStripModelObserver {
  public:
-  // ponytail: fixed until settings exist (12 h / 24 h / 7 d / never).
-  static constexpr base::TimeDelta kArchiveAfter = base::Hours(12);
-
   // Time left before `tab` is archived, or nullopt if it isn't archived:
-  // pinned, active, on screen, playing sound, being captured, holding unsaved
-  // input, or the last tab of its space (a space dies with its last tab).
+  // archiving is off, or the tab is pinned, active, on screen, playing sound,
+  // being captured, holding unsaved input, or the last tab of its space (a
+  // space dies with its last tab).
   static std::optional<base::TimeDelta> TimeUntilArchive(
       const tabs::TabInterface* tab);
 

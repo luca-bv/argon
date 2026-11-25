@@ -1,6 +1,14 @@
 --- a/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
 +++ b/chrome/browser/ui/views/frame/layout/browser_view_tabbed_layout_impl.cc
-@@ -291,7 +291,9 @@
+@@ -29,6 +29,7 @@
+ #include "chrome/browser/ui/views/animations/organizer_panel_animations.h"
+ #include "chrome/browser/ui/views/animations/side_panel_animations.h"
+ #include "chrome/browser/ui/views/animations/tab_strip_animations.h"
++#include "chrome/browser/ui/views/argon/argon_prefs.h"
+ #include "chrome/browser/ui/views/bookmarks/bookmark_bar_view.h"
+ #include "chrome/browser/ui/views/frame/custom_corners.h"
+ #include "chrome/browser/ui/views/frame/custom_corners_background.h"
+@@ -291,7 +292,9 @@
      case WindowState::kNormal:
      case WindowState::kMaximized: {
        // In content-height mode, split view outline serves as shadow box.
@@ -10,7 +18,7 @@
            has_side_panel && (has_infobar || !is_split_view || !is_force_to_top);
        const bool suppress_separator = info.shadow_box && is_force_to_top;
        info.multi_contents_separator = !suppress_separator && !has_infobar;
-@@ -659,8 +661,11 @@
+@@ -659,8 +662,11 @@
        case WindowState::kMaximized:
          if (layout_data_->revised_params.leading_exclusion.ContentWithPadding()
                  .height() > 0) {
@@ -23,22 +31,21 @@
                    ? -1.0
                    : side_panel_corner_value;
          }
-@@ -999,6 +1004,21 @@
+@@ -999,6 +1005,20 @@
                  0.0f);
    }
  
 +  // Argon: the page (toolbar, infobars, contents, side panel) is a card on the
-+  // frame, 8px from it except on the sidebar's side.
++  // frame, inset from it by the Frame gap setting (argon_prefs.h, 8px by
++  // default) except on the sidebar's side.
 +  const bool argon_card =
 +      layout_data_->tab_strip_type == TabStripType::kVertical &&
 +      !is_fullscreen(layout_data_->window_state);
 +  gfx::Rect argon_card_bounds;
 +  if (argon_card) {
-+    constexpr int kArgonPageGap = 8;
-+    params.Inset(gfx::Insets::TLBR(kArgonPageGap, 0, kArgonPageGap,
-+                                   kArgonPageGap));
-+    unclipped_contents_region.Inset(
-+        gfx::Insets::TLBR(0, 0, 0, kArgonPageGap));
++    const int gap = argon::PageGap();
++    params.Inset(gfx::Insets::TLBR(gap, 0, gap, gap));
++    unclipped_contents_region.Inset(gfx::Insets::TLBR(0, 0, 0, gap));
 +    argon_card_bounds = params.visual_client_area;
 +  }
 +
@@ -86,7 +93,15 @@
    // toolbar-height side panel with a horizontal tabstrip if the browser is wide
 --- a/chrome/browser/ui/views/frame/shadow_overlay_view.cc
 +++ b/chrome/browser/ui/views/frame/shadow_overlay_view.cc
-@@ -48,8 +48,10 @@
+@@ -11,6 +11,7 @@
+ #include "chrome/browser/ui/animation/browser_animation_controller.h"
+ #include "chrome/browser/ui/animation/browser_animation_types.h"
+ #include "chrome/browser/ui/views/animations/side_panel_animations.h"
++#include "chrome/browser/ui/views/argon/argon_prefs.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+ #include "chrome/browser/ui/views/frame/shadow_frame_view.h"
+ #include "chrome/browser/ui/views/frame/themed_background.h"
+@@ -48,8 +49,10 @@
    static constexpr float kCornerSubpixelOverpaint = 0.5f;
  
    CornerView(Corner corner, BrowserView& browser_view) : corner_(corner) {
@@ -98,26 +113,44 @@
    }
    ~CornerView() override = default;
  
-@@ -209,16 +211,18 @@
-     shadow_box_->SetShadowOpacity(GetShadowValue());
+@@ -210,15 +213,18 @@
    }
  }
-+
-+// Argon: the page card's corners are 10px (design_handoff_argon_browser,
-+// "Page card"), not the high-emphasis metric (8).
-+constexpr int kArgonPageCornerRadius = 10;
  
++// Argon: the page card's corners follow the Corners setting (argon_prefs.h,
++// 10px by default as in design_handoff_argon_browser), not the high-emphasis
++// metric (8).
  void ShadowOverlayView::AddedToWidget() {
 -  shadow_box_->SetShadowCornerRadius(
 -      GetLayoutProvider()->GetCornerRadiusMetric(views::Emphasis::kHigh));
-+  shadow_box_->SetShadowCornerRadius(kArgonPageCornerRadius);
++  shadow_box_->SetShadowCornerRadius(argon::PageRadius());
  }
  
  views::ProposedLayout ShadowOverlayView::CalculateProposedLayout(
      const views::SizeBounds& size_bounds) const {
 -  const int corner_radius =
 -      GetLayoutProvider()->GetCornerRadiusMetric(views::Emphasis::kHigh);
-+  const int corner_radius = kArgonPageCornerRadius;
++  const int corner_radius = argon::PageRadius();
++  // The setting can change while the window is open; a no-op when it didn't.
++  shadow_box_->SetShadowCornerRadius(corner_radius);
  
    views::ProposedLayout layout;
    layout.host_size = gfx::Size(size_bounds.width().value_or(corner_radius),
+--- a/chrome/browser/ui/views/frame/BUILD.gn
++++ b/chrome/browser/ui/views/frame/BUILD.gn
+@@ -1266,6 +1266,7 @@
+     "//base:i18n",
+     "//chrome/browser/ui/animation",
+     "//chrome/browser/ui/views/animations",
++    "//chrome/browser/ui/views/argon:prefs",
+     "//chrome/browser/ui/views/frame:browser_view_header",
+     "//chrome/browser/ui/views/side_panel",
+     "//skia",
+@@ -3026,6 +3027,7 @@
+     "//base",
+     "//build:buildflag_header_h",
+     "//chrome/browser/ui:layout_constants",
++    "//chrome/browser/ui/views/argon:prefs",
+     "//chrome/browser/ui:ui_features",
+     "//chrome/browser/ui/browser_window",
+     "//chrome/browser/ui/color:color_headers",

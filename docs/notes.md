@@ -31,7 +31,17 @@ else uses Argon.
   `helium-noise-page-info`'s `page_info_strings.grdp` hunk used `</grit-part>` as context, which Helium's name
   substitution leaves without a final newline in a resumed tree (issue #5). The hunk now inserts before the
   enterprise strings; rerun after that.
-- Next: go through what the user sees in the installed build, fix, then Customize. Proposed, not yet
+- Customize started (2026-11-25, the user lifted "wait until tested"), stage 1 first. Decided: layout and
+  behaviour settings are global (Local State), colors (tone) are per profile. Assumed, not confirmed: each profile's
+  tone defaults to Auto (Paper or Dark, following macOS).
+- Customize stage 1 written, reviewed by Fable, not built: `argon_prefs.*` (Local State dict `argon.customize` =
+  the handoff's `{zones, cfg}`, defaults in code; profile string `argon.tone`). Wired: side module order, density,
+  close ×, tab icons (Tile/Dot/None), archive after, edge pill on/off, frame gap, corners, tone Paper/Cool (Dark and
+  Auto are Chromium's per-profile `kBrowserColorScheme`). Stored only: top zone, side, behavior, switcher, pill side,
+  roundness, Tinted (drawn as Paper). Cool rides on `ColorProviderKey::app_controller` (null for normal windows),
+  set in `ThemeService::GetColorProviderKey`. Hooks: new `argon/core/prefs.patch`, more in `colors.patch` and
+  `page-card.patch`. Width stays upstream's (240, `kVerticalTabsUncollapsedWidth`); 224 would only need that pref.
+- Still to do alongside: go through what the user sees in the installed build and fix it. Proposed, not yet
   decided: the handoff's exact dark tokens in `argon_palette.cc` (`Argon Customize.dc.html`, `tone()`).
 
 ## Base (patch check, 2026-11-20)

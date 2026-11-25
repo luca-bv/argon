@@ -16,8 +16,10 @@
 #include "base/timer/timer.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
+#include "chrome/browser/ui/views/argon/argon_prefs.h"
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
+#include "components/prefs/pref_change_registrar.h"
 #include "components/sessions/core/session_id.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/views/context_menu_controller.h"
@@ -33,8 +35,8 @@ class ImageButton;
 class LabelButton;
 }  // namespace views
 
-// Argon's sidebar zone: draws the modules of a layout (argon_layout.h), top to
-// bottom. It takes the place of the vertical tab strip's tab list inside
+// Argon's sidebar zone: draws the side zone of the layout (argon_prefs.h), top
+// to bottom. It takes the place of the vertical tab strip's tab list inside
 // VerticalTabStripRegionView, which still owns the width, collapse, resize and
 // the window controls above it. Collapsed, it shows favicons only.
 //
@@ -92,6 +94,8 @@ class ArgonSidebarView : public views::View,
   // synchronously), and bursts of changes during page loads coalesce.
   void ScheduleRebuild();
   void Rebuild();
+  // The Customize settings changed (Local State).
+  void OnSettingsChanged();
   // Updates every tab row in place (titles, favicons, archive timers).
   void RefreshRows();
 
@@ -141,7 +145,9 @@ class ArgonSidebarView : public views::View,
   raw_ptr<views::ImageButton> forward_ = nullptr;
   raw_ptr<views::LabelButton> address_ = nullptr;
   ArgonPalette palette_;
+  argon::Settings settings_;
   bool compact_ = false;
+  PrefChangeRegistrar local_state_registrar_;
 
   base::RepeatingTimer refresh_timer_;
   base::CallbackListSubscription window_set_subscription_;

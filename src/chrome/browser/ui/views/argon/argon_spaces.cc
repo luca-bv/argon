@@ -21,6 +21,7 @@
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/argon/argon_pins.h"
+#include "chrome/browser/ui/views/argon/argon_prefs.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/tab_groups/tab_group_visual_data.h"
 #include "components/tabs/public/tab_group.h"
@@ -75,8 +76,10 @@ ArgonSpaces::ArgonSpaces(BrowserWindowInterface* browser)
 // static
 std::optional<base::TimeDelta> ArgonSpaces::TimeUntilArchive(
     const tabs::TabInterface* tab) {
+  const std::optional<base::TimeDelta> archive_after =
+      argon::Settings::Load().archive_after;
   content::WebContents* contents = tab->GetContents();
-  if (tab->IsPinned() || tab->IsActivated() || !contents ||
+  if (!archive_after || tab->IsPinned() || tab->IsActivated() || !contents ||
       argon_pins::IsPin(contents) ||
       contents->GetVisibility() == content::Visibility::VISIBLE ||
       contents->IsCurrentlyAudible() || contents->IsBeingCaptured() ||
@@ -97,7 +100,7 @@ std::optional<base::TimeDelta> ArgonSpaces::TimeUntilArchive(
     idle_since = std::max(idle_since, it->second);
   }
   const base::Time deadline =
-      std::max(idle_since + kArchiveAfter, LaunchTime() + kLaunchGrace);
+      std::max(idle_since + *archive_after, LaunchTime() + kLaunchGrace);
   return deadline - base::Time::Now();
 }
 

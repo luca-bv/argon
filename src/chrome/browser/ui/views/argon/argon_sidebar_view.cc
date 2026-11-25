@@ -34,12 +34,14 @@
 #include "chrome/browser/ui/views/argon/argon_command_bar.h"
 #include "chrome/browser/ui/views/argon/argon_edge_pill.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
-#include "chrome/browser/ui/views/argon/argon_layout.h"
 #include "chrome/browser/ui/views/argon/argon_pins.h"
+#include "chrome/browser/ui/views/argon/argon_prefs.h"
 #include "chrome/browser/ui/views/argon/argon_space_menu.h"
 #include "chrome/browser/ui/views/argon/argon_tab_menu.h"
 #include "chrome/browser/ui/views/argon/argon_toast.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
+#include "chrome/browser/ui/views/frame/browser_view.h"
+#include "components/prefs/pref_service.h"
 #include "components/sessions/core/tab_restore_service.h"
 #include "components/sessions/core/tab_restore_types.h"
 #include "components/tab_groups/tab_group_visual_data.h"
@@ -80,14 +82,15 @@
 
 namespace {
 
-// Sizes from the handoff's tokens (Regular density).
-constexpr int kRowHeight = 30;
+// Sizes from the handoff's tokens (Regular density; RowHeight() and
+// RowTextSize() follow the Density setting).
 constexpr int kRowRadius = 7;
 constexpr int kRowPadding = 8;
 constexpr int kRowGap = 1;
 constexpr int kSectionGap = 14;
 constexpr int kIconTitleGap = 9;
 constexpr int kFaviconSize = 16;
+constexpr int kDotSize = 7;
 constexpr int kCloseSize = 24;
 constexpr int kCloseIconSize = 10;
 constexpr int kTimerTextSize = 11;
@@ -99,12 +102,25 @@ constexpr int kCompactWidth = 64;
 // Shown for a space whose group has no title.
 constexpr char16_t kDefaultSpaceName[] = u"Home";
 
-// Type sizes from the handoff: 13 for rows, 12 for the space name and Clear.
-constexpr int kTextSize = 13;
+// Type sizes from the handoff: 13 for rows (12.5 / 14 in Compact / Roomy, but
+// ArgonFont takes whole sizes), 12 for the space name and Clear.
 constexpr int kSmallTextSize = 12;
 
-// One tab: favicon and title; loose tabs also get a close button, shown while
-// the row is hovered or active. Compact rows show the favicon alone.
+int RowHeight(argon::Density density) {
+  return density == argon::Density::kCompact ? 26
+         : density == argon::Density::kRoomy ? 36
+                                             : 30;
+}
+
+int RowTextSize(argon::Density density) {
+  return density == argon::Density::kCompact ? 12
+         : density == argon::Density::kRoomy ? 14
+                                             : 13;
+}
+
+// One tab: favicon (or a dot, or nothing) and title; loose tabs also get a
+// close button, shown while the row is hovered or active, unless the setting
+// turns it off. Compact rows show the favicon alone.
 class ArgonTabRow : public views::Button {
   METADATA_HEADER(ArgonTabRow, views::Button)
 
@@ -113,6 +129,8 @@ class ArgonTabRow : public views::Button {
               bool active,
               bool compact,
               const ArgonPalette& palette,
+              const argon::Settings& settings,
+              SkColor accent,
               PressedCallback open,
               PressedCallback close)
       : views::Button(std::move(open)),
@@ -120,6 +138,7 @@ class ArgonTabRow : public views::Button {
         active_(active),
         compact_(compact),
         palette_(palette) {
+    const bool show_close = close && settings.close_on_hover;
     SetNotifyEnterExitOnChild(true);
     // Like real tabs: activate on press, so a click still lands when the row
     // is rebuilt before the mouse comes up.
@@ -134,17 +153,27 @@ class ArgonTabRow : public views::Button {
     auto* layout = SetLayoutManager(std::make_unique<views::BoxLayout>(
         views::BoxLayout::Orientation::kHorizontal,
         compact ? gfx::Insets()
-                : gfx::Insets::TLBR(0, kRowPadding, 0, close ? 3 : kRowPadding),
+                : gfx::Insets::TLBR(0, kRowPadding, 0,
+                                    show_close ? 3 : kRowPadding),
         kIconTitleGap));
     layout->set_cross_axis_alignment(
         views::BoxLayout::CrossAxisAlignment::kCenter);
     layout->set_main_axis_alignment(
         compact ? views::BoxLayout::MainAxisAlignment::kCenter
                 : views::BoxLayout::MainAxisAlignment::kStart);
-    layout->set_minimum_cross_axis_size(kRowHeight);
+    layout->set_minimum_cross_axis_size(RowHeight(settings.density));
 
-    icon_ = AddChildView(std::make_unique<views::ImageView>());
-    icon_->SetImageSize(gfx::Size(kFaviconSize, kFaviconSize));
+    if (compact || settings.icon == argon::TabIcon::kTile) {
+      icon_ = AddChildView(std::make_unique<views::ImageView>());
+      icon_->SetImageSize(gfx::Size(kFaviconSize, kFaviconSize));
+    } else if (settings.icon == argon::TabIcon::kDot) {
+      // The handoff's dot is a per-site color; there is none here, so it's
+      // muted, and the space's accent on the active tab.
+      auto* dot = AddChildView(std::make_unique<views::View>());
+      dot->SetPreferredSize(gfx::Size(kDotSize, kDotSize));
+      dot->SetBackground(views::CreateRoundedRectBackground(
+          active ? accent : palette_.muted, kDotSize / 2.0f));
+    }
     if (compact) {
       UpdateFromTab();
       UpdateLook();
@@ -155,7 +184,7 @@ class ArgonTabRow : public views::Button {
     title_->SetHorizontalAlignment(gfx::ALIGN_LEFT);
     title_->SetElideBehavior(gfx::ELIDE_TAIL);
     title_->SetAutoColorReadabilityEnabled(false);
-    title_->SetFontList(ArgonFont(kTextSize,
+    title_->SetFontList(ArgonFont(RowTextSize(settings.density),
                                   active ? gfx::Font::Weight::SEMIBOLD
                                          : gfx::Font::Weight::NORMAL));
     layout->SetFlexForView(title_, 1);
@@ -167,12 +196,14 @@ class ArgonTabRow : public views::Button {
       timer_->SetFontList(
           ArgonFont(kTimerTextSize, gfx::Font::Weight::NORMAL));
       timer_->SetAutoColorReadabilityEnabled(false);
-      close_ = AddChildView(views::CreateVectorImageButton(std::move(close)));
-      views::SetImageFromVectorIconWithColor(
-          close_, vector_icons::kCloseIcon, kCloseIconSize,
-          views::IconColors(palette_.muted, palette_.muted));
-      close_->SetPreferredSize(gfx::Size(kCloseSize, kCloseSize));
-      close_->GetViewAccessibility().SetName(u"Close tab");
+      if (show_close) {
+        close_ = AddChildView(views::CreateVectorImageButton(std::move(close)));
+        views::SetImageFromVectorIconWithColor(
+            close_, vector_icons::kCloseIcon, kCloseIconSize,
+            views::IconColors(palette_.muted, palette_.muted));
+        close_->SetPreferredSize(gfx::Size(kCloseSize, kCloseSize));
+        close_->GetViewAccessibility().SetName(u"Close tab");
+      }
     }
     UpdateFromTab();
     UpdateLook();
@@ -198,7 +229,9 @@ class ArgonTabRow : public views::Button {
     if (title_) {
       title_->SetText(title);
     }
-    icon_->SetImage(helper->GetFavicon());
+    if (icon_) {
+      icon_->SetImage(helper->GetFavicon());
+    }
     if (timer_) {
       left_ = ArgonSpaces::TimeUntilArchive(tab_.get());
       if (left_) {
@@ -242,7 +275,9 @@ class ArgonTabRow : public views::Button {
       close_->SetVisible(active_ || hovered);
     }
     if (timer_) {
-      timer_->SetVisible(!active_ && !hovered && left_.has_value());
+      // Without ×, the timer stays on hover.
+      timer_->SetVisible(left_.has_value() &&
+                         !(close_ && (active_ || hovered)));
     }
   }
 
@@ -286,6 +321,7 @@ std::unique_ptr<views::LabelButton> MakeTextButton(
     views::Button::PressedCallback callback,
     std::u16string text,
     int size,
+    int row_height,
     const ArgonPalette& palette) {
   auto button =
       std::make_unique<TextButton>(std::move(callback), std::move(text));
@@ -294,7 +330,7 @@ std::unique_ptr<views::LabelButton> MakeTextButton(
   button->SetTextColor(views::Button::STATE_PRESSED, palette.ink);
   button->label()->SetFontList(ArgonFont(size, gfx::Font::Weight::NORMAL));
   button->label()->SetAutoColorReadabilityEnabled(false);
-  button->SetMinSize(gfx::Size(0, kRowHeight));
+  button->SetMinSize(gfx::Size(0, row_height));
   button->SetBorder(views::CreateEmptyBorder(gfx::Insets::VH(0, kRowPadding)));
   return button;
 }
@@ -304,7 +340,8 @@ std::unique_ptr<views::LabelButton> MakeTextButton(
 ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
     : browser_(browser),
       model_(browser->GetTabStripModel()),
-      spaces_(std::make_unique<ArgonSpaces>(browser)) {
+      spaces_(std::make_unique<ArgonSpaces>(browser)),
+      settings_(argon::Settings::Load()) {
   auto* scroll = AddChildView(std::make_unique<views::ScrollView>());
   scroll_ = scroll;
   scroll->SetHorizontalScrollBarMode(views::ScrollView::ScrollBarMode::kDisabled);
@@ -342,6 +379,15 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
   window_set_subscription_ = ArgonWindowSet::Get()->Subscribe(
       base::BindRepeating(&ArgonSidebarView::OnWindowSetChanged,
                           weak_factory_.GetWeakPtr()));
+  // The Customize settings are global, so every window redraws when they
+  // change.
+  if (PrefService* local_state = g_browser_process->local_state()) {
+    local_state_registrar_.Init(local_state);
+    local_state_registrar_.Add(
+        argon::kCustomizePref,
+        base::BindRepeating(&ArgonSidebarView::OnSettingsChanged,
+                            base::Unretained(this)));
+  }
   Rebuild();
   // Archive timers count down by the minute.
   refresh_timer_.Start(FROM_HERE, base::Minutes(1), this,
@@ -366,6 +412,20 @@ bool ArgonSidebarView::AcceleratorPressed(const ui::Accelerator& accelerator) {
   return true;
 }
 
+void ArgonSidebarView::OnSettingsChanged() {
+  settings_ = argon::Settings::Load();
+  ScheduleRebuild();
+  InvalidateLayout();  // The pill's gutter.
+  // The page card's gap and corners (argon/ui/page-card.patch).
+  if (BrowserView* browser_view =
+          BrowserView::GetBrowserViewForBrowser(browser_)) {
+    browser_view->InvalidateLayout();
+    if (views::View* overlay = browser_view->main_shadow_overlay()) {
+      overlay->InvalidateLayout();
+    }
+  }
+}
+
 void ArgonSidebarView::OnThemeChanged() {
   views::View::OnThemeChanged();
   palette_ = ArgonPalette(GetColorProvider()->GetColor(ui::kColorFrameActive));
@@ -373,10 +433,11 @@ void ArgonSidebarView::OnThemeChanged() {
 }
 
 // The list, with a gutter on the leading side for the edge pill (none while
-// collapsed, where the pill sits over the rows' padding), and the pill
-// vertically centered on the edge.
+// collapsed, where the pill sits over the rows' padding, or with the pill off),
+// and the pill vertically centered on the edge.
 void ArgonSidebarView::Layout(PassKey) {
-  const int gutter = compact_ ? 0 : ArgonEdgePill::kRestWidth + 4;
+  const int gutter =
+      compact_ || !settings_.edge_pill ? 0 : ArgonEdgePill::kRestWidth + 4;
   scroll_->SetBounds(gutter, 0, std::max(0, width() - gutter), height());
   const gfx::Size pill = pill_->GetPreferredSize();
   pill_->SetBounds(0, (height() - pill.height()) / 2,
@@ -543,7 +604,7 @@ void ArgonSidebarView::Rebuild() {
     drew_since_divider = true;
   };
 
-  for (const ArgonModule module : kQuietSidebar) {
+  for (const ArgonModule module : settings_.side) {
     switch (module) {
       case ArgonModule::kNavigation: {
         // ponytail: hidden while collapsed; the collapsed strip has no room.
@@ -640,6 +701,7 @@ void ArgonSidebarView::Rebuild() {
         {name, accent, space.browser == browser_ && space.id == current});
   }
   pill_->SetSpaces(std::move(pill_spaces), palette_);
+  pill_->SetVisible(settings_.edge_pill);
   PreferredSizeChanged();
 }
 
@@ -664,6 +726,12 @@ ArgonSidebarView::RowKind ArgonSidebarView::KindOf(int index) const {
 }
 
 bool ArgonSidebarView::AddTabRows(views::View* parent, RowKind kind) {
+  // The active tab's dot (the Dot icon setting) is in the space's accent.
+  SkColor accent = palette_.ink;
+  if (const std::optional<tab_groups::TabGroupId> focused =
+          model_->GetFocusedGroup()) {
+    accent = NameAndAccent({browser_, *focused}).second;
+  }
   bool added = false;
   for (int i = 0; i < model_->count(); ++i) {
     if (KindOf(i) != kind || !InSpace(i)) {
@@ -680,8 +748,8 @@ bool ArgonSidebarView::AddTabRows(views::View* parent, RowKind kind) {
                                   weak_factory_.GetWeakPtr(), weak_tab);
     }
     auto* row = parent->AddChildView(std::make_unique<ArgonTabRow>(
-        tab, i == model_->active_index(), compact_, palette_, std::move(open),
-        std::move(close)));
+        tab, i == model_->active_index(), compact_, palette_, settings_,
+        accent, std::move(open), std::move(close)));
     // Right-click: pin, unpin, Favorites, close (argon_tab_menu.h).
     row->set_context_menu_controller(this);
     tab_rows_.emplace(row, weak_tab);
@@ -698,7 +766,8 @@ void ArgonSidebarView::AddNewTabRow(views::BoxLayoutView* row,
                                 : views::BoxLayout::MainAxisAlignment::kStart);
   auto* new_tab = row->AddChildView(MakeTextButton(
       base::BindRepeating(&ArgonSidebarView::NewTab, base::Unretained(this)),
-      compact_ ? u"+" : u"+ New", kTextSize, palette_));
+      compact_ ? u"+" : u"+ New", RowTextSize(settings_.density),
+      RowHeight(settings_.density), palette_));
   new_tab->SetTooltipText(u"New tab");
   if (compact_ || !any_loose) {
     return;
@@ -707,7 +776,7 @@ void ArgonSidebarView::AddNewTabRow(views::BoxLayoutView* row,
   auto* clear = row->AddChildView(MakeTextButton(
       base::BindRepeating(&ArgonSidebarView::CloseLooseTabs,
                           base::Unretained(this)),
-      u"Clear", kSmallTextSize, palette_));
+      u"Clear", kSmallTextSize, RowHeight(settings_.density), palette_));
   clear->SetTooltipText(u"Close every loose tab in this space");
 }
 
@@ -735,7 +804,8 @@ void ArgonSidebarView::AddNavigationRow(views::BoxLayoutView* row) {
   address_ = row->AddChildView(MakeTextButton(
       base::BindRepeating(&ArgonSidebarView::EditAddress,
                           base::Unretained(this)),
-      std::u16string(), kSmallTextSize, palette_));
+      std::u16string(), kSmallTextSize, RowHeight(settings_.density),
+      palette_));
   // Elide the start, so the registrable domain stays visible: this is the only
   // place the page's origin shows without the toolbar.
   address_->SetElideBehavior(gfx::ELIDE_HEAD);
@@ -796,7 +866,8 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
     auto* button = row->AddChildView(MakeTextButton(
         base::BindRepeating(&ArgonSidebarView::SwitchSpace,
                             base::Unretained(this), space),
-        name.substr(0, 1), kTextSize, palette_));
+        name.substr(0, 1), RowTextSize(settings_.density),
+      RowHeight(settings_.density), palette_));
     // "Name · ⌃N", as in the handoff.
     button->SetTooltipText(
         i < 9 ? name + u" \u00b7 \u2303" + base::NumberToString16(i + 1)
@@ -820,7 +891,8 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
   }
   auto* add = row->AddChildView(MakeTextButton(
       base::BindRepeating(&ArgonSpaces::Create, base::Unretained(spaces_.get())),
-      u"+", kTextSize, palette_));
+      u"+", RowTextSize(settings_.density),
+      RowHeight(settings_.density), palette_));
   add->SetTooltipText(u"New space");
 }
 

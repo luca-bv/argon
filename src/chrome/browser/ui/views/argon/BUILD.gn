@@ -9,7 +9,6 @@ source_set("argon") {
     "argon_command_bar.h",
     "argon_features.h",
     "argon_font.h",
-    "argon_layout.h",
     "argon_palette.h",
     "argon_pins.h",
     "argon_sidebar_view.h",
@@ -24,9 +23,11 @@ source_set("argon") {
     "argon_palette.cc",
   ]
   public_deps = [
+    ":prefs",
     "//base",
     "//chrome/browser/ui/browser_window",
     "//chrome/browser/ui/tabs:tab_strip",
+    "//components/prefs",
     "//components/sessions:session_id",
     "//components/tab_groups",
     "//components/tabs:public",
@@ -37,6 +38,26 @@ source_set("argon") {
     "//ui/views",
   ]
   deps = [ "//ui/gfx:color_utils" ]
+}
+
+# Argon's settings (Customize). A leaf: //chrome/browser/themes depends on it
+# for the tone (argon/ui/colors.patch), so it must not reach back into
+# //chrome/browser/ui.
+source_set("prefs") {
+  sources = [
+    "argon_prefs.cc",
+    "argon_prefs.h",
+  ]
+  public_deps = [
+    "//base",
+    "//ui/color:color_provider_key",
+  ]
+  deps = [
+    "//chrome/browser:browser_process",
+    "//components/prefs",
+    "//skia",
+    "//ui/color",
+  ]
 }
 
 source_set("impl") {

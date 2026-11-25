@@ -27,3 +27,53 @@
  
    if (key.custom_theme) {
      key.custom_theme->AddColorMixers(provider, key);
+--- a/chrome/browser/themes/theme_service.cc
++++ b/chrome/browser/themes/theme_service.cc
+@@ -50,6 +50,7 @@
+ #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+ #include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
+ #include "chrome/browser/ui/color/chrome_color_id.h"
++#include "chrome/browser/ui/views/argon/argon_prefs.h"
+ #include "chrome/common/buildflags.h"
+ #include "chrome/common/chrome_constants.h"
+ #include "chrome/common/chrome_switches.h"
+@@ -323,6 +324,7 @@
+       prefs::kBrowserColorScheme,
+       std::to_underlying(ThemeService::BrowserColorScheme::kSystem));
+   registry->RegisterIntegerPref(prefs::kUserColor, SK_ColorTRANSPARENT);
++  argon::RegisterProfilePrefs(registry);
+   registry->RegisterIntegerPref(
+       prefs::kBrowserColorVariant,
+       static_cast<int>(ui::mojom::BrowserColorVariant::kSystem));
+@@ -406,6 +408,9 @@
+   pref_change_registrar_.Add(
+       prefs::kUserColor, base::BindRepeating(&ThemeService::NotifyThemeChanged,
+                                              base::Unretained(this)));
++  pref_change_registrar_.Add(
++      argon::kTonePref, base::BindRepeating(&ThemeService::NotifyThemeChanged,
++                                            base::Unretained(this)));
+ }
+ 
+ void ThemeService::Shutdown() {
+@@ -785,6 +790,11 @@
+     key.custom_theme = GetThemeSupplier();
+   }
+ 
++  // Argon: the profile's tone (argon_prefs.h); incognito stays dark.
++  if (!is_incognito && !is_isolated) {
++    argon::ApplyTone(*profile_->GetPrefs(), key);
++  }
++
+   return key;
+ }
+ 
+--- a/chrome/browser/themes/BUILD.gn
++++ b/chrome/browser/themes/BUILD.gn
+@@ -34,6 +34,7 @@
+     "//chrome/browser/search/background",
+     "//chrome/browser/ui/browser_window",
+     "//chrome/browser/ui/color:color_headers",
++    "//chrome/browser/ui/views/argon:prefs",
+     "//chrome/browser/ui/webui/cr_components/theme_color_picker",
+     "//chrome/common",
+     "//components/infobars/content",
