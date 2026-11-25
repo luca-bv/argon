@@ -20,6 +20,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/task/sequenced_task_runner.h"
 #include "chrome/browser/autocomplete/autocomplete_classifier_factory.h"
+#include "chrome/app/chrome_command_ids.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/navigator/browser_navigator.h"
@@ -30,11 +31,13 @@
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/argon/argon_arc_import.h"
+#include "chrome/browser/ui/views/argon/argon_features.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
 #include "chrome/browser/ui/views/argon/argon_pins.h"
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
+#include "chrome/browser/ui/views/frame/browser_view.h"
 #include "components/omnibox/browser/autocomplete_classifier.h"
 #include "components/omnibox/browser/autocomplete_match.h"
 #include "components/tab_groups/tab_group_visual_data.h"
@@ -259,10 +262,21 @@ class CommandBarView : public views::View, public views::TextfieldController {
                                               base::Unretained(this))});
     }
 
-    // Tabs in every space.
+    // Tabs in every space, most recently used first.
+    std::vector<tabs::TabInterface*> by_recency;
+    for (int i = 0; i < model_->count(); ++i) {
+      by_recency.push_back(model_->GetTabAtIndex(i));
+    }
+    std::stable_sort(by_recency.begin(), by_recency.end(),
+                     [](tabs::TabInterface* a, tabs::TabInterface* b) {
+                       return a->GetContents()->GetLastActiveTime() >
+                              b->GetContents()->GetLastActiveTime();
+                     });
     int tab_count = 0;
-    for (int i = 0; i < model_->count() && tab_count < kMaxTabs; ++i) {
-      tabs::TabInterface* tab = model_->GetTabAtIndex(i);
+    for (tabs::TabInterface* tab : by_recency) {
+      if (tab_count >= kMaxTabs) {
+        break;
+      }
       const std::u16string title = TabUIHelper::From(tab)->GetTitle();
       const std::u16string url =
           base::UTF8ToUTF16(tab->GetContents()->GetVisibleURL().spec());
@@ -326,10 +340,37 @@ class CommandBarView : public views::View, public views::TextfieldController {
     // Commands on the current space.
     if (model_->SupportsTabGroups() &&
         base::FeatureList::IsEnabled(features::kTabGroupsFocusing)) {
+      // The toolbar, for extension buttons, downloads and the site's details.
+      const bool hidden = ArgonToolbarHidden(browser_);
+      if (matches(hidden ? u"show toolbar" : u"hide toolbar")) {
+        results_.push_back(CommandResult{
+            hidden ? u"Show toolbar" : u"Hide toolbar", u"Command",
+            base::BindRepeating(&CommandBarView::ToggleToolbar,
+                                base::Unretained(this))});
+      }
+      if (matches(u"downloads")) {
+        results_.push_back(CommandResult{
+            u"Downloads", u"\u2318\u21e7J",
+            base::BindRepeating(&CommandBarView::RunCommand,
+                                base::Unretained(this), IDC_SHOW_DOWNLOADS)});
+      }
+      if (matches(u"extensions")) {
+        results_.push_back(CommandResult{
+            u"Extensions", u"Command",
+            base::BindRepeating(&CommandBarView::RunCommand,
+                                base::Unretained(this),
+                                IDC_MANAGE_EXTENSIONS)});
+      }
       if (matches(u"import from arc")) {
         results_.push_back(CommandResult{
             u"Import from Arc", u"Command",
             base::BindRepeating(&ImportFromArc, base::Unretained(browser_.get()))});
+      }
+      if (matches(u"clear loose tabs")) {
+        results_.push_back(CommandResult{
+            u"Clear loose tabs", u"Command",
+            base::BindRepeating(&CommandBarView::ClearLooseTabs,
+                                base::Unretained(this))});
       }
       if (matches(u"new space")) {
         results_.push_back(CommandResult{
@@ -426,6 +467,21 @@ class CommandBarView : public views::View, public views::TextfieldController {
   void TogglePin() {
     if (ArgonSpaces* spaces = ArgonWindowSet::Get()->SpacesFor(browser_)) {
       spaces->TogglePinOfActiveTab();
+    }
+  }
+
+  void ToggleToolbar() {
+    SetArgonToolbarShown(browser_, ArgonToolbarHidden(browser_));
+    if (BrowserView* view = BrowserView::GetBrowserViewForBrowser(browser_)) {
+      view->InvalidateLayout();
+    }
+  }
+
+  void RunCommand(int command) { chrome::ExecuteCommand(browser_, command); }
+
+  void ClearLooseTabs() {
+    if (ArgonSpaces* spaces = ArgonWindowSet::Get()->SpacesFor(browser_)) {
+      spaces->Clear();
     }
   }
 
@@ -531,6 +587,10 @@ void CommandBar::OnClosed(views::Widget::ClosedReason reason) {
 
 bool ShowArgonCommandBar(BrowserWindowInterface* browser, bool new_tab) {
   if (browser->GetType() != BrowserWindowInterface::TYPE_NORMAL) {
+    return false;
+  }
+  // With the toolbar shown ("Show toolbar"), ⌘L focuses its address bar.
+  if (!new_tab && !ArgonToolbarHidden(browser)) {
     return false;
   }
   views::Widget* parent = views::Widget::GetWidgetForNativeWindow(

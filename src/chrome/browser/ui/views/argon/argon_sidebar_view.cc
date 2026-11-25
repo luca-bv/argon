@@ -17,6 +17,11 @@
 #include "base/time/time.h"
 #include "base/task/sequenced_task_runner.h"
 #include "chrome/app/chrome_command_ids.h"
+#include "chrome/browser/browser_process.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/profiles/profile_attributes_entry.h"
+#include "chrome/browser/profiles/profile_attributes_storage.h"
+#include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/sessions/tab_restore_service_factory.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
@@ -41,6 +46,10 @@
 #include "components/tabs/public/tab_interface.h"
 #include "components/vector_icons/vector_icons.h"
 #include "content/public/browser/navigation_controller.h"
+#include "content/public/browser/navigation_entry.h"
+#include "content/public/browser/ssl_status.h"
+#include "net/cert/cert_status_flags.h"
+#include "url/url_constants.h"
 #include "content/public/browser/web_contents.h"
 #include "ui/base/accelerators/accelerator.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
@@ -323,6 +332,8 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
                                    ui::EF_CONTROL_DOWN));
   }
 
+  spaces_->SetClearCallback(base::BindRepeating(
+      &ArgonSidebarView::CloseLooseTabs, weak_factory_.GetWeakPtr()));
   model_->AddObserver(this);
   // Spaces in the set's other windows show here too.
   window_set_subscription_ = ArgonWindowSet::Get()->Subscribe(
@@ -509,6 +520,20 @@ void ArgonSidebarView::Rebuild() {
             name = group->visual_data()->title();
           }
         }
+        // With spaces in other profiles' windows too, say which profile this
+        // one uses: "Work · School".
+        if (std::ranges::any_of(ArgonWindowSet::Get()->List(browser_),
+                                [&](const ArgonWindowSet::Space& space) {
+                                  return space.browser != browser_;
+                                })) {
+          if (ProfileAttributesEntry* entry =
+                  g_browser_process->profile_manager()
+                      ->GetProfileAttributesStorage()
+                      .GetProfileAttributesWithPath(
+                          browser_->GetProfile()->GetPath())) {
+            name += u" \u00b7 " + entry->GetLocalProfileName();
+          }
+        }
         auto label = std::make_unique<views::Label>(name);
         label->SetHorizontalAlignment(gfx::ALIGN_LEFT);
         label->SetFontList(ArgonFont(kSmallTextSize, gfx::Font::Weight::SEMIBOLD));
@@ -673,7 +698,19 @@ void ArgonSidebarView::UpdateNavigation() {
   if (base::StartsWith(host, "www.")) {
     host.erase(0, 4);
   }
-  address_->SetText(base::UTF8ToUTF16(host.empty() ? url.spec() : host));
+  std::u16string text = base::UTF8ToUTF16(host.empty() ? url.spec() : host);
+  // With the toolbar hidden this is the only security indicator: plain HTTP
+  // and certificate errors say so.
+  content::NavigationEntry* entry = contents->GetController().GetVisibleEntry();
+  const bool not_secure =
+      url.SchemeIs(url::kHttpScheme) ||
+      (entry && net::IsCertStatusError(entry->GetSSL().cert_status));
+  if (not_secure) {
+    text = u"Not secure \u00b7 " + text;
+  }
+  address_->SetText(text);
+  address_->SetTextColor(views::Button::STATE_NORMAL,
+                         not_secure ? palette_.warning : palette_.muted);
 }
 
 void ArgonSidebarView::RunCommand(int command) {

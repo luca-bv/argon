@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "base/memory/raw_ptr.h"
+#include "base/functional/callback.h"
 #include "base/memory/weak_ptr.h"
 #include "base/time/time.h"
 #include "base/timer/timer.h"
@@ -59,6 +60,10 @@ class ArgonSpaces : public TabStripModelObserver {
   // After a tab was pinned or unpinned in its space (argon_pins.h): reorders
   // the space and redraws sidebars.
   void PinsChanged();
+  // Closes the current space's loose tabs, with an undo toast. The sidebar
+  // provides it (it owns the toast's bookkeeping); null until it does.
+  void SetClearCallback(base::RepeatingClosure clear);
+  void Clear();
   // Pins the active tab in its space at its current URL, or unpins it (⌘D).
   // Returns false if it can't be (a global pin, or no space).
   bool TogglePinOfActiveTab();
@@ -95,6 +100,7 @@ class ArgonSpaces : public TabStripModelObserver {
   std::map<tab_groups::TabGroupId, base::WeakPtr<tabs::TabInterface>>
       last_active_;
 
+  base::RepeatingClosure clear_;
   base::RepeatingTimer archive_timer_;
   bool enforce_pending_ = false;
   base::WeakPtrFactory<ArgonSpaces> weak_factory_{this};

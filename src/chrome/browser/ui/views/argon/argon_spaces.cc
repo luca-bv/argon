@@ -175,6 +175,16 @@ void ArgonSpaces::Create() {
   model_->EnterFocusMode(space);
 }
 
+void ArgonSpaces::SetClearCallback(base::RepeatingClosure clear) {
+  clear_ = std::move(clear);
+}
+
+void ArgonSpaces::Clear() {
+  if (clear_) {
+    clear_.Run();
+  }
+}
+
 bool ArgonSpaces::TogglePinOfActiveTab() {
   tabs::TabInterface* active = model_->GetActiveTab();
   if (!active || active->IsPinned() || !active->GetGroup()) {

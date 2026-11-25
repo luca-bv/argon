@@ -98,3 +98,26 @@
    }
    ~CornerView() override = default;
  
+@@ -209,16 +211,18 @@
+     shadow_box_->SetShadowOpacity(GetShadowValue());
+   }
+ }
++
++// Argon: the page card's corners are 10px (design_handoff_argon_browser,
++// "Page card"), not the high-emphasis metric (8).
++constexpr int kArgonPageCornerRadius = 10;
+ 
+ void ShadowOverlayView::AddedToWidget() {
+-  shadow_box_->SetShadowCornerRadius(
+-      GetLayoutProvider()->GetCornerRadiusMetric(views::Emphasis::kHigh));
++  shadow_box_->SetShadowCornerRadius(kArgonPageCornerRadius);
+ }
+ 
+ views::ProposedLayout ShadowOverlayView::CalculateProposedLayout(
+     const views::SizeBounds& size_bounds) const {
+-  const int corner_radius =
+-      GetLayoutProvider()->GetCornerRadiusMetric(views::Emphasis::kHigh);
++  const int corner_radius = kArgonPageCornerRadius;
+ 
+   views::ProposedLayout layout;
+   layout.host_size = gfx::Size(size_bounds.width().value_or(corner_radius),

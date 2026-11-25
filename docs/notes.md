@@ -160,6 +160,8 @@ Stages, one patch each:
       sidebar lists all their spaces and switching swaps windows (show the target, then hide the old). Nothing
       stored. Decided (2026-11-25): restore the last session by default; moving a space reopens its tabs in the
       other profile with an undo toast; a new profile copies Helium's services consent.
+      - [x] The space name at the top of the sidebar adds the profile ("Work · School") once other profiles' windows
+        are in the set.
       - [x] Step 1: cross-window switcher and ⌃1–9, the activation rule that keeps one member shown, closing the
         hidden ones with the shown one, no swap out of fullscreen.
       - [x] Steps 2–3 (`argon_space_menu.*`): right-click a space: its profile (checked) and the others, "New
@@ -220,9 +222,10 @@ Compiled only by CI so far.
 - [x] Paper and Dark tones (`src/chrome/browser/ui/color/argon_color_mixer.cc`, hook `argon/ui/colors.patch`):
       frame `#f3f1ed` / `#1c1b19`, toolbar in the page color, so toolbar and page read as one card. Skipped under a
       custom theme or high contrast.
-- [x] Page card (`argon/ui/page-card.patch`): with vertical tabs, Chromium's toolbar-height side panel "shadow box"
-      is always on, so toolbar and page form one card 8px from the frame (none on the sidebar side), with
-      frame-colored corners. Corner radius is Chromium's high-emphasis metric, not the handoff's 10px; no 1px ring yet.
+- [x] Page card (`argon/ui/page-card.patch`): with vertical tabs, the tabbed layout insets everything right of the
+      sidebar once (8px from the frame, none on the sidebar side), so toolbar, infobars, page and side panel form one
+      card; Chromium's shadow overlay draws its frame-colored corners, 10px as in the handoff. The collapsed sidebar
+      rounds its own top corner. No 1px ring (the shadow box's shadow only shows with a side panel).
       Horizontal tabs with a side panel open would show frame-colored corners on the toolbar color.
 - [x] Allo font in Argon's own views (`argon_font.*`): `resources/AlloVariable.ttf.b64` (base64, since `src/` reaches
       the build as a text patch) is decoded by a GN action into the framework's Resources and registered with
@@ -233,7 +236,7 @@ Compiled only by CI so far.
 - [x] No toolbar with vertical tabs (`argon/ui/no-toolbar.patch`: `BrowserView::IsToolbarVisible()` false, the
       path fullscreen-without-toolbar already uses): the sidebar's first module (`kNavigation`) has back, forward,
       reload and the site (head-elided), which opens ⌘L. `--disable-features=ArgonHideToolbar` brings the toolbar
-      back. The bookmarks bar is hidden the same way (it listed every space, as saved tab groups). Known gaps: no extensions button (popups only via shortcuts), no app menu (the Mac menu bar covers
+      back. The bookmarks bar is hidden the same way (it listed every space, as saved tab groups). The sidebar's address says "Not secure" (warning color) for plain HTTP and certificate errors. Known gaps: no extensions button (popups only via shortcuts), no app menu (the Mac menu bar covers
       most of it), no downloads button (⌘⇧J), no lock/not-secure indicator; bubbles that anchored to toolbar
       buttons (downloads, passwords, translate, page actions) open from the page card's top-left corner, and page
       info and permission bubbles 40px in from the window's top-left.
@@ -245,8 +248,9 @@ Compiled only by CI so far.
       new tab, ⌘L (`IDC_FOCUS_LOCATION`) on the current URL to replace it; falls back to Chromium's behavior outside
       normal windows. A `BubbleDialogDelegate` 14% from the window top: tabs in every space (substring match, max 6),
       open/search through the omnibox classifier, "Go to <space>". Argon's own new-tab needs call `chrome::NewTab`.
-      Commands: "New space", "rename <name>", "Go to <space>" across profile windows.
-      Not yet: ranking, Clear.
+      Commands: "New space", "rename <name>", "Go to <space>" across profile windows, "Clear loose tabs", "Show/Hide
+      toolbar" (per window, `ArgonToolbarHidden`: brings back extension buttons, downloads, the app menu and the
+      site's details), "Downloads", "Extensions", pin/unpin, "Import from Arc". Tabs are ranked by last use.
 - [ ] Ticks layout and Customize
 
 Testing a build: the app is still named Helium and uses Helium's profile folder, so if Helium is installed, run it

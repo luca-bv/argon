@@ -24,9 +24,9 @@
  bool BrowserView::IsBookmarkBarVisible() const {
 +  // Argon: no bookmarks bar either while the toolbar is hidden (see
 +  // IsToolbarVisible()); spaces are tab groups, which it would list as saved
-+  // groups.
-+  if (base::FeatureList::IsEnabled(kArgonHideToolbar) &&
-+      vertical_tab_strip_region_view_ && ShouldDrawVerticalTabStrip()) {
++  // groups. The command bar's "Show toolbar" brings both back.
++  if (ArgonToolbarHidden(browser()) && vertical_tab_strip_region_view_ &&
++      ShouldDrawVerticalTabStrip()) {
 +    return false;
 +  }
    if (!WindowFeatureController::From(browser_)->SupportsWindowFeature(
@@ -40,8 +40,8 @@
 +  // Argon: with vertical tabs, the sidebar (back, forward, reload, the site)
 +  // and the command bar (chrome/browser/ui/views/argon/) replace the toolbar.
 +  // The tab strip views only exist between construction and teardown.
-+  if (base::FeatureList::IsEnabled(kArgonHideToolbar) &&
-+      vertical_tab_strip_region_view_ && ShouldDrawVerticalTabStrip()) {
++  if (ArgonToolbarHidden(browser()) && vertical_tab_strip_region_view_ &&
++      ShouldDrawVerticalTabStrip()) {
 +    return false;
 +  }
  
