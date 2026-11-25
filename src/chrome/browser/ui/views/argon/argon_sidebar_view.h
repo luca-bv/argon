@@ -4,6 +4,7 @@
 #ifndef CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
 #define CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
 
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -17,6 +18,7 @@
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/sessions/core/session_id.h"
 #include "ui/base/metadata/metadata_header_macros.h"
+#include "ui/views/context_menu_controller.h"
 #include "ui/views/view.h"
 
 class BrowserWindowInterface;
@@ -36,7 +38,9 @@ class LabelButton;
 // The space is the focused tab group (argon_spaces.h). Until pins (Spaces
 // stage 2) land, kept tabs are Chromium-pinned tabs, and loose tabs are the
 // space's other tabs.
-class ArgonSidebarView : public views::View, public TabStripModelObserver {
+class ArgonSidebarView : public views::View,
+                         public views::ContextMenuController,
+                         public TabStripModelObserver {
   METADATA_HEADER(ArgonSidebarView, views::View)
 
  public:
@@ -49,6 +53,12 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
   void OnThemeChanged() override;
   void OnBoundsChanged(const gfx::Rect& previous_bounds) override;
+
+  // views::ContextMenuController (space buttons):
+  void ShowContextMenuForViewImpl(
+      views::View* source,
+      const gfx::Point& point,
+      ui::mojom::MenuSourceType source_type) override;
 
   // TabStripModelObserver:
   void OnTabStripModelChanged(TabStripModel* tab_strip_model,
@@ -118,6 +128,8 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
 
   base::RepeatingTimer refresh_timer_;
   base::CallbackListSubscription window_set_subscription_;
+  // The space each space button stands for, for its menu.
+  std::map<views::View*, ArgonWindowSet::Space> space_buttons_;
   bool rebuild_pending_ = false;
   base::WeakPtrFactory<ArgonSidebarView> weak_factory_{this};
 };

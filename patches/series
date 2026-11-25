@@ -3,6 +3,7 @@ argon/core/memory-saver-maximum.patch
 argon/core/quick-intensive-throttling.patch
 argon/core/live-tab-budget.patch
 argon/core/no-spare-renderer.patch
+argon/core/restore-session.patch
 argon/ui/sidebar.patch
 argon/ui/tab-strip-defaults.patch
 argon/ui/colors.patch

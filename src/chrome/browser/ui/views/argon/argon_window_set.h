@@ -18,6 +18,10 @@
 #include "components/tab_groups/tab_group_id.h"
 
 class ArgonSpaces;
+
+namespace base {
+class FilePath;
+}  // namespace base
 class BrowserWindowInterface;
 
 // Spaces across profiles (docs/notes.md, "Spaces", stage 4). A window holds one
@@ -43,6 +47,8 @@ class ArgonWindowSet : public BrowserCollectionObserver {
   // The spaces `from`'s sidebar lists: every member's when `from` is in the
   // set, else `from`'s own. Members in creation order, each in strip order.
   std::vector<Space> List(BrowserWindowInterface* from);
+  // The set's window for the profile at `profile_path`, or null.
+  BrowserWindowInterface* MemberFor(const base::FilePath& profile_path);
   // Switches `from` to `space`, swapping windows if it lives in another one.
   void Switch(BrowserWindowInterface* from, const Space& space);
 

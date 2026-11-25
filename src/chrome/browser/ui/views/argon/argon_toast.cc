@@ -69,14 +69,20 @@ class Toast {
     label->SetFontList(ArgonFont(kTextSize, gfx::Font::Weight::NORMAL));
     label->SetAutoColorReadabilityEnabled(false);
     label->SetEnabledColor(kText);
-    auto* undo_button = row->AddChildView(std::make_unique<views::LabelButton>(
-        base::BindRepeating(&Toast::Undo, base::Unretained(this)), u"Undo"));
-    undo_button->SetTextColor(views::Button::STATE_NORMAL, kText);
-    undo_button->SetTextColor(views::Button::STATE_HOVERED, kText);
-    undo_button->SetTextColor(views::Button::STATE_PRESSED, kText);
-    undo_button->SetBackground(
-        views::CreateRoundedRectBackground(kUndoBackground, 8));
-    undo_button->SetBorder(views::CreateEmptyBorder(gfx::Insets::VH(4, 10)));
+    if (undo_) {
+      auto* undo_button =
+          row->AddChildView(std::make_unique<views::LabelButton>(
+              base::BindRepeating(&Toast::Undo, base::Unretained(this)),
+              u"Undo"));
+      undo_button->SetTextColor(views::Button::STATE_NORMAL, kText);
+      undo_button->SetTextColor(views::Button::STATE_HOVERED, kText);
+      undo_button->SetTextColor(views::Button::STATE_PRESSED, kText);
+      undo_button->SetBackground(
+          views::CreateRoundedRectBackground(kUndoBackground, 8));
+      undo_button->SetBorder(views::CreateEmptyBorder(gfx::Insets::VH(4, 10)));
+    } else {
+      row->SetInsideBorderInsets(gfx::Insets::VH(10, 16));
+    }
     delegate_->SetContentsView(std::move(row));
 
     widget_ = views::BubbleDialogDelegate::CreateBubble(

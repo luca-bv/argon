@@ -29,6 +29,7 @@
 #include "chrome/browser/ui/views/argon/argon_command_bar.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_layout.h"
+#include "chrome/browser/ui/views/argon/argon_space_menu.h"
 #include "chrome/browser/ui/views/argon/argon_toast.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/sessions/core/tab_restore_service.h"
@@ -436,6 +437,7 @@ void ArgonSidebarView::Rebuild() {
   back_ = nullptr;
   forward_ = nullptr;
   address_ = nullptr;
+  space_buttons_.clear();
   contents_->RemoveAllChildViews();
 
   bool any_loose = false;
@@ -672,6 +674,9 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
         i < 9 ? name + u" \u00b7 \u2303" + base::NumberToString16(i + 1)
               : name);
     button->GetViewAccessibility().SetName(name);
+    // Right-click: which profile the space uses (argon_space_menu.h).
+    button->set_context_menu_controller(this);
+    space_buttons_.emplace(button, space);
     // The current space is filled with its accent, the others drawn in it.
     if (space.browser == browser_ && space.id == current) {
       for (const auto state : {views::Button::STATE_NORMAL,
@@ -689,6 +694,15 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
       base::BindRepeating(&ArgonSpaces::Create, base::Unretained(spaces_.get())),
       u"+", kTextSize, palette_));
   add->SetTooltipText(u"New space");
+}
+
+void ArgonSidebarView::ShowContextMenuForViewImpl(
+    views::View* source,
+    const gfx::Point& point,
+    ui::mojom::MenuSourceType source_type) {
+  if (const auto it = space_buttons_.find(source); it != space_buttons_.end()) {
+    ShowArgonSpaceMenu(source, it->second, point, source_type);
+  }
 }
 
 void ArgonSidebarView::SwitchSpace(const ArgonWindowSet::Space& space) {

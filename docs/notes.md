@@ -152,10 +152,14 @@ Stages, one patch each:
       other profile with an undo toast; a new profile copies Helium's services consent.
       - [x] Step 1: cross-window switcher and ⌃1–9, the activation rule that keeps one member shown, closing the
         hidden ones with the shown one, no swap out of fullscreen.
-      - [ ] Step 2: profile menu on space buttons (existing profiles, "New profile" named after the space).
-      - [ ] Step 3: move an existing space to a profile (reopen URLs, undo toast).
-      - [ ] Step 4: launch: "continue where you left off" default, open every profile's window, sync sidebar
-        width/collapse on swap.
+      - [x] Steps 2–3 (`argon_space_menu.*`): right-click a space: its profile (checked) and the others, "New
+        profile for this space" (named after it, skips Helium's setup, copies the services consent). Picking one
+        reopens the space's tabs in that profile's window (`profiles::SwitchToProfile`), closes the originals,
+        and shows a toast whose Undo moves it back. Refused while a page would ask "Leave site?".
+      - [x] Step 4: "continue where you left off" by default (`argon/core/restore-session.patch`); hidden windows
+        are open at quit, so session restore brings every profile's window back and the activation rule stacks
+        them. Sidebar width and collapse follow the window on screen. Not done: reopening profiles whose window
+        was closed before quitting.
 - [x] 5. Auto-archive: `ArgonSpaces` checks every minute and closes unpinned, inactive, silent tabs unused for 12 h
       (`kArchiveAfter`, from `WebContents::GetLastActiveTime`); they land in Recently Closed/History. Not yet: the
       12 h / 24 h / 7 d / never setting, an Archive list.

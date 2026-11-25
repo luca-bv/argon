@@ -6,6 +6,7 @@
 #include <set>
 #include <utility>
 
+#include "base/files/file_path.h"
 #include "base/functional/bind.h"
 #include "base/location.h"
 #include "base/no_destructor.h"
@@ -13,9 +14,28 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_window/public/browser_collection.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
+#include "chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h"
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
 #include "ui/base/base_window.h"
 #include "ui/gfx/geometry/rect.h"
+
+namespace {
+
+// The sidebar's width and collapsed state are per window; the window coming on
+// screen takes them from the one it replaces.
+void CopySidebarState(BrowserWindowInterface* from, BrowserWindowInterface* to) {
+  const auto* from_state = tabs::VerticalTabStripStateController::From(from);
+  auto* to_state = tabs::VerticalTabStripStateController::From(to);
+  if (!from_state || !to_state) {
+    return;
+  }
+  to_state->SetUncollapsedWidth(from_state->GetUncollapsedWidth());
+  if (to_state->IsCollapsed() != from_state->IsCollapsed()) {
+    to_state->RequestCollapse(from_state->IsCollapsed());
+  }
+}
+
+}  // namespace
 
 // static
 ArgonWindowSet* ArgonWindowSet::Get() {
@@ -55,6 +75,16 @@ bool ArgonWindowSet::IsMember(BrowserWindowInterface* browser) {
   return false;
 }
 
+BrowserWindowInterface* ArgonWindowSet::MemberFor(
+    const base::FilePath& profile_path) {
+  for (BrowserWindowInterface* member : Members()) {
+    if (member->GetProfile()->GetPath() == profile_path) {
+      return member;
+    }
+  }
+  return nullptr;
+}
+
 std::vector<ArgonWindowSet::Space> ArgonWindowSet::List(
     BrowserWindowInterface* from) {
   std::vector<BrowserWindowInterface*> windows = {from};
@@ -86,6 +116,7 @@ void ArgonWindowSet::Switch(BrowserWindowInterface* from, const Space& space) {
   // window just comes forward.
   if (!shown->IsFullscreen()) {
     target->SetBounds(shown->GetBounds());
+    CopySidebarState(from, space.browser);
   }
   // Show the target first, so there's no gap and AppKit doesn't bring up a
   // third window.
@@ -188,6 +219,7 @@ void ArgonWindowSet::HideOtherMembers(SessionID shown_id) {
     }
     if (!moved) {
       shown->GetWindow()->SetBounds(window->GetBounds());
+      CopySidebarState(member, shown);
       moved = true;
     }
     Hide(member);

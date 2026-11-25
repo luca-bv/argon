@@ -11,7 +11,8 @@
 class BrowserWindowInterface;
 
 // A toast at the bottom center of the window (design_handoff_argon_browser/
-// README.md, "Toast / undo"): `text`, and an Undo button that runs `undo`.
+// README.md, "Toast / undo"): `text`, and an Undo button that runs `undo` (none
+// when `undo` is null).
 // Shown for 6 seconds; a newer toast replaces it. It never takes focus.
 void ShowArgonToast(BrowserWindowInterface* browser,
                     std::u16string text,
