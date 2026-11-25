@@ -256,7 +256,19 @@ Compiled only by CI; Argon has never been built locally.
       features or axes; ROND stays 50). Also Chromium's own UI font (decided 2026-11-25): `UseArgonFontAsDefault()` at
       Mac startup (`argon/ui/allo-default-font.patch`) sets `gfx::FontList`'s default to "Allo Variable, 13px"; views
       that build a `gfx::Font` directly, and native Mac menus, keep the system font.
-- [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
+- [ ] Customize (design: `design_handoff_argon_browser/README.md` §6, `Argon Customize.dc.html`, `ArgonModule.dc.html`).
+      Three stages, in dependency order, each its own build:
+      1. Layout and settings in profile prefs: the zones (`side`, `top`: lists of modules) and the handoff's `cfg`
+         (side, behavior pinned/auto-hide/off, width 180–320, density, tab icons, close ×, archive 12 h/24 h/7 d/never,
+         switcher, edge pill side, per-space hues, tone Paper/Cool/Tinted/Dark, frame gap 0–16, corners 0–20, Allo
+         roundness). Replace the constants with prefs and redraw on change: `kQuietSidebar` (`argon_layout.h`), row
+         sizes, `kArchiveAfter`, the page card's gap and radius, the color mixer's tone, the edge pill.
+      2. The Customize page: WebUI editing those prefs, so the native UI updates live. Left a preview, right the 320px
+         inspector: Mode (Edit layout / Use, ⌃⇧E), presets Quiet/Ticks/Classic/Top bar, modules tray, and the
+         Sidebar, Tabs, Spaces and Window sections, saved automatically, with Reset.
+      3. What Customize adds: the Top bar zone with horizontal module variants, the remaining modules (address,
+         Favorites grid, archive count, spacer), the Ticks layout (tick marks on the edge, tab panel on hover), custom
+         space colors (the six handoff hues, the Tinted tone per space).
 - [x] Edge pill (`argon_edge_pill.*`): on the sidebar's leading edge, vertically centered; a 6×56 pill with a dot per
       space (the current one 14px tall, in its accent), expanding on hover into a round button per space. It's the
       switcher while collapsed. No drop shadow yet (a hairline instead).
@@ -278,7 +290,7 @@ Compiled only by CI; Argon has never been built locally.
       Commands: "New space", "rename <name>", "Go to <space>" across profile windows, "Clear loose tabs", "Show/Hide
       toolbar" (per window, `ArgonToolbarHidden`: brings back extension buttons, downloads, the app menu and the
       site's details), "Downloads", "Extensions", pin/unpin, "Import from Arc". Tabs are ranked by last use.
-- [ ] Ticks layout and Customize
+- [ ] Ticks layout: Customize stage 3
 
 Testing a build: the app is still named Helium and uses Helium's profile folder, so if Helium is installed, run it
 with its own profile: `<path>/Helium.app/Contents/MacOS/Helium --user-data-dir="$HOME/argon-test-profile"`.
