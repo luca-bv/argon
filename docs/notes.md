@@ -131,10 +131,13 @@ space property (re-implements filtering and persistence that focus mode already 
 
 Stages, one patch each:
 
-- [ ] 1. Switchable spaces (300–450 lines): new `chrome/browser/ui/argon/` controller (every unpinned tab in a
-      group, one group always focused, "Home" on first run) and a space switcher in the sidebar footer; flip
-      `kTabGroupsFocusing`; in `tab_strip_model.cc` make new tabs join the focused group and make activating a
-      tab in another group switch spaces instead of exiting focus (about 15 `ExitFocusMode` call sites to audit).
+- [x] 1. Switchable spaces: `ArgonSpaces` (`src/chrome/browser/ui/views/argon/argon_spaces.*`, owned by the
+      sidebar) keeps every unpinned tab in a group and one group focused ("Home" on first run). Rather than
+      patching the ~15 `ExitFocusMode` call sites, it observes focus changes and, a task later, re-focuses the
+      active tab's group (or the last space), and moves ungrouped tabs into it. Hook `argon/ui/spaces.patch`
+      turns on `kTabGroupsFocusing` and drops the "focus exited" toast. Switcher: a row of first-letter
+      buttons and "+" at the bottom of the sidebar (`ArgonModule::kSpaces`), hidden while collapsed. Not yet:
+      ⌃1–9, renaming from Argon's UI (the group editor works), spaces in horizontal-tabs mode.
 - [ ] 2. Pins (`argon_pin_url`, sorted to the top of the group with a divider)
 - [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`)
 - [ ] 4. Profile per space: a profile-bound space lives in that profile's window; switching swaps windows at the
@@ -182,7 +185,10 @@ Compiled only by CI so far.
       is always on, so toolbar and page form one card 8px from the frame (none on the sidebar side), with
       frame-colored corners. Corner radius is Chromium's high-emphasis metric, not the handoff's 10px; no 1px ring yet.
       Horizontal tabs with a side panel open would show frame-colored corners on the toolbar color.
-- [ ] Allo font (bundled, registered at startup; `ss01`/`tnum` and `ROND` need more than `gfx::FontList`)
+- [x] Allo font in Argon's own views (`argon_font.*`): `resources/AlloVariable.ttf.b64` (base64, since `src/` reaches
+      the build as a text patch) is decoded by a GN action into the framework's Resources and registered with
+      CoreText on first use. Family "Allo Variable". Not applied: `ss01`/`tnum` and ROND 100 (FontList can't set
+      features or axes; ROND stays 50). The rest of Chromium's UI keeps the system font.
 - [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
 - [ ] Edge-pill space switcher (after Spaces stage 1)
 - [ ] Archive timers on loose tabs (with auto-archive, stage 5)
@@ -211,8 +217,9 @@ Patches, biggest saving first:
       a power or thermal change applies at the next tab switch; macOS-only code, uncompiled)
 - [x] Memory Saver defaults to Maximum (`argon/core/memory-saver-maximum.patch`)
 - [x] Intensive background throttling after 10 s instead of 5 min (`argon/core/quick-intensive-throttling.patch`)
-- [ ] No spare renderer process: not a feature flag on desktop in Chromium 158 (only Android has one), needs a
-      patch in `content/browser/renderer_host/spare_render_process_host_manager*`
+- [x] No spare renderer process (`argon/core/no-spare-renderer.patch`): `kSpareRendererForSitePerProcess` off, so
+      `RenderProcessHostImpl::IsSpareProcessKeptAtAllTimes()` is false and the manager drops spares instead of
+      keeping one warm. Direct `WarmupSpare()` callers (navigation predictors) can still make one briefly.
 
 Not worth it: removing features (saves download size, not RAM), V8 lite mode (slow JS), weakening site isolation
 (security).

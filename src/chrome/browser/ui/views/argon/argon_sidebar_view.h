@@ -4,12 +4,14 @@
 #ifndef CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
 #define CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_SIDEBAR_VIEW_H_
 
+#include <memory>
 #include <optional>
 
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
+#include "chrome/browser/ui/views/argon/argon_spaces.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/views/view.h"
 
@@ -25,9 +27,9 @@ class BoxLayoutView;
 // VerticalTabStripRegionView, which still owns the width, collapse, resize and
 // the window controls above it. Collapsed, it shows favicons only.
 //
-// Until Spaces (stage 1) and pins (stage 2) land: the space is the focused tab
-// group ("Home" when none), kept tabs are Chromium-pinned tabs, and loose tabs
-// are the unpinned tabs Chromium shows (only the focused group's in focus mode).
+// The space is the focused tab group (argon_spaces.h). Until pins (Spaces
+// stage 2) land, kept tabs are Chromium-pinned tabs, and loose tabs are the
+// space's other tabs.
 class ArgonSidebarView : public views::View, public TabStripModelObserver {
   METADATA_HEADER(ArgonSidebarView, views::View)
 
@@ -71,6 +73,7 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   // it added any.
   bool AddTabRows(views::View* parent, bool kept);
   void AddNewTabRow(views::BoxLayoutView* row, bool any_loose);
+  void AddSpaceButtons(views::BoxLayoutView* row);
 
   void Activate(base::WeakPtr<tabs::TabInterface> tab);
   void Close(base::WeakPtr<tabs::TabInterface> tab);
@@ -79,6 +82,7 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
 
   const raw_ptr<BrowserWindowInterface> browser_;
   const raw_ptr<TabStripModel> model_;
+  const std::unique_ptr<ArgonSpaces> spaces_;
 
   raw_ptr<views::View> contents_ = nullptr;
   ArgonPalette palette_;

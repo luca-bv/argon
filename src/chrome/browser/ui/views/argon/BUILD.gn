@@ -8,11 +8,13 @@ source_set("argon") {
     "argon_layout.h",
     "argon_palette.h",
     "argon_sidebar_view.h",
+    "argon_spaces.h",
   ]
   sources = [ "argon_palette.cc" ]
   public_deps = [
     "//base",
     "//chrome/browser/ui/tabs:tab_strip",
+    "//components/tab_groups",
     "//skia",
     "//ui/base/metadata",
     "//ui/views",
@@ -21,8 +23,15 @@ source_set("argon") {
 }
 
 source_set("impl") {
-  sources = [ "argon_sidebar_view.cc" ]
+  sources = [
+    "argon_font.cc",
+    "argon_font.h",
+    "argon_sidebar_view.cc",
+    "argon_spaces.cc",
+  ]
+  frameworks = [ "CoreText.framework" ]
   deps = [
+    ":allo_font",
     ":argon",
     "//chrome/app:command_ids",
     "//chrome/browser/ui:browser_commands",
@@ -31,10 +40,30 @@ source_set("impl") {
     "//chrome/browser/ui/tabs",
     "//chrome/browser/ui/tabs:tab_enums",
     "//chrome/browser/ui/tabs:tab_group",
+    "//chrome/browser/ui:ui_features",
     "//components/tab_groups",
     "//components/tabs:public",
     "//components/vector_icons",
     "//ui/color",
     "//ui/gfx",
   ]
+}
+
+# Allo, decoded into the framework's Resources (argon_font.cc registers it).
+# bundle_data reaches the framework bundle through //chrome/browser's deps.
+action("allo_font_ttf") {
+  script = "resources/decode_base64.py"
+  inputs = [ "resources/AlloVariable.ttf.b64" ]
+  outputs = [ "$target_gen_dir/AlloVariable.ttf" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+bundle_data("allo_font") {
+  # The OFL asks for the licence to travel with the font.
+  sources = get_target_outputs(":allo_font_ttf") + [ "resources/Allo-OFL.txt" ]
+  outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+  public_deps = [ ":allo_font_ttf" ]
 }

@@ -15,6 +15,7 @@ enum class ArgonModule {
   kPinned,   // Kept tabs.
   kLoose,    // Temporary tabs.
   kNewTab,   // "+ New", with "Clear" while there are loose tabs.
+  kSpaces,   // One button per space, and "+" for a new one.
 };
 
 // ponytail: the "Quiet" preset is the only layout until the Customize page
@@ -26,6 +27,8 @@ inline constexpr auto kQuietSidebar = std::to_array<ArgonModule>({
     ArgonModule::kDivider,
     ArgonModule::kLoose,
     ArgonModule::kNewTab,
+    ArgonModule::kDivider,
+    ArgonModule::kSpaces,
 });
 
 #endif  // CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_LAYOUT_H_
