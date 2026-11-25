@@ -14,4 +14,10 @@
 // font's default, 50).
 gfx::FontList ArgonFont(int size, gfx::Font::Weight weight);
 
+// Makes Allo the default font of Chromium's own UI too (gfx::FontList()), at
+// the Mac UI size. Called at startup once the resource bundle has set the
+// default (argon/ui/allo-default-font.patch); views built from gfx::Font()
+// directly keep the system font.
+void UseArgonFontAsDefault();
+
 #endif  // CHROME_BROWSER_UI_VIEWS_ARGON_ARGON_FONT_H_

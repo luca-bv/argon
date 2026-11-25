@@ -34,6 +34,11 @@ void RegisterOnce() {
 
 }  // namespace
 
+void UseArgonFontAsDefault() {
+  RegisterOnce();
+  gfx::FontList::SetDefaultFontDescription(std::string(kFamily) + ", 13px");
+}
+
 gfx::FontList ArgonFont(int size, gfx::Font::Weight weight) {
   RegisterOnce();
   return gfx::FontList(std::vector<std::string>{kFamily}, gfx::Font::NORMAL,

@@ -21,3 +21,4 @@ argon/ui/spaces.patch
 argon/ui/space-pins.patch
 argon/ui/command-bar.patch
 argon/ui/no-toolbar.patch
+argon/ui/allo-default-font.patch

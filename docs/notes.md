@@ -43,7 +43,8 @@ Not compiled yet.
 
 What goes with it, besides Helium's look: on-screen controls for features that stay underneath (pins sidebar, bangs
 and translate UI, uBlock entry in Settings, noise indicator in page info, crash dialog), and cleanups in the UI block.
-Candidates to bring back as Argon patches (each needs a re-apply check against upstream):
+Brought back as Argon patches, unchanged copies in `patches/argon/helium/` (2026-11-25; Argon patches so resuming
+still works; all eight dry-run cleanly on the assembled tree and touch no file Argon's patches do):
 `remove-google-promotional-resources` (first-run intro, Gemini spark, sign-in promos), `remove-devtools-annoyances`,
 `profile-picker-cleanup`, `profile-customization-cleanup`, `remove-dead-profile-actions`, `licenses-in-credits`,
 `ublock-show-in-settings`, `helium-noise-page-info`. `helium/macos/open-shortcuts-settings-action` stays but is dead
@@ -184,7 +185,7 @@ Stages, one patch each:
       Built: read and parsed on the thread pool; Arc profile names from Arc's `User Data/Local State`; tabs added
       unloaded (Helium's `chrome::AddDeferredTab`); space colors mapped to the nearest group color; spaces whose name
       exists are skipped. Not imported: logins, history, folder names, Little Arc/Peek state.
-- [ ] Command bar, Peek, Little Arc
+- [ ] Peek and Little Arc (after Customize, decided 2026-11-25)
 
 First thing on the EC2 Mac, before any code: run the first Argon build (stock Chromium interface) with
 `--enable-features=TabGroupsFocusing,NonGroupFocus,TabGroupRibbon` and vertical tabs, and check that focusing a group
@@ -230,7 +231,9 @@ Compiled only by CI so far.
 - [x] Allo font in Argon's own views (`argon_font.*`): `resources/AlloVariable.ttf.b64` (base64, since `src/` reaches
       the build as a text patch) is decoded by a GN action into the framework's Resources and registered with
       CoreText on first use. Family "Allo Variable". Not applied: `ss01`/`tnum` and ROND 100 (FontList can't set
-      features or axes; ROND stays 50). The rest of Chromium's UI keeps the system font.
+      features or axes; ROND stays 50). Also Chromium's own UI font (decided 2026-11-25): `UseArgonFontAsDefault()` at
+      Mac startup (`argon/ui/allo-default-font.patch`) sets `gfx::FontList`'s default to "Allo Variable, 13px"; views
+      that build a `gfx::Font` directly, and native Mac menus, keep the system font.
 - [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
 - [x] Edge pill (`argon_edge_pill.*`): on the sidebar's leading edge, vertically centered; a 6×56 pill with a dot per
       space (the current one 14px tall, in its accent), expanding on hover into a round button per space. It's the

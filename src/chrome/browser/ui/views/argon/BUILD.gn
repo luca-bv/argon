@@ -8,6 +8,7 @@ source_set("argon") {
     "argon_arc_import.h",
     "argon_command_bar.h",
     "argon_features.h",
+    "argon_font.h",
     "argon_layout.h",
     "argon_palette.h",
     "argon_pins.h",
@@ -32,6 +33,7 @@ source_set("argon") {
     "//skia",
     "//url",
     "//ui/base/metadata",
+    "//ui/gfx",
     "//ui/views",
   ]
   deps = [ "//ui/gfx:color_utils" ]
@@ -44,7 +46,6 @@ source_set("impl") {
     "argon_edge_pill.cc",
     "argon_edge_pill.h",
     "argon_font.cc",
-    "argon_font.h",
     "argon_pins.cc",
     "argon_sidebar_view.cc",
     "argon_space_menu.cc",
