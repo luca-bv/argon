@@ -136,12 +136,14 @@ Stages, one patch each:
       patching the ~15 `ExitFocusMode` call sites, it observes focus changes and, a task later, re-focuses the
       active tab's group (or the last space), and moves ungrouped tabs into it. Hook `argon/ui/spaces.patch`
       turns on `kTabGroupsFocusing` and drops the "focus exited" toast. Switcher: a row of first-letter
-      buttons and "+" at the bottom of the sidebar (`ArgonModule::kSpaces`), hidden while collapsed. Not yet:
-      ⌃1–9, renaming from Argon's UI (the group editor works), spaces in horizontal-tabs mode.
+      buttons and "+" at the bottom of the sidebar (`ArgonModule::kSpaces`), hidden while collapsed, and ⌃1–9
+      (sidebar accelerators). Not yet: renaming from Argon's UI (the group editor works), spaces in horizontal-tabs mode.
 - [ ] 2. Pins: Helium's `helium/core/pins/*` already gives Chromium-pinned tabs Arc's pin behavior (pinned URL,
       hibernate instead of close, synced across windows, other-origin links open outside), and the sidebar shows them
       in every space. Per-space pins (`argon_pin_url`) only if global pins aren't enough.
-- [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`)
+- [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`).
+      Done so far: a space's accent is its group's color (set in the group editor); the current space's button is
+      filled with it, the others drawn in it.
 - [ ] 4. Profile per space: a profile-bound space lives in that profile's window; switching swaps windows at the
       same frame. Expect a visible swap.
 - [x] 5. Auto-archive: `ArgonSpaces` checks every minute and closes unpinned, inactive, silent tabs unused for 12 h
@@ -194,6 +196,15 @@ Compiled only by CI so far.
       features or axes; ROND stays 50). The rest of Chromium's UI keeps the system font.
 - [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
 - [ ] Edge-pill space switcher (after Spaces stage 1)
+- [x] No toolbar with vertical tabs (`argon/ui/no-toolbar.patch`: `BrowserView::IsToolbarVisible()` false, the
+      path fullscreen-without-toolbar already uses): the sidebar's first module (`kNavigation`) has back, forward,
+      reload and the site (head-elided), which opens ⌘L. `--disable-features=ArgonHideToolbar` brings the toolbar
+      back. Known gaps: no extensions button (popups only via shortcuts), no app menu (the Mac menu bar covers
+      most of it), no downloads button (⌘⇧J), no lock/not-secure indicator; bubbles that anchored to toolbar
+      buttons (downloads, passwords, translate, page actions) open from the page card's top-left corner, and page
+      info and permission bubbles 40px in from the window's top-left.
+- [x] Undo toast (`argon_toast.*`): closing a tab from the sidebar or Clear shows 6 s with Undo (reopens the
+      closed tabs from the recently closed list).
 - [x] Archive timers on loose tabs: `Nm`/`Nh`/`Nd` left, amber under 2 h, replaced by × on hover; rows refresh in
       place every minute.
 - [x] Command bar (`argon_command_bar.*`, hook `argon/ui/command-bar.patch`): ⌘T (`IDC_NEW_TAB`) opens it to start a

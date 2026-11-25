@@ -6,15 +6,21 @@
 source_set("argon") {
   public = [
     "argon_command_bar.h",
+    "argon_features.h",
     "argon_layout.h",
     "argon_palette.h",
     "argon_sidebar_view.h",
     "argon_spaces.h",
+    "argon_toast.h",
   ]
-  sources = [ "argon_palette.cc" ]
+  sources = [
+    "argon_features.cc",
+    "argon_palette.cc",
+  ]
   public_deps = [
     "//base",
     "//chrome/browser/ui/tabs:tab_strip",
+    "//components/sessions:session_id",
     "//components/tab_groups",
     "//skia",
     "//ui/base/metadata",
@@ -30,6 +36,7 @@ source_set("impl") {
     "argon_font.h",
     "argon_sidebar_view.cc",
     "argon_spaces.cc",
+    "argon_toast.cc",
   ]
   frameworks = [ "CoreText.framework" ]
   deps = [
@@ -38,6 +45,7 @@ source_set("impl") {
     "//base:i18n",
     "//chrome/app:command_ids",
     "//chrome/browser/autocomplete",
+    "//chrome/browser/sessions",
     "//chrome/browser/ui:browser_commands",
     "//chrome/browser/ui:tab_ui_helper",
     "//chrome/browser/ui/browser_window",
@@ -47,6 +55,7 @@ source_set("impl") {
     "//chrome/browser/ui/tabs:tab_group",
     "//chrome/browser/ui:ui_features",
     "//components/omnibox/browser",
+    "//components/sessions",
     "//components/tab_groups",
     "//components/tabs:public",
     "//components/vector_icons",

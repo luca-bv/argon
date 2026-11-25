@@ -10,6 +10,7 @@
 // (design_handoff_argon_browser/README.md, "Modules"). The Customize page will
 // let people rearrange them; each zone draws its list in order.
 enum class ArgonModule {
+  kNavigation,  // Back, forward, reload and the current site (opens ⌘L).
   kSpaceName,
   kDivider,  // Skipped when nothing is drawn between it and the last divider.
   kPinned,   // Kept tabs.
@@ -21,6 +22,7 @@ enum class ArgonModule {
 // ponytail: the "Quiet" preset is the only layout until the Customize page
 // stores one in the profile's prefs.
 inline constexpr auto kQuietSidebar = std::to_array<ArgonModule>({
+    ArgonModule::kNavigation,
     ArgonModule::kSpaceName,
     ArgonModule::kDivider,
     ArgonModule::kPinned,

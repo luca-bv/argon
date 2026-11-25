@@ -9,3 +9,4 @@ argon/ui/colors.patch
 argon/ui/page-card.patch
 argon/ui/spaces.patch
 argon/ui/command-bar.patch
+argon/ui/no-toolbar.patch

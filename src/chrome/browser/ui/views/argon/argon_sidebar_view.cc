@@ -12,23 +12,36 @@
 #include "base/functional/bind.h"
 #include "base/location.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/strings/string_util.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/time/time.h"
 #include "base/task/sequenced_task_runner.h"
 #include "chrome/app/chrome_command_ids.h"
+#include "chrome/browser/sessions/tab_restore_service_factory.h"
 #include "chrome/browser/ui/browser_commands.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tab_ui_helper.h"
 #include "chrome/browser/ui/tabs/tab_enums.h"
+#include "chrome/browser/ui/tabs/tab_group_theme.h"
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_user_gesture_details.h"
+#include "chrome/browser/ui/views/argon/argon_command_bar.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_layout.h"
+#include "chrome/browser/ui/views/argon/argon_toast.h"
+#include "components/sessions/core/tab_restore_service.h"
+#include "components/sessions/core/tab_restore_types.h"
 #include "components/tab_groups/tab_group_visual_data.h"
 #include "components/tabs/public/tab_group.h"
 #include "components/tabs/public/tab_interface.h"
 #include "components/vector_icons/vector_icons.h"
+#include "content/public/browser/navigation_controller.h"
+#include "content/public/browser/web_contents.h"
+#include "ui/base/accelerators/accelerator.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
+#include "ui/events/event_constants.h"
+#include "ui/events/keycodes/keyboard_codes.h"
 #include "ui/color/color_id.h"
 #include "ui/color/color_provider.h"
 #include "ui/gfx/font.h"
@@ -63,6 +76,7 @@ constexpr int kFaviconSize = 16;
 constexpr int kCloseSize = 24;
 constexpr int kCloseIconSize = 10;
 constexpr int kTimerTextSize = 11;
+constexpr int kNavIconSize = 16;
 // Narrower than this (the collapsed strip, ~32px; the narrowest expanded one is
 // ~100px), rows show only their favicon.
 constexpr int kCompactWidth = 64;
@@ -291,6 +305,12 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
       views::BoxLayout::CrossAxisAlignment::kStretch);
   contents_ = contents;
 
+  // ⌃1–⌃9 go to the first nine spaces.
+  for (int i = 0; i < 9; ++i) {
+    AddAccelerator(ui::Accelerator(static_cast<ui::KeyboardCode>(ui::VKEY_1 + i),
+                                   ui::EF_CONTROL_DOWN));
+  }
+
   model_->AddObserver(this);
   Rebuild();
   // Archive timers count down by the minute.
@@ -300,6 +320,16 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
 
 ArgonSidebarView::~ArgonSidebarView() {
   model_->RemoveObserver(this);
+}
+
+bool ArgonSidebarView::AcceleratorPressed(const ui::Accelerator& accelerator) {
+  const size_t index = accelerator.key_code() - ui::VKEY_1;
+  const std::vector<tab_groups::TabGroupId> spaces = spaces_->List();
+  if (index >= spaces.size()) {
+    return false;  // No such space: the page may use the key.
+  }
+  spaces_->Switch(spaces[index]);
+  return true;
 }
 
 void ArgonSidebarView::OnThemeChanged() {
@@ -327,6 +357,9 @@ void ArgonSidebarView::OnTabStripModelChanged(
 // rows under the pointer aren't torn down mid-click.
 void ArgonSidebarView::OnTabChangedAt(tabs::TabInterface* tab,
                                       TabChangeType change_type) {
+  if (tab == model_->GetActiveTab()) {
+    UpdateNavigation();
+  }
   for (views::View* list : contents_->children()) {
     for (views::View* child : list->children()) {
       if (auto* row = views::AsViewClass<ArgonTabRow>(child);
@@ -387,6 +420,9 @@ void ArgonSidebarView::ScheduleRebuild() {
 // show up in profiles.
 void ArgonSidebarView::Rebuild() {
   rebuild_pending_ = false;
+  back_ = nullptr;
+  forward_ = nullptr;
+  address_ = nullptr;
   contents_->RemoveAllChildViews();
 
   bool any_loose = false;
@@ -409,6 +445,16 @@ void ArgonSidebarView::Rebuild() {
 
   for (const ArgonModule module : kQuietSidebar) {
     switch (module) {
+      case ArgonModule::kNavigation: {
+        // ponytail: hidden while collapsed; the collapsed strip has no room.
+        if (compact_) {
+          break;
+        }
+        auto row = std::make_unique<views::BoxLayoutView>();
+        AddNavigationRow(row.get());
+        add(std::move(row));
+        break;
+      }
       case ArgonModule::kSpaceName: {
         if (compact_) {
           break;
@@ -461,6 +507,7 @@ void ArgonSidebarView::Rebuild() {
       }
     }
   }
+  UpdateNavigation();
   PreferredSizeChanged();
 }
 
@@ -519,28 +566,105 @@ void ArgonSidebarView::AddNewTabRow(views::BoxLayoutView* row,
   clear->SetTooltipText(u"Close every loose tab in this space");
 }
 
+void ArgonSidebarView::AddNavigationRow(views::BoxLayoutView* row) {
+  row->SetCrossAxisAlignment(views::BoxLayout::CrossAxisAlignment::kCenter);
+  row->SetBetweenChildSpacing(2);
+  const auto add_button = [&](const gfx::VectorIcon& icon, int command,
+                              std::u16string name) {
+    auto* button = row->AddChildView(views::CreateVectorImageButton(
+        base::BindRepeating(&ArgonSidebarView::RunCommand,
+                            base::Unretained(this), command)));
+    // The second color is the disabled one.
+    views::SetImageFromVectorIconWithColor(
+        button, icon, kNavIconSize,
+        views::IconColors(palette_.secondary, palette_.line));
+    button->SetPreferredSize(gfx::Size(kCloseSize, kCloseSize));
+    button->SetTooltipText(name);
+    button->GetViewAccessibility().SetName(name);
+    return button;
+  };
+  back_ = add_button(vector_icons::kArrowBackIcon, IDC_BACK, u"Back");
+  forward_ =
+      add_button(vector_icons::kArrowForwardIcon, IDC_FORWARD, u"Forward");
+  add_button(vector_icons::kRefreshIcon, IDC_RELOAD, u"Reload");
+  address_ = row->AddChildView(MakeTextButton(
+      base::BindRepeating(&ArgonSidebarView::EditAddress,
+                          base::Unretained(this)),
+      std::u16string(), kSmallTextSize, palette_));
+  // Elide the start, so the registrable domain stays visible: this is the only
+  // place the page's origin shows without the toolbar.
+  address_->SetElideBehavior(gfx::ELIDE_HEAD);
+  address_->SetTooltipText(u"Edit address (\u2318L)");
+  row->SetFlexForView(address_, 1);
+}
+
+void ArgonSidebarView::UpdateNavigation() {
+  content::WebContents* contents = model_->GetActiveWebContents();
+  if (!back_ || !contents) {
+    return;
+  }
+  back_->SetEnabled(contents->GetController().CanGoBack());
+  forward_->SetEnabled(contents->GetController().CanGoForward());
+  // The site, as Arc shows it: host without "www.", or the whole URL when
+  // there's no host.
+  const GURL& url = contents->GetVisibleURL();
+  std::string host(url.host());
+  if (base::StartsWith(host, "www.")) {
+    host.erase(0, 4);
+  }
+  address_->SetText(base::UTF8ToUTF16(host.empty() ? url.spec() : host));
+}
+
+void ArgonSidebarView::RunCommand(int command) {
+  chrome::ExecuteCommand(browser_, command);
+}
+
+void ArgonSidebarView::EditAddress() {
+  ShowArgonCommandBar(browser_, /*new_tab=*/false);
+}
+
 void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
   row->SetCrossAxisAlignment(views::BoxLayout::CrossAxisAlignment::kCenter);
   row->SetBetweenChildSpacing(2);
   const std::optional<tab_groups::TabGroupId> current =
       model_->GetFocusedGroup();
-  for (const tab_groups::TabGroupId& space : spaces_->List()) {
+  const std::vector<tab_groups::TabGroupId> spaces = spaces_->List();
+  for (size_t i = 0; i < spaces.size(); ++i) {
+    const tab_groups::TabGroupId& space = spaces[i];
     std::u16string name = kDefaultSpaceName;
-    if (const TabGroup* group = model_->group_model()->GetTabGroup(space);
-        group && !group->visual_data()->title().empty()) {
-      name = group->visual_data()->title();
+    // The space's accent is its tab group's color (the color picked in the
+    // group editor); before the view has a theme, plain ink.
+    SkColor accent = palette_.ink;
+    if (const TabGroup* group = model_->group_model()->GetTabGroup(space)) {
+      if (!group->visual_data()->title().empty()) {
+        name = group->visual_data()->title();
+      }
+      if (const ui::ColorProvider* colors = GetColorProvider()) {
+        accent = colors->GetColor(GetTabGroupTabStripColorId(
+            group->visual_data()->color(), /*active_frame=*/true));
+      }
     }
     // ponytail: the name's first letter stands in for space icons.
     auto* button = row->AddChildView(MakeTextButton(
         base::BindRepeating(&ArgonSpaces::Switch,
                             base::Unretained(spaces_.get()), space),
         name.substr(0, 1), kTextSize, palette_));
-    button->SetTooltipText(name);
+    // "Name · ⌃N", as in the handoff.
+    button->SetTooltipText(
+        i < 9 ? name + u" \u00b7 \u2303" + base::NumberToString16(i + 1)
+              : name);
     button->GetViewAccessibility().SetName(name);
+    // The current space is filled with its accent, the others drawn in it.
     if (space == current) {
-      button->SetTextColor(views::Button::STATE_NORMAL, palette_.ink);
+      for (const auto state : {views::Button::STATE_NORMAL,
+                               views::Button::STATE_HOVERED,
+                               views::Button::STATE_PRESSED}) {
+        button->SetTextColor(state, SK_ColorWHITE);
+      }
       button->SetBackground(
-          views::CreateRoundedRectBackground(palette_.active, kRowRadius));
+          views::CreateRoundedRectBackground(accent, kRowRadius));
+    } else {
+      button->SetTextColor(views::Button::STATE_NORMAL, accent);
     }
   }
   auto* add = row->AddChildView(MakeTextButton(
@@ -561,14 +685,63 @@ void ArgonSidebarView::Activate(base::WeakPtr<tabs::TabInterface> tab) {
 }
 
 // Closed tabs stay reopenable with Cmd+Shift+T (historical tab entries).
-void ArgonSidebarView::Close(base::WeakPtr<tabs::TabInterface> tab) {
+bool ArgonSidebarView::CloseTab(base::WeakPtr<tabs::TabInterface> tab) {
   if (!tab) {
-    return;
+    return false;
   }
   const int index = model_->GetIndexOfTab(tab.get());
-  if (index != TabStripModel::kNoTab) {
-    model_->CloseWebContentsAt(index, TabCloseTypes::CLOSE_USER_GESTURE |
-                                          TabCloseTypes::CLOSE_CREATE_HISTORICAL_TAB);
+  if (index == TabStripModel::kNoTab) {
+    return false;
+  }
+  model_->CloseWebContentsAt(index, TabCloseTypes::CLOSE_USER_GESTURE |
+                                        TabCloseTypes::CLOSE_CREATE_HISTORICAL_TAB);
+  return true;
+}
+
+void ArgonSidebarView::Close(base::WeakPtr<tabs::TabInterface> tab) {
+  const std::optional<SessionID> newest = NewestClosedEntry();
+  if (!CloseTab(tab)) {
+    return;
+  }
+  // Only offer Undo for what reached the recently closed list (not a blank
+  // tab, nothing in incognito, not a tab kept open by a "Leave site?" prompt).
+  if (const int entries = ClosedEntriesSince(newest)) {
+    ShowArgonToast(browser_, u"Closed tab",
+                   base::BindOnce(&ArgonSidebarView::Reopen,
+                                  weak_factory_.GetWeakPtr(), entries));
+  }
+}
+
+std::optional<SessionID> ArgonSidebarView::NewestClosedEntry() {
+  const sessions::TabRestoreService* service =
+      TabRestoreServiceFactory::GetForProfile(browser_->GetProfile());
+  if (!service || service->entries().empty()) {
+    return std::nullopt;
+  }
+  return service->entries().front()->id;
+}
+
+int ArgonSidebarView::ClosedEntriesSince(std::optional<SessionID> newest) {
+  const sessions::TabRestoreService* service =
+      TabRestoreServiceFactory::GetForProfile(browser_->GetProfile());
+  if (!service) {
+    return 0;
+  }
+  // New entries go to the front.
+  int count = 0;
+  for (const auto& entry : service->entries()) {
+    if (newest && entry->id == *newest) {
+      break;
+    }
+    ++count;
+  }
+  return count;
+}
+
+// Each closed tab is its own entry in the recently closed list, newest first.
+void ArgonSidebarView::Reopen(int count) {
+  for (int i = 0; i < count; ++i) {
+    chrome::ExecuteCommand(browser_, IDC_RESTORE_TAB);
   }
 }
 
@@ -584,8 +757,19 @@ void ArgonSidebarView::CloseLooseTabs() {
   if (static_cast<int>(loose.size()) == model_->count()) {
     chrome::NewTab(browser_, NewTabTypes::kNewTabCommand);
   }
+  const std::optional<SessionID> newest = NewestClosedEntry();
+  int closed = 0;
   for (const auto& tab : loose) {
-    Close(tab);
+    closed += CloseTab(tab);
+  }
+  const int entries = ClosedEntriesSince(newest);
+  if (closed && entries) {
+    ShowArgonToast(browser_,
+                   closed == 1 ? std::u16string(u"Cleared 1 tab")
+                               : u"Cleared " + base::NumberToString16(closed) +
+                                     u" tabs",
+                   base::BindOnce(&ArgonSidebarView::Reopen,
+                                  weak_factory_.GetWeakPtr(), entries));
   }
 }
 

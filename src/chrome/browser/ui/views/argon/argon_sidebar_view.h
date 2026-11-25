@@ -13,6 +13,7 @@
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
+#include "components/sessions/core/session_id.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/views/view.h"
 
@@ -21,6 +22,8 @@ class TabStripModel;
 
 namespace views {
 class BoxLayoutView;
+class ImageButton;
+class LabelButton;
 }  // namespace views
 
 // Argon's sidebar zone: draws the modules of a layout (argon_layout.h), top to
@@ -41,6 +44,7 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   ~ArgonSidebarView() override;
 
   // views::View:
+  bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
   void OnThemeChanged() override;
   void OnBoundsChanged(const gfx::Rect& previous_bounds) override;
 
@@ -77,9 +81,22 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   bool AddTabRows(views::View* parent, bool kept);
   void AddNewTabRow(views::BoxLayoutView* row, bool any_loose);
   void AddSpaceButtons(views::BoxLayoutView* row);
+  void AddNavigationRow(views::BoxLayoutView* row);
+  // Back/forward state and the address, from the active tab.
+  void UpdateNavigation();
+  void EditAddress();
+  void RunCommand(int command);
 
   void Activate(base::WeakPtr<tabs::TabInterface> tab);
   void Close(base::WeakPtr<tabs::TabInterface> tab);
+  // Closes `tab` without a toast; returns whether it closed it.
+  bool CloseTab(base::WeakPtr<tabs::TabInterface> tab);
+  // Reopens the `count` most recently closed entries (the toast's Undo).
+  void Reopen(int count);
+  // The newest entry in the recently closed list, and how many entries were
+  // added in front of it since.
+  std::optional<SessionID> NewestClosedEntry();
+  int ClosedEntriesSince(std::optional<SessionID> newest);
   void CloseLooseTabs();
   void NewTab();
 
@@ -88,6 +105,10 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   const std::unique_ptr<ArgonSpaces> spaces_;
 
   raw_ptr<views::View> contents_ = nullptr;
+  // The navigation row's controls; null when it isn't drawn.
+  raw_ptr<views::ImageButton> back_ = nullptr;
+  raw_ptr<views::ImageButton> forward_ = nullptr;
+  raw_ptr<views::LabelButton> address_ = nullptr;
   ArgonPalette palette_;
   bool compact_ = false;
 
