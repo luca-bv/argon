@@ -7,6 +7,8 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 
 #include "base/callback_list.h"
 #include "base/memory/raw_ptr.h"
@@ -21,6 +23,7 @@
 #include "ui/views/context_menu_controller.h"
 #include "ui/views/view.h"
 
+class ArgonEdgePill;
 class BrowserWindowInterface;
 class TabStripModel;
 
@@ -53,6 +56,9 @@ class ArgonSidebarView : public views::View,
   views::View* GetActiveTabRow();
 
   // views::View:
+  void Layout(PassKey) override;
+  gfx::Size CalculatePreferredSize(
+      const views::SizeBounds& available_size) const override;
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
   void OnThemeChanged() override;
   void OnBoundsChanged(const gfx::Rect& previous_bounds) override;
@@ -99,6 +105,10 @@ class ArgonSidebarView : public views::View,
   void AddNewTabRow(views::BoxLayoutView* row, bool any_loose);
   void AddSpaceButtons(views::BoxLayoutView* row);
   void SwitchSpace(const ArgonWindowSet::Space& space);
+  void SwitchToSpaceAt(size_t index);
+  // A space's name ("Home" when untitled) and accent (its group's color).
+  std::pair<std::u16string, SkColor> NameAndAccent(
+      const ArgonWindowSet::Space& space) const;
   void OnWindowSetChanged(BrowserWindowInterface* browser);
   void AddNavigationRow(views::BoxLayoutView* row);
   // Back/forward state and the address, from the active tab.
@@ -123,7 +133,9 @@ class ArgonSidebarView : public views::View,
   const raw_ptr<TabStripModel> model_;
   const std::unique_ptr<ArgonSpaces> spaces_;
 
+  raw_ptr<views::View> scroll_ = nullptr;
   raw_ptr<views::View> contents_ = nullptr;
+  raw_ptr<ArgonEdgePill> pill_ = nullptr;
   // The navigation row's controls; null when it isn't drawn.
   raw_ptr<views::ImageButton> back_ = nullptr;
   raw_ptr<views::ImageButton> forward_ = nullptr;

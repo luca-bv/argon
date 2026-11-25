@@ -232,7 +232,9 @@ Compiled only by CI so far.
       CoreText on first use. Family "Allo Variable". Not applied: `ss01`/`tnum` and ROND 100 (FontList can't set
       features or axes; ROND stays 50). The rest of Chromium's UI keeps the system font.
 - [ ] Layout and settings in profile prefs, then the Customize page (WebUI that edits those prefs)
-- [ ] Edge-pill space switcher (after Spaces stage 1)
+- [x] Edge pill (`argon_edge_pill.*`): on the sidebar's leading edge, vertically centered; a 6×56 pill with a dot per
+      space (the current one 14px tall, in its accent), expanding on hover into a round button per space. It's the
+      switcher while collapsed. No drop shadow yet (a hairline instead).
 - [x] No toolbar with vertical tabs (`argon/ui/no-toolbar.patch`: `BrowserView::IsToolbarVisible()` false, the
       path fullscreen-without-toolbar already uses): the sidebar's first module (`kNavigation`) has back, forward,
       reload and the site (head-elided), which opens ⌘L. `--disable-features=ArgonHideToolbar` brings the toolbar

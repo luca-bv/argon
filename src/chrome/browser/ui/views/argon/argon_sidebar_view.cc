@@ -32,6 +32,7 @@
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_user_gesture_details.h"
 #include "chrome/browser/ui/views/argon/argon_command_bar.h"
+#include "chrome/browser/ui/views/argon/argon_edge_pill.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_layout.h"
 #include "chrome/browser/ui/views/argon/argon_pins.h"
@@ -304,9 +305,8 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
     : browser_(browser),
       model_(browser->GetTabStripModel()),
       spaces_(std::make_unique<ArgonSpaces>(browser)) {
-  SetLayoutManager(std::make_unique<views::FillLayout>());
-
   auto* scroll = AddChildView(std::make_unique<views::ScrollView>());
+  scroll_ = scroll;
   scroll->SetHorizontalScrollBarMode(views::ScrollView::ScrollBarMode::kDisabled);
   scroll->SetBackgroundColor(std::nullopt);
   scroll->SetDrawOverflowIndicator(false);
@@ -322,6 +322,9 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
   contents->SetCrossAxisAlignment(
       views::BoxLayout::CrossAxisAlignment::kStretch);
   contents_ = contents;
+  // After the list, so it's drawn over it when expanded.
+  pill_ = AddChildView(std::make_unique<ArgonEdgePill>(base::BindRepeating(
+      &ArgonSidebarView::SwitchToSpaceAt, base::Unretained(this))));
 
   // ⌘D pins or unpins the active tab in its space, as in Arc (Bookmark This
   // Tab loses the shortcut, argon/ui/space-pins.patch).
@@ -367,6 +370,50 @@ void ArgonSidebarView::OnThemeChanged() {
   views::View::OnThemeChanged();
   palette_ = ArgonPalette(GetColorProvider()->GetColor(ui::kColorFrameActive));
   ScheduleRebuild();
+}
+
+// The list, with a gutter on the leading side for the edge pill (none while
+// collapsed, where the pill sits over the rows' padding), and the pill
+// vertically centered on the edge.
+void ArgonSidebarView::Layout(PassKey) {
+  const int gutter = compact_ ? 0 : ArgonEdgePill::kRestWidth + 4;
+  scroll_->SetBounds(gutter, 0, std::max(0, width() - gutter), height());
+  const gfx::Size pill = pill_->GetPreferredSize();
+  pill_->SetBounds(0, (height() - pill.height()) / 2,
+                   std::min(pill.width(), width()), pill.height());
+}
+
+gfx::Size ArgonSidebarView::CalculatePreferredSize(
+    const views::SizeBounds& available_size) const {
+  return scroll_->GetPreferredSize(available_size);
+}
+
+void ArgonSidebarView::SwitchToSpaceAt(size_t index) {
+  const std::vector<ArgonWindowSet::Space> spaces =
+      ArgonWindowSet::Get()->List(browser_);
+  if (index < spaces.size()) {
+    ArgonWindowSet::Get()->Switch(browser_, spaces[index]);
+  }
+}
+
+std::pair<std::u16string, SkColor> ArgonSidebarView::NameAndAccent(
+    const ArgonWindowSet::Space& space) const {
+  std::u16string name = kDefaultSpaceName;
+  // The space's accent is its tab group's color (the color picked in the
+  // group editor or the space menu); before the view has a theme, plain ink.
+  SkColor accent = palette_.ink;
+  const TabGroupModel* groups = space.browser->GetTabStripModel()->group_model();
+  if (groups && groups->ContainsTabGroup(space.id)) {
+    const TabGroup* group = groups->GetTabGroup(space.id);
+    if (!group->visual_data()->title().empty()) {
+      name = group->visual_data()->title();
+    }
+    if (const ui::ColorProvider* colors = GetColorProvider()) {
+      accent = colors->GetColor(GetTabGroupTabStripColorId(
+          group->visual_data()->color(), /*active_frame=*/true));
+    }
+  }
+  return {name, accent};
 }
 
 void ArgonSidebarView::OnBoundsChanged(const gfx::Rect& previous_bounds) {
@@ -581,6 +628,18 @@ void ArgonSidebarView::Rebuild() {
     }
   }
   UpdateNavigation();
+
+  // The edge pill: every space in the set, the current one marked.
+  std::vector<ArgonEdgePill::Space> pill_spaces;
+  const std::optional<tab_groups::TabGroupId> current =
+      model_->GetFocusedGroup();
+  for (const ArgonWindowSet::Space& space :
+       ArgonWindowSet::Get()->List(browser_)) {
+    const auto [name, accent] = NameAndAccent(space);
+    pill_spaces.push_back(
+        {name, accent, space.browser == browser_ && space.id == current});
+  }
+  pill_->SetSpaces(std::move(pill_spaces), palette_);
   PreferredSizeChanged();
 }
 
@@ -732,21 +791,7 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
       ArgonWindowSet::Get()->List(browser_);
   for (size_t i = 0; i < spaces.size(); ++i) {
     const ArgonWindowSet::Space& space = spaces[i];
-    std::u16string name = kDefaultSpaceName;
-    // The space's accent is its tab group's color (the color picked in the
-    // group editor); before the view has a theme, plain ink.
-    SkColor accent = palette_.ink;
-    if (const TabGroup* group = space.browser->GetTabStripModel()
-                                    ->group_model()
-                                    ->GetTabGroup(space.id)) {
-      if (!group->visual_data()->title().empty()) {
-        name = group->visual_data()->title();
-      }
-      if (const ui::ColorProvider* colors = GetColorProvider()) {
-        accent = colors->GetColor(GetTabGroupTabStripColorId(
-            group->visual_data()->color(), /*active_frame=*/true));
-      }
-    }
+    const auto [name, accent] = NameAndAccent(space);
     // ponytail: the name's first letter stands in for space icons.
     auto* button = row->AddChildView(MakeTextButton(
         base::BindRepeating(&ArgonSidebarView::SwitchSpace,

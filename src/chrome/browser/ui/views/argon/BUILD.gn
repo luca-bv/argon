@@ -41,6 +41,8 @@ source_set("impl") {
   sources = [
     "argon_arc_import.cc",
     "argon_command_bar.cc",
+    "argon_edge_pill.cc",
+    "argon_edge_pill.h",
     "argon_font.cc",
     "argon_font.h",
     "argon_pins.cc",
