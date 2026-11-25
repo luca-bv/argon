@@ -7,12 +7,14 @@
 #include <memory>
 #include <optional>
 
+#include "base/callback_list.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/timer/timer.h"
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
+#include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/sessions/core/session_id.h"
 #include "ui/base/metadata/metadata_header_macros.h"
 #include "ui/views/view.h"
@@ -81,6 +83,8 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   bool AddTabRows(views::View* parent, bool kept);
   void AddNewTabRow(views::BoxLayoutView* row, bool any_loose);
   void AddSpaceButtons(views::BoxLayoutView* row);
+  void SwitchSpace(const ArgonWindowSet::Space& space);
+  void OnWindowSetChanged(BrowserWindowInterface* browser);
   void AddNavigationRow(views::BoxLayoutView* row);
   // Back/forward state and the address, from the active tab.
   void UpdateNavigation();
@@ -113,6 +117,7 @@ class ArgonSidebarView : public views::View, public TabStripModelObserver {
   bool compact_ = false;
 
   base::RepeatingTimer refresh_timer_;
+  base::CallbackListSubscription window_set_subscription_;
   bool rebuild_pending_ = false;
   base::WeakPtrFactory<ArgonSidebarView> weak_factory_{this};
 };

@@ -144,8 +144,18 @@ Stages, one patch each:
 - [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`).
       Done so far: a space's accent is its group's color (set in the group editor); the current space's button is
       filled with it, the others drawn in it.
-- [ ] 4. Profile per space: a profile-bound space lives in that profile's window; switching swaps windows at the
-      same frame. Expect a visible swap.
+- [ ] 4. Profile per space (Arc's model: spaces share the default profile; any space can get its own from its
+      button's menu). A profile-bound space lives in that profile's window. `ArgonWindowSet`
+      (`argon_window_set.*`): the first normal window of each profile, stacked at one frame with one shown; the
+      sidebar lists all their spaces and switching swaps windows (show the target, then hide the old). Nothing
+      stored. Decided (2026-11-25): restore the last session by default; moving a space reopens its tabs in the
+      other profile with an undo toast; a new profile copies Helium's services consent.
+      - [x] Step 1: cross-window switcher and ⌃1–9, the activation rule that keeps one member shown, closing the
+        hidden ones with the shown one, no swap out of fullscreen.
+      - [ ] Step 2: profile menu on space buttons (existing profiles, "New profile" named after the space).
+      - [ ] Step 3: move an existing space to a profile (reopen URLs, undo toast).
+      - [ ] Step 4: launch: "continue where you left off" default, open every profile's window, sync sidebar
+        width/collapse on swap.
 - [x] 5. Auto-archive: `ArgonSpaces` checks every minute and closes unpinned, inactive, silent tabs unused for 12 h
       (`kArchiveAfter`, from `WebContents::GetLastActiveTime`); they land in Recently Closed/History. Not yet: the
       12 h / 24 h / 7 d / never setting, an Archive list.

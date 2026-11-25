@@ -20,6 +20,7 @@
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
+#include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/tab_groups/tab_group_visual_data.h"
 #include "components/tabs/public/tab_group.h"
 #include "components/tabs/public/tab_interface.h"
@@ -61,6 +62,7 @@ bool Enabled(const TabStripModel* model) {
 ArgonSpaces::ArgonSpaces(BrowserWindowInterface* browser)
     : browser_(browser), model_(browser->GetTabStripModel()) {
   model_->AddObserver(this);
+  ArgonWindowSet::Get()->Register(browser_, this);
   LaunchTime();
   ScheduleEnforce();
   archive_timer_.Start(FROM_HERE, base::Minutes(1), this,
@@ -96,17 +98,24 @@ std::optional<base::TimeDelta> ArgonSpaces::TimeUntilArchive(
 }
 
 ArgonSpaces::~ArgonSpaces() {
+  ArgonWindowSet::Get()->Unregister(browser_);
   model_->RemoveObserver(this);
 }
 
 std::vector<tab_groups::TabGroupId> ArgonSpaces::List() const {
+  return ListIn(model_);
+}
+
+// static
+std::vector<tab_groups::TabGroupId> ArgonSpaces::ListIn(
+    const TabStripModel* model) {
   std::vector<tab_groups::TabGroupId> spaces;
-  if (!Enabled(model_)) {
+  if (!Enabled(model)) {
     return spaces;
   }
-  for (int i = 0; i < model_->count(); ++i) {
+  for (int i = 0; i < model->count(); ++i) {
     const std::optional<tab_groups::TabGroupId> group =
-        model_->GetTabAtIndex(i)->GetGroup();
+        model->GetTabAtIndex(i)->GetGroup();
     if (group && (spaces.empty() || spaces.back() != *group)) {
       spaces.push_back(*group);  // A group's tabs are contiguous.
     }
@@ -218,6 +227,8 @@ void ArgonSpaces::ScheduleEnforce() {
 
 void ArgonSpaces::Enforce() {
   enforce_pending_ = false;
+  // Sidebars of the other windows in the set list this window's spaces too.
+  ArgonWindowSet::Get()->NotifyChanged(browser_);
   if (!Enabled(model_) || model_->empty() || model_->closing_all()) {
     return;
   }

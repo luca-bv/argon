@@ -49,8 +49,9 @@ class ArgonSpaces : public TabStripModelObserver {
   ArgonSpaces& operator=(const ArgonSpaces&) = delete;
   ~ArgonSpaces() override;
 
-  // Spaces in tab strip order.
+  // Spaces in tab strip order, in this window or in `model`'s.
   std::vector<tab_groups::TabGroupId> List() const;
+  static std::vector<tab_groups::TabGroupId> ListIn(const TabStripModel* model);
   // Switches to `space`, back to the tab that was active there.
   void Switch(const tab_groups::TabGroupId& space);
   // Opens a new tab in a new space and switches to it.

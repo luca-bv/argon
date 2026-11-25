@@ -30,6 +30,7 @@
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_layout.h"
 #include "chrome/browser/ui/views/argon/argon_toast.h"
+#include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/sessions/core/tab_restore_service.h"
 #include "components/sessions/core/tab_restore_types.h"
 #include "components/tab_groups/tab_group_visual_data.h"
@@ -312,6 +313,10 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
   }
 
   model_->AddObserver(this);
+  // Spaces in the set's other windows show here too.
+  window_set_subscription_ = ArgonWindowSet::Get()->Subscribe(
+      base::BindRepeating(&ArgonSidebarView::OnWindowSetChanged,
+                          weak_factory_.GetWeakPtr()));
   Rebuild();
   // Archive timers count down by the minute.
   refresh_timer_.Start(FROM_HERE, base::Minutes(1), this,
@@ -324,11 +329,12 @@ ArgonSidebarView::~ArgonSidebarView() {
 
 bool ArgonSidebarView::AcceleratorPressed(const ui::Accelerator& accelerator) {
   const size_t index = accelerator.key_code() - ui::VKEY_1;
-  const std::vector<tab_groups::TabGroupId> spaces = spaces_->List();
+  const std::vector<ArgonWindowSet::Space> spaces =
+      ArgonWindowSet::Get()->List(browser_);
   if (index >= spaces.size()) {
     return false;  // No such space: the page may use the key.
   }
-  spaces_->Switch(spaces[index]);
+  ArgonWindowSet::Get()->Switch(browser_, spaces[index]);
   return true;
 }
 
@@ -403,6 +409,13 @@ void ArgonSidebarView::OnTabGroupFocusChanged(
     std::optional<tab_groups::TabGroupId> new_focused_group_id,
     std::optional<tab_groups::TabGroupId> old_focused_group_id) {
   ScheduleRebuild();
+}
+
+void ArgonSidebarView::OnWindowSetChanged(BrowserWindowInterface* browser) {
+  // This window's own changes already reach it as a TabStripModelObserver.
+  if (browser != browser_) {
+    ScheduleRebuild();
+  }
 }
 
 void ArgonSidebarView::ScheduleRebuild() {
@@ -628,14 +641,19 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
   row->SetBetweenChildSpacing(2);
   const std::optional<tab_groups::TabGroupId> current =
       model_->GetFocusedGroup();
-  const std::vector<tab_groups::TabGroupId> spaces = spaces_->List();
+  // Every space in the window set: other profiles' spaces live in their own
+  // windows (argon_window_set.h).
+  const std::vector<ArgonWindowSet::Space> spaces =
+      ArgonWindowSet::Get()->List(browser_);
   for (size_t i = 0; i < spaces.size(); ++i) {
-    const tab_groups::TabGroupId& space = spaces[i];
+    const ArgonWindowSet::Space& space = spaces[i];
     std::u16string name = kDefaultSpaceName;
     // The space's accent is its tab group's color (the color picked in the
     // group editor); before the view has a theme, plain ink.
     SkColor accent = palette_.ink;
-    if (const TabGroup* group = model_->group_model()->GetTabGroup(space)) {
+    if (const TabGroup* group = space.browser->GetTabStripModel()
+                                    ->group_model()
+                                    ->GetTabGroup(space.id)) {
       if (!group->visual_data()->title().empty()) {
         name = group->visual_data()->title();
       }
@@ -646,8 +664,8 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
     }
     // ponytail: the name's first letter stands in for space icons.
     auto* button = row->AddChildView(MakeTextButton(
-        base::BindRepeating(&ArgonSpaces::Switch,
-                            base::Unretained(spaces_.get()), space),
+        base::BindRepeating(&ArgonSidebarView::SwitchSpace,
+                            base::Unretained(this), space),
         name.substr(0, 1), kTextSize, palette_));
     // "Name · ⌃N", as in the handoff.
     button->SetTooltipText(
@@ -655,7 +673,7 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
               : name);
     button->GetViewAccessibility().SetName(name);
     // The current space is filled with its accent, the others drawn in it.
-    if (space == current) {
+    if (space.browser == browser_ && space.id == current) {
       for (const auto state : {views::Button::STATE_NORMAL,
                                views::Button::STATE_HOVERED,
                                views::Button::STATE_PRESSED}) {
@@ -671,6 +689,10 @@ void ArgonSidebarView::AddSpaceButtons(views::BoxLayoutView* row) {
       base::BindRepeating(&ArgonSpaces::Create, base::Unretained(spaces_.get())),
       u"+", kTextSize, palette_));
   add->SetTooltipText(u"New space");
+}
+
+void ArgonSidebarView::SwitchSpace(const ArgonWindowSet::Space& space) {
+  ArgonWindowSet::Get()->Switch(browser_, space);
 }
 
 void ArgonSidebarView::Activate(base::WeakPtr<tabs::TabInterface> tab) {
