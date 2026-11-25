@@ -49,6 +49,9 @@ class ArgonSidebarView : public views::View,
   ArgonSidebarView& operator=(const ArgonSidebarView&) = delete;
   ~ArgonSidebarView() override;
 
+  // The active tab's row, where keyboard focus starts (F6); null if none.
+  views::View* GetActiveTabRow();
+
   // views::View:
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
   void OnThemeChanged() override;

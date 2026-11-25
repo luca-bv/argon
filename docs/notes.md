@@ -195,6 +195,8 @@ Compiled only by CI so far.
       `argon/ui/sidebar.patch` puts it in place of the tab list inside upstream's `VerticalTabStripRegionView`,
       which keeps width, collapse, resize and the window controls. Until Spaces and pins: the space is the focused
       group ("Home" if none), kept tabs are Chromium-pinned tabs.
+- [x] Keyboard: F6 (pane focus) starts on the sidebar's active row (`argon/ui/sidebar-focus.patch`), and rows
+      show a rounded focus ring.
 - [x] Tab strip defaults (`argon/ui/tab-strip-defaults.patch`): vertical tabs on (the sidebar only exists in
       vertical mode), and the tab-search and tab-groups buttons unpinned from the sidebar header (they can be
       pinned back from their context menus). Only affects profiles that never set them.

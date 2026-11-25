@@ -54,6 +54,7 @@
 #include "ui/views/border.h"
 #include "ui/views/controls/button/button.h"
 #include "ui/views/controls/button/button_controller.h"
+#include "ui/views/controls/highlight_path_generator.h"
 #include "ui/views/controls/button/image_button.h"
 #include "ui/views/controls/button/image_button_factory.h"
 #include "ui/views/controls/button/label_button.h"
@@ -112,6 +113,9 @@ class ArgonTabRow : public views::Button {
     // is rebuilt before the mouse comes up.
     button_controller()->set_notify_action(
         views::ButtonController::NotifyAction::kOnPress);
+    // Buttons show a focus ring; this gives it the row's rounded shape.
+    views::InstallRoundRectHighlightPathGenerator(this, gfx::Insets(),
+                                                  kRowRadius);
 
     // Compact rows are barely wider than the favicon, so they center it with
     // no padding.
@@ -166,6 +170,7 @@ class ArgonTabRow : public views::Button {
   ~ArgonTabRow() override = default;
 
   const tabs::TabInterface* tab() const { return tab_.get(); }
+  bool active() const { return active_; }
 
   // Title and favicon, which change while a page loads.
   void UpdateFromTab() {
@@ -376,6 +381,18 @@ void ArgonSidebarView::OnTabChangedAt(tabs::TabInterface* tab,
       }
     }
   }
+}
+
+views::View* ArgonSidebarView::GetActiveTabRow() {
+  for (views::View* list : contents_->children()) {
+    for (views::View* child : list->children()) {
+      if (auto* row = views::AsViewClass<ArgonTabRow>(child);
+          row && row->active()) {
+        return row;
+      }
+    }
+  }
+  return nullptr;
 }
 
 void ArgonSidebarView::RefreshRows() {
