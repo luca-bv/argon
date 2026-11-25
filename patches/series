@@ -4,6 +4,14 @@ argon/core/quick-intensive-throttling.patch
 argon/core/live-tab-budget.patch
 argon/core/no-spare-renderer.patch
 argon/core/restore-session.patch
+argon/helium/remove-google-promotional-resources.patch
+argon/helium/remove-devtools-annoyances.patch
+argon/helium/profile-picker-cleanup.patch
+argon/helium/profile-customization-cleanup.patch
+argon/helium/remove-dead-profile-actions.patch
+argon/helium/licenses-in-credits.patch
+argon/helium/ublock-show-in-settings.patch
+argon/helium/helium-noise-page-info.patch
 argon/ui/sidebar.patch
 argon/ui/sidebar-focus.patch
 argon/ui/tab-strip-defaults.patch
