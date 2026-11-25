@@ -140,7 +140,8 @@ Stages, one patch each:
       (sidebar accelerators). Not yet: renaming from Argon's UI (the group editor works), spaces in horizontal-tabs mode.
 - [ ] 2. Pins: Helium's `helium/core/pins/*` already gives Chromium-pinned tabs Arc's pin behavior (pinned URL,
       hibernate instead of close, synced across windows, other-origin links open outside), and the sidebar shows them
-      in every space. Per-space pins (`argon_pin_url`) only if global pins aren't enough.
+      in every space. Decided (2026-11-25): add Arc's per-space pins too (above the space's loose tabs, never
+      archived, reset to their URL on close); global pins stay as Favorites. The Arc import maps Arc's pins to them.
 - [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`).
       Done so far: a space's accent is its group's color (set in the group editor); the current space's button is
       filled with it, the others drawn in it.
