@@ -10,12 +10,23 @@
            has_side_panel && (has_infobar || !is_split_view || !is_force_to_top);
        const bool suppress_separator = info.shadow_box && is_force_to_top;
        info.multi_contents_separator = !suppress_separator && !has_infobar;
-@@ -997,6 +999,21 @@
-         in_glass_mode() && features::kGlassExpandOnHoverEnabled.Get() &&
-             layout_data_->vertical_tab_strip_animation.expand_on_hover_width >
+@@ -659,8 +661,11 @@
+       case WindowState::kMaximized:
+         if (layout_data_->revised_params.leading_exclusion.ContentWithPadding()
+                 .height() > 0) {
++          // Argon: without a toolbar (argon/ui/no-toolbar.patch) the
++          // collapsed strip rounds its own top-trailing corner.
+           top_corner_collapsed_state =
+-              delegate().IsBookmarkBarVisible() || !would_have_separator
++              delegate().IsBookmarkBarVisible() || !would_have_separator ||
++                      !delegate().IsToolbarVisible()
+                   ? -1.0
+                   : side_panel_corner_value;
+         }
+@@ -999,6 +1004,21 @@
                  0.0f);
-+  }
-+
+   }
+ 
 +  // Argon: the page (toolbar, infobars, contents, side panel) is a card on the
 +  // frame, 8px from it except on the sidebar's side.
 +  const bool argon_card =
@@ -29,10 +40,12 @@
 +    unclipped_contents_region.Inset(
 +        gfx::Insets::TLBR(0, 0, 0, kArgonPageGap));
 +    argon_card_bounds = params.visual_client_area;
-   }
- 
++  }
++
    // Position the vertical tabstrip top corner.
-@@ -1006,7 +1023,7 @@
+   if (IsParentedTo(views().vertical_tab_strip_top_corner,
+                    views().browser_view)) {
+@@ -1006,7 +1026,7 @@
      const double top_corner = layout_data_->vertical_tabs_top_corner();
      const bool top_corner_visible =
          layout_data_->tab_strip_type == TabStripType::kVertical &&
@@ -41,7 +54,7 @@
  
      // The top corner is drawn when the tabstrip goes all the way to the top.
      if (top_corner_visible) {
-@@ -1029,7 +1046,7 @@
+@@ -1029,7 +1049,7 @@
      const double bottom_corner = layout_data_->vertical_tabs_bottom_corner();
      const bool bottom_corner_visible =
          layout_data_->tab_strip_type == TabStripType::kVertical &&
@@ -50,7 +63,7 @@
      if (bottom_corner_visible) {
        auto preferred =
            views().vertical_tab_strip_bottom_corner->GetPreferredSize();
-@@ -1065,7 +1082,7 @@
+@@ -1065,7 +1085,7 @@
      // Possibly bump the leading margin of the top container out to cover the
      // caption buttons, leaving all of the child views in the same absolute
      // position.
@@ -59,7 +72,7 @@
        top_container_layout.bounds.Outset(
            gfx::Outsets::TLBR(0, collapsed_vertical_tab_strip_adjustment, 0, 0));
        for (auto& [child, child_layout] : top_container_layout.children) {
-@@ -1177,8 +1194,9 @@
+@@ -1177,8 +1197,9 @@
    }
  
    // Lay out the shadow overlay.

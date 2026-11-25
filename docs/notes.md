@@ -199,7 +199,7 @@ Compiled only by CI so far.
 - [x] No toolbar with vertical tabs (`argon/ui/no-toolbar.patch`: `BrowserView::IsToolbarVisible()` false, the
       path fullscreen-without-toolbar already uses): the sidebar's first module (`kNavigation`) has back, forward,
       reload and the site (head-elided), which opens ⌘L. `--disable-features=ArgonHideToolbar` brings the toolbar
-      back. Known gaps: no extensions button (popups only via shortcuts), no app menu (the Mac menu bar covers
+      back. The bookmarks bar is hidden the same way (it listed every space, as saved tab groups). Known gaps: no extensions button (popups only via shortcuts), no app menu (the Mac menu bar covers
       most of it), no downloads button (⌘⇧J), no lock/not-secure indicator; bubbles that anchored to toolbar
       buttons (downloads, passwords, translate, page actions) open from the page card's top-left corner, and page
       info and permission bubbles 40px in from the window's top-left.
