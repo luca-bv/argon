@@ -11,6 +11,26 @@ Decisions, patch checks and plans behind [the README](../README.md). Dated entri
 - Lighter than stock Helium where possible (tab-policy patches), with Helium's privacy changes plus more.
 - Rented Macs kept to a minimum: everything that can be done on GitHub's free runners is.
 
+## Where things stand (2026-11-25)
+
+Plan, in the user's order: finish every patch except Customize (done), get a clean build and have the user test
+it, then Customize (layout and settings in profile prefs, then the Customize page, the Ticks layout, custom space
+colors), then Peek and Little Arc. Rebranding, signing and notarization, and update delivery come before anyone
+else uses Argon.
+
+- Last user-tested build: run 45532163822 (spaces, Allo in the sidebar, command bar, auto-archive), installed with
+  the test profile. The user's reports from it were fixed after: saved-group chips in the bookmarks bar (now hidden
+  with the toolbar), no rounding on the collapsed sidebar (its top corner is now rounded). Their "spaces aren't
+  compartmentalized" meant separate logins, which became profile-per-space.
+- Built but never run: run 45537464022 (no toolbar, navigation row, ⌃1–9, colors, undo toast), 45543347571
+  (bookmarks bar, collapsed corner, cross-profile switcher), 45549245685 (profile menu and moves, restore session,
+  color menu, command bar commands, F6 focus, per-space pins, tab row menu, Arc import, Show/Hide toolbar, Not
+  secure, 10px corners). Expect bugs: all of it was reviewed by reading, none of it tried.
+- Building when this was written: run 45564285997 (edge pill, eight Helium cleanups, Allo as the default UI font).
+  If it failed, CI opened an issue; fix, close it, rerun.
+- Next: install the newest successful dmg for the user (ask first; they want to be present), go through what they
+  see, fix, then Customize.
+
 ## Base (patch check, 2026-11-20)
 
 Applied in order with Helium's own flags (`patch -p1 --ignore-whitespace --fuzz=0`) to Helium 0.22.1.1
@@ -50,8 +70,7 @@ still works; all eight dry-run cleanly on the assembled tree and touch no file A
 `ublock-show-in-settings`, `helium-noise-page-info`. `helium/macos/open-shortcuts-settings-action` stays but is dead
 code without the shortcuts page.
 
-Status: CI pipeline, EC2 dev scripts, three weight patches and the first interface patches written; nothing
-compiled yet. Spaces designed, not started.
+Status: see "Where things stand" above.
 
 ## How it builds
 
@@ -152,10 +171,10 @@ Stages, one patch each:
       - [x] Step 2 (`argon_tab_menu.*`): right-click a tab row: pin in this space / unpin, go back to the pinned
         page, pin this page instead, add to or remove from Favorites, close.
       - [x] Step 3 (`argon_arc_import.*`, command bar "Import from Arc"): see "Arc import" below.
-- [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`).
+- [ ] 3. Custom colors and gradients: with Customize (its settings hold per-space hues; decided 2026-11-25).
       Done so far: a space's accent is its group's color (set in the group editor); the current space's button is
       filled with it, the others drawn in it.
-- [ ] 4. Profile per space (Arc's model: spaces share the default profile; any space can get its own from its
+- [x] 4. Profile per space (Arc's model: spaces share the default profile; any space can get its own from its
       button's menu). A profile-bound space lives in that profile's window. `ArgonWindowSet`
       (`argon_window_set.*`): the first normal window of each profile, stacked at one frame with one shown; the
       sidebar lists all their spaces and switching swaps windows (show the target, then hide the old). Nothing
@@ -207,7 +226,7 @@ Native Views, aimed at the Customize design: a layout is zones of modules plus s
 modules in order. Argon's own code is plain files in `src/` (laid out like the Chromium tree); `ci/assemble.sh`
 turns them into `argon/src.patch` (`ci/src-patch.sh`), applied before Argon's other patches. Those other patches
 are only hooks into Chromium's files, kept small and one per area, since they're what breaks on a Chromium update.
-Compiled only by CI so far.
+Compiled only by CI; Argon has never been built locally.
 
 - [x] Sidebar zone (`src/chrome/browser/ui/views/argon/`): `ArgonSidebarView` draws `kQuietSidebar`
       (`argon_layout.h`: space name, divider, kept tabs, divider, loose tabs, "+ New" with "Clear"); collapsed, rows
