@@ -359,8 +359,8 @@ class CommandBarView : public views::View, public views::TextfieldController {
 
   void Open(const GURL& url, ui::PageTransition transition) {
     NavigateParams params(browser_, url, transition);
-    params.disposition = new_tab_ ? WindowOpenDisposition::NEW_FOREGROUND_TAB
-                                  : WindowOpenDisposition::CURRENT_TAB;
+    params.disposition = new_tab_ ? WindowOpenDisposition::kNewForegroundTab
+                                  : WindowOpenDisposition::kCurrentTab;
     Navigate(&params);
   }
 
