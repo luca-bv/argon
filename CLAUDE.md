@@ -19,6 +19,21 @@ and the user's decisions. Update it whenever a step lands or the user decides so
   - Changing Helium's own series (`ci/assemble.sh` drops) changes the resume manifest and forces a full ~17 h
     build. Restored Helium patches go in `patches/argon/helium/` instead.
 
+## Working rhythm
+
+Work the patch list from "Where things stand" in order, one patch at a time:
+
+1. Read the upstream code the patch touches before writing it.
+2. Write the Argon code in `src/` and the hooks in `patches/argon/`.
+3. Have Fable review it (below), and apply its fixes. For non-trivial fixes, send them back to the same reviewer
+   with SendMessage.
+4. Commit and push the reviewed work.
+5. Build it. Keep writing the next patch while the build runs.
+
+Use one Fable reviewer per area: the toolbar, profiles, pins and so on. Spawn a fresh one to design anything that
+needs research before code (profiles across windows and the Arc import were done that way). A reviewer can stop on
+a server error (529); resume it with SendMessage.
+
 ## Builds
 
 CI only. Nothing is built locally.
@@ -30,11 +45,18 @@ CI only. Nothing is built locally.
 - **Before every build, have Fable review the change.** Spawn an Agent with `model: "fable"` and give it the diff,
   the post-Helium copies, and what to check: compile, GN, runtime, and fit with Helium's code. The user asked
   for this; each CI round shows only the first compile error, so reading first saves rounds.
-- **Auto-fix:** a failed build opens a "Build failed" issue.
-  1. Read the errors with `gh run view <id> --log-failed | grep 'error:'`.
-  2. Fix them and push.
-  3. Close the issue with the cause.
-  4. Rerun.
+- **Watch** each build in the background: `gh run watch <id> -R luca-bv/argon --exit-status` with
+  `run_in_background`. It finishes when the run ends and wakes the session, so there's no polling. Nothing watches
+  while no session is open: a failure then waits for "check the build".
+- **Auto-fix:** a failed build opens a "Build failed" issue (the `report-failure` job), and the run's build
+  directory is kept so the rerun resumes.
+  1. Read the errors with `gh run view <id> --log-failed | grep 'error:'`. The build stops at the first failing
+     file, so there's usually one.
+  2. Check the 158 API with `dev/fetch-chromium.sh`, fix it, commit with the cause, and push.
+  3. Close the issue, naming the cause and the commit.
+  4. Rerun. Only the changed files recompile.
+
+  Stop and ask the user instead when a fix would change behaviour or drop a feature.
 
 ## Trying a build
 
