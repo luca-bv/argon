@@ -62,6 +62,10 @@ struct Settings {
   // nullopt: never archive.
   std::optional<base::TimeDelta> archive_after = base::Hours(12);
   bool edge_pill = true;
+  // The sidebar's width, set on every window when it changes. nullopt: never
+  // set here, so windows keep their own (upstream's, saved per window and
+  // per profile, and changed by dragging the edge).
+  std::optional<int> width;
   // The page card's inset from the frame and its corner radius.
   int gap = 8;
   int radius = 10;

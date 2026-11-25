@@ -60,6 +60,39 @@ source_set("prefs") {
   ]
 }
 
+# The Customize page, chrome://customize. A leaf, since
+# //chrome/browser/ui/webui:configs registers it (argon/ui/customize-page.patch).
+source_set("customize_ui") {
+  sources = [
+    "argon_customize_ui.cc",
+    "argon_customize_ui.h",
+  ]
+  public_deps = [ "//content/public/browser" ]
+  deps = [
+    ":customize_resources",
+    ":prefs",
+    "//base",
+    "//chrome/browser:browser_process",
+    "//chrome/browser/profiles:profile",
+    "//chrome/common:constants",
+    "//components/prefs",
+    "//content/public/common",
+  ]
+}
+
+# customize/, compiled into argon_customize_resources.h; the page comes first.
+action("customize_resources") {
+  script = "resources/embed.py"
+  inputs = [
+    "customize/customize.html",
+    "customize/customize.css",
+    "customize/customize.js",
+  ]
+  outputs = [ "$target_gen_dir/argon_customize_resources.h" ]
+  args = [ rebase_path(outputs[0], root_build_dir) ] +
+         rebase_path(inputs, root_build_dir)
+}
+
 source_set("impl") {
   sources = [
     "argon_arc_import.cc",
@@ -79,6 +112,7 @@ source_set("impl") {
   deps = [
     ":allo_font",
     ":argon",
+    ":customize_ui",
     "//base:i18n",
     "//chrome/app:command_ids",
     "//chrome/browser/autocomplete",

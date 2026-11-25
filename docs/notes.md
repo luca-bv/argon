@@ -38,8 +38,8 @@ else uses Argon.
   that and finish 0.22.2.1 first, moving to 0.22.4.1 after testing. `build/0.22.4.1` now exists, so the schedule
   won't start it again: start it by hand (`-f tag=0.22.4.1`), a full ~17 h build.
 - Customize started (2026-11-25, the user lifted "wait until tested"), stage 1 first. Decided: layout and
-  behaviour settings are global (Local State), colors (tone) are per profile. Assumed, not confirmed: each profile's
-  tone defaults to Auto (Paper or Dark, following macOS).
+  behaviour settings are global (Local State), colors (tone) are per profile, each defaulting to Auto (Paper or
+  Dark, following macOS; confirmed with stage 2).
 - Customize stage 1 written, reviewed by Fable, not built: `argon_prefs.*` (Local State dict `argon.customize` =
   the handoff's `{zones, cfg}`, defaults in code; profile string `argon.tone`). Wired: side module order, density,
   close ×, tab icons (Tile/Dot/None), archive after, edge pill on/off, frame gap, corners, tone Paper/Cool (Dark and
@@ -47,6 +47,21 @@ else uses Argon.
   roundness, Tinted (drawn as Paper). Cool rides on `ColorProviderKey::app_controller` (null for normal windows),
   set in `ThemeService::GetColorProviderKey`. Hooks: new `argon/core/prefs.patch`, more in `colors.patch` and
   `page-card.patch`. Width stays upstream's (240, `kVerticalTabsUncollapsedWidth`); 224 would only need that pref.
+- Customize stage 2 started (2026-11-25), design with Fable. Decided by the user: the preview is the handoff's
+  HTML mock window (sample tabs, drag and drop, presets, Edit layout/Use); the tone control is five swatches,
+  Auto/Paper/Cool/Tinted/Dark, Auto (Paper or Dark following macOS) the default; the page shows the full design
+  now, and stage 3's controls save but change nothing until stage 3. Also the user's: Quiet (and Reset) is
+  Argon's own sidebar (`DefaultSide()`, with navigation, Favorites and the switcher), not the handoff's shorter list.
+- Customize stage 2 written, reviewed by Fable, not built: `chrome://customize` (`argon_customize_ui.*`), opened
+  from the command bar ("Customize"). The page is plain HTML/CSS/JS in `customize/`, compiled into a header by
+  `resources/embed.py` and served by a `WebUIDataSource` request filter: no grit, pak or resource ids, and a page
+  edit recompiles one file. Hook: `argon/ui/customize-page.patch` (registration in `chrome_web_ui_configs.cc`, its
+  GN dep). A `WebUIMessageHandler` reads and writes `argon.customize` (Local State) and the profile's `argon.tone` +
+  `kBrowserColorScheme`, and pushes changes from other windows. Swatches: Auto = system + paper, Paper/Cool/Tinted
+  = light + that tone, Dark = dark. Allo for the preview is read from the bundle (`allo.ttf`). Width now works
+  (`cfg.width`, 180–320): a change sets every window's width; unset, windows keep their own. An empty sidebar list
+  (Top bar preset) falls back to the default until stage 3. ⌃1–9 stay the real space shortcuts on the page.
+  Tested only in a browser with a stubbed backend (scratch copy); C++, GN and the real chrome:// page are untested.
 - Still to do alongside: go through what the user sees in the installed build and fix it. Proposed, not yet
   decided: the handoff's exact dark tokens in `argon_palette.cc` (`Argon Customize.dc.html`, `tone()`).
 

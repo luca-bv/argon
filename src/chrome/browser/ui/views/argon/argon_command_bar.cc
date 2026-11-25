@@ -31,6 +31,7 @@
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/argon/argon_arc_import.h"
+#include "chrome/browser/ui/views/argon/argon_customize_ui.h"
 #include "chrome/browser/ui/views/argon/argon_features.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
@@ -361,6 +362,12 @@ class CommandBarView : public views::View, public views::TextfieldController {
                                 base::Unretained(this),
                                 IDC_MANAGE_EXTENSIONS)});
       }
+      if (matches(u"customize")) {
+        results_.push_back(CommandResult{
+            u"Customize Argon", u"Command",
+            base::BindRepeating(&CommandBarView::OpenCustomize,
+                                base::Unretained(this))});
+      }
       if (matches(u"import from arc")) {
         results_.push_back(CommandResult{
             u"Import from Arc", u"Command",
@@ -450,6 +457,14 @@ class CommandBarView : public views::View, public views::TextfieldController {
     NavigateParams params(browser_, url, transition);
     params.disposition = new_tab_ ? WindowOpenDisposition::kNewForegroundTab
                                   : WindowOpenDisposition::kCurrentTab;
+    Navigate(&params);
+  }
+
+  // In its own tab, or the one already showing it.
+  void OpenCustomize() {
+    NavigateParams params(browser_, GURL(argon::kCustomizeURL),
+                          ui::PAGE_TRANSITION_AUTO_TOPLEVEL);
+    params.disposition = WindowOpenDisposition::kSingletonTab;
     Navigate(&params);
   }
 

@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "base/containers/fixed_flat_map.h"
 #include "base/no_destructor.h"
@@ -121,7 +122,11 @@ Settings Settings::Load() {
 
   const base::DictValue* zones = stored.FindDict("zones");
   if (const base::ListValue* side = zones ? zones->FindList("side") : nullptr) {
-    settings.side = ParseSide(*side);
+    // ponytail: an empty sidebar (the Top bar preset) keeps the default until
+    // the top zone exists (Customize stage 3).
+    if (std::vector<ArgonModule> parsed = ParseSide(*side); !parsed.empty()) {
+      settings.side = std::move(parsed);
+    }
   }
 
   const base::DictValue* cfg = stored.FindDict("cfg");
@@ -152,6 +157,9 @@ Settings Settings::Load() {
     settings.archive_after = std::nullopt;
   }
   settings.edge_pill = cfg->FindBool("edgePill").value_or(settings.edge_pill);
+  if (const std::optional<int> width = cfg->FindInt("width")) {
+    settings.width = std::clamp(*width, 180, 320);
+  }
   settings.gap = std::clamp(cfg->FindInt("gap").value_or(settings.gap), 0, 16);
   settings.radius =
       std::clamp(cfg->FindInt("radius").value_or(settings.radius), 0, 20);

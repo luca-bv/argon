@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -31,6 +32,7 @@
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_user_gesture_details.h"
+#include "chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h"
 #include "chrome/browser/ui/views/argon/argon_command_bar.h"
 #include "chrome/browser/ui/views/argon/argon_edge_pill.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
@@ -413,7 +415,16 @@ bool ArgonSidebarView::AcceleratorPressed(const ui::Accelerator& accelerator) {
 }
 
 void ArgonSidebarView::OnSettingsChanged() {
+  const std::optional<int> old_width = settings_.width;
   settings_ = argon::Settings::Load();
+  // Only on a change, so a window's own width (restored, or dragged) stays
+  // until Customize sets one.
+  if (settings_.width && settings_.width != old_width) {
+    if (auto* state =
+            tabs::VerticalTabStripStateController::From(browser_.get())) {
+      state->SetUncollapsedWidth(*settings_.width);
+    }
+  }
   ScheduleRebuild();
   InvalidateLayout();  // The pill's gutter.
   // The page card's gap and corners (argon/ui/page-card.patch).
