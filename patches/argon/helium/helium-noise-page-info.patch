@@ -61,10 +61,11 @@
                                   const base::Value& object);
 --- a/components/page_info_strings.grdp
 +++ b/components/page_info_strings.grdp
-@@ -1063,4 +1063,23 @@
-     Your organization has blocked this site because it violates a policy.
-   </message>
- 
+@@ -1048,6 +1048,26 @@
+       </message>
+     </else>
+   </if>
++
 +  <!-- Helium Noise strings -->
 +  <message name="IDS_PAGE_INFO_HELIUM_NOISE_HEADER" desc="The title of the fingerprinting protection row and subpage in Page Info.">
 +    Fingerprinting protection
@@ -84,7 +85,9 @@
 +  <message name="IDS_PAGE_INFO_HELIUM_NOISE_SETTINGS_BUTTON" desc="A button label that opens Helium's global fingerprinting protection settings page.">
 +    Manage fingerprinting protection
 +  </message>
- </grit-part>
+ 
+   <!-- Enterprise interstitial strings -->
+   <message name="IDS_PAGE_INFO_ENTERPRISE_WARN_SUMMARY" desc="A one-line summary at the top of the Page Info bubble (which shows when you click the security indicator) if the website has been flagged by your admin to show a warning">
 --- /dev/null
 +++ b/chrome/browser/ui/views/page_info/page_info_noise_content_view.cc
 @@ -0,0 +1,160 @@

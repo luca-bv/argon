@@ -26,10 +26,13 @@ else uses Argon.
   (bookmarks bar, collapsed corner, cross-profile switcher), 45549245685 (profile menu and moves, restore session,
   color menu, command bar commands, F6 focus, per-space pins, tab row menu, Arc import, Show/Hide toolbar, Not
   secure, 10px corners). Expect bugs: all of it was reviewed by reading, none of it tried.
-- Building when this was written: run 45564285997 (edge pill, eight Helium cleanups, Allo as the default UI font).
-  If it failed, CI opened an issue; fix, close it, rerun.
-- Next: install the newest successful dmg for the user (ask first; they want to be present), go through what they
-  see, fix, then Customize.
+- Installed for the user (2026-11-25): run 45549245685, with the test profile; waiting on their reports.
+- Run 45564285997 (edge pill, eight Helium cleanups, Allo as the default UI font) failed in `swap-patches.sh`:
+  `helium-noise-page-info`'s `page_info_strings.grdp` hunk used `</grit-part>` as context, which Helium's name
+  substitution leaves without a final newline in a resumed tree (issue #5). The hunk now inserts before the
+  enterprise strings; rerun after that.
+- Next: go through what the user sees in the installed build, fix, then Customize. Proposed, not yet
+  decided: the handoff's exact dark tokens in `argon_palette.cc` (`Argon Customize.dc.html`, `tone()`).
 
 ## Base (patch check, 2026-11-20)
 

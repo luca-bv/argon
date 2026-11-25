@@ -16,6 +16,8 @@ and the user's decisions. Update it whenever a step lands or the user decides so
   - Write each hook against the **post-Helium** copy of the file, because Helium patches many of them. Get it with
     `dev/replay.sh`, and pristine files with `dev/fetch-chromium.sh`.
   - Generate the hook with `diff -u --label a/<path> --label b/<path>`, then check it with `patch -p1 --fuzz=0`.
+  - In `.grd`/`.grdp` files, never use the last line (`</grit-part>`) as context. A resumed build applies Argon's
+    patches after Helium's name substitution, which rewrites those files without a final newline.
   - Changing Helium's own series (`ci/assemble.sh` drops) changes the resume manifest and forces a full ~17 h
     build. Restored Helium patches go in `patches/argon/helium/` instead.
 
