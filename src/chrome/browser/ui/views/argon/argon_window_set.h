@@ -47,6 +47,8 @@ class ArgonWindowSet : public BrowserCollectionObserver {
   // The spaces `from`'s sidebar lists: every member's when `from` is in the
   // set, else `from`'s own. Members in creation order, each in strip order.
   std::vector<Space> List(BrowserWindowInterface* from);
+  // `browser`'s ArgonSpaces, or null if it has no sidebar.
+  ArgonSpaces* SpacesFor(BrowserWindowInterface* browser);
   // The set's window for the profile at `profile_path`, or null.
   BrowserWindowInterface* MemberFor(const base::FilePath& profile_path);
   // Switches `from` to `space`, swapping windows if it lives in another one.

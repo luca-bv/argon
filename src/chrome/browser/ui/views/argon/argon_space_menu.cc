@@ -29,6 +29,7 @@
 #include "chrome/browser/ui/views/argon/argon_toast.h"
 #include "components/prefs/pref_service.h"
 #include "components/sessions/core/session_id.h"
+#include "components/tab_groups/tab_group_color.h"
 #include "components/tab_groups/tab_group_visual_data.h"
 #include "components/tabs/public/tab_group.h"
 #include "components/tabs/public/tab_interface.h"
@@ -52,8 +53,11 @@ constexpr char kHeliumDidOnboarding[] = "helium.completed_onboarding";
 constexpr char kHeliumServicesConsented[] = "helium.services.user_consented";
 
 constexpr int kNewProfileCommand = 0;
+constexpr int kColorMenuCommand = 1;
 // Commands from here up pick the profile at (command - kFirstProfileCommand).
-constexpr int kFirstProfileCommand = 1;
+constexpr int kFirstProfileCommand = 2;
+// Commands from here up pick the color kFirstColorCommand + TabGroupColorId.
+constexpr int kFirstColorCommand = 1000;
 
 // What a moved space keeps: its name, color and tabs' addresses.
 struct SpaceContents {
@@ -196,6 +200,13 @@ class SpaceMenu : public ui::SimpleMenuModel::Delegate {
     }
     model_.AddSeparator(ui::NORMAL_SEPARATOR);
     model_.AddItem(kNewProfileCommand, u"New profile for this space");
+    // The space's accent (its tab group's color).
+    for (const auto& [color, label] : tab_groups::GetTabGroupColorLabelMap()) {
+      colors_model_.AddRadioItem(kFirstColorCommand + static_cast<int>(color),
+                                 label, /*group_id=*/0);
+    }
+    model_.AddSeparator(ui::NORMAL_SEPARATOR);
+    model_.AddSubMenu(kColorMenuCommand, u"Color", &colors_model_);
   }
   SpaceMenu(const SpaceMenu&) = delete;
   SpaceMenu& operator=(const SpaceMenu&) = delete;
@@ -212,12 +223,29 @@ class SpaceMenu : public ui::SimpleMenuModel::Delegate {
 
   // ui::SimpleMenuModel::Delegate:
   bool IsCommandIdChecked(int command_id) const override {
+    if (command_id >= kFirstColorCommand) {
+      const TabGroup* group = Group();
+      return group && static_cast<int>(group->visual_data()->color()) ==
+                          command_id - kFirstColorCommand;
+    }
     const size_t index = command_id - kFirstProfileCommand;
     return command_id >= kFirstProfileCommand && index < profiles_.size() &&
            profiles_[index] == current_profile_;
   }
 
   void ExecuteCommand(int command_id, int event_flags) override {
+    if (command_id >= kFirstColorCommand) {
+      if (const TabGroup* group = Group()) {
+        BrowserWindowInterface::FromSessionID(from_id_)
+            ->GetTabStripModel()
+            ->ChangeTabGroupVisuals(
+                space_, tab_groups::TabGroupVisualData(
+                            group->visual_data()->title(),
+                            static_cast<tab_groups::TabGroupColorId>(
+                                command_id - kFirstColorCommand)));
+      }
+      return;
+    }
     if (command_id == kNewProfileCommand) {
       NewProfile();
       return;
@@ -229,6 +257,18 @@ class SpaceMenu : public ui::SimpleMenuModel::Delegate {
   }
 
  private:
+  // The space's group, or null if it (or its window) is gone.
+  const TabGroup* Group() const {
+    BrowserWindowInterface* from =
+        BrowserWindowInterface::FromSessionID(from_id_);
+    if (!from) {
+      return nullptr;
+    }
+    const TabGroupModel* groups = from->GetTabStripModel()->group_model();
+    return groups->ContainsTabGroup(space_) ? groups->GetTabGroup(space_)
+                                            : nullptr;
+  }
+
   void NewProfile() {
     BrowserWindowInterface* from = BrowserWindowInterface::FromSessionID(from_id_);
     if (!from) {
@@ -268,6 +308,8 @@ class SpaceMenu : public ui::SimpleMenuModel::Delegate {
   const tab_groups::TabGroupId space_;
   const base::FilePath current_profile_;
   std::vector<base::FilePath> profiles_;
+  // Declared first: model_ points at it.
+  ui::SimpleMenuModel colors_model_{this};
   ui::SimpleMenuModel model_{this};
   std::unique_ptr<views::MenuRunner> runner_;
 };

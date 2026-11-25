@@ -31,6 +31,8 @@
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
+#include "chrome/browser/ui/views/argon/argon_spaces.h"
+#include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/omnibox/browser/autocomplete_classifier.h"
 #include "components/omnibox/browser/autocomplete_match.h"
 #include "components/tab_groups/tab_group_visual_data.h"
@@ -305,14 +307,40 @@ class CommandBarView : public views::View, public views::TextfieldController {
     // Commands: go to a space.
     if (!needle.empty() && model_->SupportsTabGroups() &&
         base::FeatureList::IsEnabled(features::kTabGroupsFocusing)) {
-      for (const tab_groups::TabGroupId& space :
-           model_->group_model()->ListTabGroups()) {
-        const std::u16string name = SpaceName(model_, space);
+      // Every space in the window set, other profiles' too.
+      for (const ArgonWindowSet::Space& space :
+           ArgonWindowSet::Get()->List(browser_)) {
+        const std::u16string name =
+            SpaceName(space.browser->GetTabStripModel(), space.id);
         if (matches(name) || matches(u"go to " + name)) {
           results_.push_back(CommandResult{u"Go to " + name, u"Space",
                               base::BindRepeating(&CommandBarView::GoToSpace,
                                                   base::Unretained(this),
                                                   space)});
+        }
+      }
+    }
+
+    // Commands on the current space.
+    if (model_->SupportsTabGroups() &&
+        base::FeatureList::IsEnabled(features::kTabGroupsFocusing)) {
+      if (matches(u"new space")) {
+        results_.push_back(CommandResult{
+            u"New space", u"Command",
+            base::BindRepeating(&CommandBarView::NewSpace,
+                                base::Unretained(this))});
+      }
+      // "rename <name>": only on that prefix, so a typo can't rename.
+      constexpr std::u16string_view kRename = u"rename ";
+      if (base::StartsWith(needle, kRename) && model_->GetFocusedGroup()) {
+        const std::u16string name(base::TrimWhitespace(
+            std::u16string_view(query).substr(kRename.size()),
+            base::TRIM_ALL));
+        if (!name.empty()) {
+          results_.push_back(CommandResult{
+              u"Rename this space to \u201c" + name + u"\u201d", u"Command",
+              base::BindRepeating(&CommandBarView::RenameSpace,
+                                  base::Unretained(this), name)});
         }
       }
     }
@@ -375,10 +403,28 @@ class CommandBarView : public views::View, public views::TextfieldController {
     }
   }
 
-  void GoToSpace(const tab_groups::TabGroupId& space) {
-    if (model_->group_model()->ContainsTabGroup(space)) {
-      model_->EnterFocusMode(space);
+  void NewSpace() {
+    if (ArgonSpaces* spaces = ArgonWindowSet::Get()->SpacesFor(browser_)) {
+      spaces->Create();
     }
+  }
+
+  void RenameSpace(const std::u16string& name) {
+    const std::optional<tab_groups::TabGroupId> space =
+        model_->GetFocusedGroup();
+    if (!space || !model_->group_model()->ContainsTabGroup(*space)) {
+      return;
+    }
+    const TabGroup* group = model_->group_model()->GetTabGroup(*space);
+    model_->ChangeTabGroupVisuals(
+        *space, tab_groups::TabGroupVisualData(
+                    name, group->visual_data()->color()));
+  }
+
+  // Via the window set: it may live in another profile's window, and Switch
+  // goes back to the space's last tab.
+  void GoToSpace(const ArgonWindowSet::Space& space) {
+    ArgonWindowSet::Get()->Switch(browser_, space);
   }
 
   const raw_ptr<BrowserWindowInterface> browser_;

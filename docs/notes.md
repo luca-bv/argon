@@ -155,7 +155,8 @@ Stages, one patch each:
       - [x] Steps 2–3 (`argon_space_menu.*`): right-click a space: its profile (checked) and the others, "New
         profile for this space" (named after it, skips Helium's setup, copies the services consent). Picking one
         reopens the space's tabs in that profile's window (`profiles::SwitchToProfile`), closes the originals,
-        and shows a toast whose Undo moves it back. Refused while a page would ask "Leave site?".
+        and shows a toast whose Undo moves it back. Refused while a page would ask "Leave site?". The menu's
+        Color submenu sets the space's accent.
       - [x] Step 4: "continue where you left off" by default (`argon/core/restore-session.patch`); hidden windows
         are open at quit, so session restore brings every profile's window back and the activation rule stacks
         them. Sidebar width and collapse follow the window on screen. Not done: reopening profiles whose window
@@ -225,7 +226,8 @@ Compiled only by CI so far.
       new tab, ⌘L (`IDC_FOCUS_LOCATION`) on the current URL to replace it; falls back to Chromium's behavior outside
       normal windows. A `BubbleDialogDelegate` 14% from the window top: tabs in every space (substring match, max 6),
       open/search through the omnibox classifier, "Go to <space>". Argon's own new-tab needs call `chrome::NewTab`.
-      Not yet: ranking, more commands (clear, new space), removing the toolbar.
+      Commands: "New space", "rename <name>", "Go to <space>" across profile windows.
+      Not yet: ranking, Clear.
 - [ ] Ticks layout and Customize
 
 Testing a build: the app is still named Helium and uses Helium's profile folder, so if Helium is installed, run it

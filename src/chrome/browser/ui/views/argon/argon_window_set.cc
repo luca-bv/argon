@@ -75,6 +75,11 @@ bool ArgonWindowSet::IsMember(BrowserWindowInterface* browser) {
   return false;
 }
 
+ArgonSpaces* ArgonWindowSet::SpacesFor(BrowserWindowInterface* browser) {
+  const auto it = spaces_.find(browser);
+  return it == spaces_.end() ? nullptr : it->second.get();
+}
+
 BrowserWindowInterface* ArgonWindowSet::MemberFor(
     const base::FilePath& profile_path) {
   for (BrowserWindowInterface* member : Members()) {

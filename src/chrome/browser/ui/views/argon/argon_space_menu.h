@@ -19,7 +19,8 @@ class View;
 // history). Picking another profile moves the space into that profile's window
 // (argon_window_set.h) by reopening its tabs there; "New profile" makes one
 // named after the space first. Moving loses the tabs' back/forward history and
-// form contents, and shows a toast whose Undo moves it back.
+// form contents, and shows a toast whose Undo moves it back. "Color" sets the
+// space's accent.
 void ShowArgonSpaceMenu(views::View* source,
                         const ArgonWindowSet::Space& space,
                         const gfx::Point& point,
