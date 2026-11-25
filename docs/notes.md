@@ -34,6 +34,8 @@ else uses Argon.
 - Its rerun, run 45569481044, failed compiling `argon_edge_pill.cc` (issue #6): no `ui/compositor/layer.h`
   for `layer()`, and the inner `PillButton` lacked `METADATA_HEADER`. Fixed; the next 0.22.2.1 build resumes from
   it and carries Customize stage 1 too.
+- Run 45645472281 (edge pill fix, Customize stage 1) built (2026-11-25); its dmg is on the draft release, not yet
+  installed. Run 45667532916 (Customize stage 2) resumes from it.
 - Helium 0.22.4.1 is out (2026-11-24). The 6-hourly schedule started a fresh build of it; the user chose to cancel
   that and finish 0.22.2.1 first, moving to 0.22.4.1 after testing. `build/0.22.4.1` now exists, so the schedule
   won't start it again: start it by hand (`-f tag=0.22.4.1`), a full ~17 h build.
