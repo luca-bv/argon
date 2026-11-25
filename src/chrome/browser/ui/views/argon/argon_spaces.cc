@@ -20,12 +20,15 @@
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/ui_features.h"
+#include "chrome/browser/ui/views/argon/argon_pins.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/tab_groups/tab_group_visual_data.h"
 #include "components/tabs/public/tab_group.h"
 #include "components/tabs/public/tab_interface.h"
 #include "content/public/browser/visibility.h"
 #include "content/public/browser/web_contents.h"
+#include "ui/gfx/range/range.h"
+#include "url/gurl.h"
 
 namespace {
 
@@ -74,6 +77,7 @@ std::optional<base::TimeDelta> ArgonSpaces::TimeUntilArchive(
     const tabs::TabInterface* tab) {
   content::WebContents* contents = tab->GetContents();
   if (tab->IsPinned() || tab->IsActivated() || !contents ||
+      argon_pins::IsPin(contents) ||
       contents->GetVisibility() == content::Visibility::VISIBLE ||
       contents->IsCurrentlyAudible() || contents->IsBeingCaptured() ||
       contents->NeedToFireBeforeUnload()) {
@@ -171,12 +175,41 @@ void ArgonSpaces::Create() {
   model_->EnterFocusMode(space);
 }
 
+bool ArgonSpaces::TogglePinOfActiveTab() {
+  tabs::TabInterface* active = model_->GetActiveTab();
+  if (!active || active->IsPinned() || !active->GetGroup()) {
+    return false;
+  }
+  content::WebContents* contents = active->GetContents();
+  const GURL& committed = contents->GetLastCommittedURL();
+  argon_pins::SetPin(contents,
+                     argon_pins::IsPin(contents)
+                         ? GURL()
+                         : (committed.is_empty() ? contents->GetVisibleURL()
+                                                 : committed));
+  PinsChanged();
+  return true;
+}
+
+void ArgonSpaces::PinsChanged() {
+  ScheduleEnforce();
+  ArgonWindowSet::Get()->NotifyChanged(nullptr);
+}
+
 void ArgonSpaces::OnTabStripModelChanged(
     TabStripModel* tab_strip_model,
     const TabStripModelChange& change,
     const TabStripSelectionChange& selection) {
   if (selection.active_tab_changed() && selection.old_tab) {
     LeftAt()[selection.old_tab] = base::Time::Now();
+  }
+  // Discarding swaps a tab's WebContents; the pin comes along.
+  if (change.type() == TabStripModelChange::kReplaced) {
+    const TabStripModelChange::Replace* replace = change.GetReplace();
+    if (argon_pins::IsPin(replace->old_contents)) {
+      argon_pins::SetPin(replace->new_contents,
+                         argon_pins::PinnedUrl(replace->old_contents));
+    }
   }
   if (change.type() == TabStripModelChange::kRemoved) {
     for (const auto& removed : change.GetRemove()->contents) {
@@ -194,6 +227,10 @@ void ArgonSpaces::OnTabStripModelChanged(
 
 void ArgonSpaces::OnTabPinnedStateChanged(tabs::TabInterface* tab,
                                           int index) {
+  // A tab made a global pin (Favorite) stops being its space's pin.
+  if (tab->IsPinned() && argon_pins::IsPin(tab->GetContents())) {
+    argon_pins::SetPin(tab->GetContents(), GURL());
+  }
   ScheduleEnforce();
 }
 
@@ -267,6 +304,23 @@ void ArgonSpaces::Enforce() {
       model_->AddToExistingGroup(loose, *space);
     } else {
       space = NewSpace(loose, kFirstSpaceName);
+    }
+  }
+
+  // Each space's pins come first, in their order, so tab order matches the
+  // sidebar.
+  for (const tab_groups::TabGroupId& group_id : List()) {
+    const gfx::Range range = groups->GetTabGroup(group_id)->ListTabs();
+    int next_pin = static_cast<int>(range.start());
+    for (int i = next_pin; i < static_cast<int>(range.end()); ++i) {
+      if (!argon_pins::IsPin(model_->GetTabAtIndex(i)->GetContents())) {
+        continue;
+      }
+      if (i != next_pin) {
+        model_->MoveWebContentsAt(i, next_pin, /*select_after_move=*/false,
+                                  group_id);
+      }
+      ++next_pin;
     }
   }
 

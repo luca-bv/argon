@@ -56,6 +56,12 @@ class ArgonSpaces : public TabStripModelObserver {
   void Switch(const tab_groups::TabGroupId& space);
   // Opens a new tab in a new space and switches to it.
   void Create();
+  // After a tab was pinned or unpinned in its space (argon_pins.h): reorders
+  // the space and redraws sidebars.
+  void PinsChanged();
+  // Pins the active tab in its space at its current URL, or unpins it (⌘D).
+  // Returns false if it can't be (a global pin, or no space).
+  bool TogglePinOfActiveTab();
 
   // TabStripModelObserver:
   void OnTabStripModelChanged(TabStripModel* tab_strip_model,

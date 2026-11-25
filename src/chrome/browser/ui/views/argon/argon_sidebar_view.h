@@ -93,7 +93,9 @@ class ArgonSidebarView : public views::View,
   bool InSpace(int index) const;
   // Adds one row per tab in the space that is (or isn't) kept. Returns whether
   // it added any.
-  bool AddTabRows(views::View* parent, bool kept);
+  enum class RowKind { kGlobalPins, kSpacePins, kLoose };
+  RowKind KindOf(int index) const;
+  bool AddTabRows(views::View* parent, RowKind kind);
   void AddNewTabRow(views::BoxLayoutView* row, bool any_loose);
   void AddSpaceButtons(views::BoxLayoutView* row);
   void SwitchSpace(const ArgonWindowSet::Space& space);

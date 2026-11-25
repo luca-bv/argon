@@ -31,6 +31,7 @@
 #include "chrome/browser/ui/ui_features.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_palette.h"
+#include "chrome/browser/ui/views/argon/argon_pins.h"
 #include "chrome/browser/ui/views/argon/argon_spaces.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
 #include "components/omnibox/browser/autocomplete_classifier.h"
@@ -330,6 +331,19 @@ class CommandBarView : public views::View, public views::TextfieldController {
             base::BindRepeating(&CommandBarView::NewSpace,
                                 base::Unretained(this))});
       }
+      // Pin or unpin the active tab in its space (argon_pins.h).
+      tabs::TabInterface* active = model_->GetActiveTab();
+      if (!needle.empty() && active && !active->IsPinned() &&
+          active->GetGroup()) {
+        const bool pinned = argon_pins::IsPin(active->GetContents());
+        if (matches(pinned ? u"unpin tab" : u"pin tab in this space")) {
+          results_.push_back(CommandResult{
+              pinned ? u"Unpin tab" : u"Pin tab in this space",
+              u"\u2318D",
+              base::BindRepeating(&CommandBarView::TogglePin,
+                                  base::Unretained(this))});
+        }
+      }
       // "rename <name>": only on that prefix, so a typo can't rename.
       constexpr std::u16string_view kRename = u"rename ";
       if (base::StartsWith(needle, kRename) && model_->GetFocusedGroup()) {
@@ -400,6 +414,12 @@ class CommandBarView : public views::View, public views::TextfieldController {
     const int index = model_->GetIndexOfTab(tab.get());
     if (index != TabStripModel::kNoTab) {
       model_->ActivateTabAt(index);
+    }
+  }
+
+  void TogglePin() {
+    if (ArgonSpaces* spaces = ArgonWindowSet::Get()->SpacesFor(browser_)) {
+      spaces->TogglePinOfActiveTab();
     }
   }
 

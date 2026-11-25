@@ -13,8 +13,9 @@ enum class ArgonModule {
   kNavigation,  // Back, forward, reload and the current site (opens ⌘L).
   kSpaceName,
   kDivider,  // Skipped when nothing is drawn between it and the last divider.
-  kPinned,   // Kept tabs.
-  kLoose,    // Temporary tabs.
+  kPinned,     // Global pins (Chromium-pinned tabs), like Arc's Favorites.
+  kSpacePins,  // The space's own pins (argon_pins.h).
+  kLoose,      // Temporary tabs.
   kNewTab,   // "+ New", with "Clear" while there are loose tabs.
   kSpaces,   // One button per space, and "+" for a new one.
 };
@@ -26,6 +27,8 @@ inline constexpr auto kQuietSidebar = std::to_array<ArgonModule>({
     ArgonModule::kSpaceName,
     ArgonModule::kDivider,
     ArgonModule::kPinned,
+    ArgonModule::kDivider,
+    ArgonModule::kSpacePins,
     ArgonModule::kDivider,
     ArgonModule::kLoose,
     ArgonModule::kNewTab,

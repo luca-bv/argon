@@ -55,7 +55,7 @@ class ArgonWindowSet : public BrowserCollectionObserver {
   void Switch(BrowserWindowInterface* from, const Space& space);
 
   // Called with the window whose spaces changed; sidebars of other windows
-  // redraw.
+  // redraw (all of them for null).
   using ChangedCallback = base::RepeatingCallback<void(BrowserWindowInterface*)>;
   base::CallbackListSubscription Subscribe(ChangedCallback callback);
   void NotifyChanged(BrowserWindowInterface* browser);

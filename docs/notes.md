@@ -142,6 +142,14 @@ Stages, one patch each:
       hibernate instead of close, synced across windows, other-origin links open outside), and the sidebar shows them
       in every space. Decided (2026-11-25): add Arc's per-space pins too (above the space's loose tabs, never
       archived, reset to their URL on close); global pins stay as Favorites. The Arc import maps Arc's pins to them.
+      - [x] Step 1 (`argon_pins.*`, hooks `argon/ui/space-pins.patch`): the pinned URL is WebContents user data,
+        saved as tab extra data `argon_pin_url` (session restore, session rebuilds and reopened windows are
+        hooked next to Helium's own pin hooks); copied across discards (`kReplaced`). A user close (⌘W, ×) takes
+        a pin back to its URL, or hands activation to the space's last used tab. Pins come first in their group
+        (`Enforce`), get their own sidebar section (`kSpacePins`), never archive, are skipped by Clear, and move
+        with their space between profiles. ⌘D (taken from Bookmark This Tab) and the command bar pin/unpin.
+      - [ ] Step 2: row menu (pin, unpin, reset, use current URL, add to Favorites).
+      - [ ] Step 3: the Arc import.
 - [ ] 3. Custom colors and gradients (pref keyed by saved-group GUID, painted in `vertical_tab_strip_region_view.cc`).
       Done so far: a space's accent is its group's color (set in the group editor); the current space's button is
       filled with it, the others drawn in it.
@@ -165,7 +173,11 @@ Stages, one patch each:
 - [x] 5. Auto-archive: `ArgonSpaces` checks every minute and closes unpinned, inactive, silent tabs unused for 12 h
       (`kArchiveAfter`, from `WebContents::GetLastActiveTime`); they land in Recently Closed/History. Not yet: the
       12 h / 24 h / 7 d / never setting, an Archive list.
-- [ ] Arc import that keeps spaces and pinned tabs (extend Helium's `add-arc-importer.patch`)
+- [ ] Arc import that keeps spaces and pinned tabs, in the browser process (command bar "Import from Arc"; reads
+      `~/Library/Application Support/Arc/StorableSidebar.json`, format as in Helium's `add-arc-importer.patch`).
+      Decided (2026-11-25), copying Arc throughout profiles and spaces: each Arc profile maps to an Argon profile
+      of the same name (created or reused) holding its spaces and Favorites; pinned folders are flattened into the
+      space's pins; closing a pin works as in Arc (back to its URL, then away); ⌘D pins/unpins in the space.
 - [ ] Command bar, Peek, Little Arc
 
 First thing on the EC2 Mac, before any code: run the first Argon build (stock Chromium interface) with

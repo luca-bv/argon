@@ -29,6 +29,7 @@
 #include "chrome/browser/ui/views/argon/argon_command_bar.h"
 #include "chrome/browser/ui/views/argon/argon_font.h"
 #include "chrome/browser/ui/views/argon/argon_layout.h"
+#include "chrome/browser/ui/views/argon/argon_pins.h"
 #include "chrome/browser/ui/views/argon/argon_space_menu.h"
 #include "chrome/browser/ui/views/argon/argon_toast.h"
 #include "chrome/browser/ui/views/argon/argon_window_set.h"
@@ -312,6 +313,9 @@ ArgonSidebarView::ArgonSidebarView(BrowserWindowInterface* browser)
       views::BoxLayout::CrossAxisAlignment::kStretch);
   contents_ = contents;
 
+  // ⌘D pins or unpins the active tab in its space, as in Arc (Bookmark This
+  // Tab loses the shortcut, argon/ui/space-pins.patch).
+  AddAccelerator(ui::Accelerator(ui::VKEY_D, ui::EF_COMMAND_DOWN));
   // ⌃1–⌃9 go to the first nine spaces.
   for (int i = 0; i < 9; ++i) {
     AddAccelerator(ui::Accelerator(static_cast<ui::KeyboardCode>(ui::VKEY_1 + i),
@@ -334,6 +338,9 @@ ArgonSidebarView::~ArgonSidebarView() {
 }
 
 bool ArgonSidebarView::AcceleratorPressed(const ui::Accelerator& accelerator) {
+  if (accelerator.key_code() == ui::VKEY_D) {
+    return spaces_->TogglePinOfActiveTab();
+  }
   const size_t index = accelerator.key_code() - ui::VKEY_1;
   const std::vector<ArgonWindowSet::Space> spaces =
       ArgonWindowSet::Get()->List(browser_);
@@ -430,8 +437,9 @@ void ArgonSidebarView::OnTabGroupFocusChanged(
 }
 
 void ArgonSidebarView::OnWindowSetChanged(BrowserWindowInterface* browser) {
-  // This window's own changes already reach it as a TabStripModelObserver.
-  if (browser != browser_) {
+  // This window's own changes already reach it as a TabStripModelObserver,
+  // except pin changes, which notify with null.
+  if (!browser || browser != browser_) {
     ScheduleRebuild();
   }
 }
@@ -459,7 +467,7 @@ void ArgonSidebarView::Rebuild() {
 
   bool any_loose = false;
   for (int i = 0; i < model_->count(); ++i) {
-    any_loose |= !model_->IsTabPinned(i) && InSpace(i);
+    any_loose |= KindOf(i) == RowKind::kLoose && InSpace(i);
   }
 
   // A divider is drawn only once something follows the previous one, so an
@@ -514,9 +522,15 @@ void ArgonSidebarView::Rebuild() {
         drew_since_divider = false;
         break;
       case ArgonModule::kPinned:
+      case ArgonModule::kSpacePins:
       case ArgonModule::kLoose: {
         auto list = MakeList();
-        if (AddTabRows(list.get(), module == ArgonModule::kPinned)) {
+        const RowKind kind = module == ArgonModule::kPinned
+                                 ? RowKind::kGlobalPins
+                             : module == ArgonModule::kSpacePins
+                                 ? RowKind::kSpacePins
+                                 : RowKind::kLoose;
+        if (AddTabRows(list.get(), kind)) {
           add(std::move(list));
         }
         break;
@@ -554,18 +568,28 @@ bool ArgonSidebarView::InSpace(int index) const {
          model_->GetTabGroupForTab(index) == focused;
 }
 
-bool ArgonSidebarView::AddTabRows(views::View* parent, bool kept) {
+ArgonSidebarView::RowKind ArgonSidebarView::KindOf(int index) const {
+  if (model_->IsTabPinned(index)) {
+    return RowKind::kGlobalPins;
+  }
+  return argon_pins::IsPin(model_->GetTabAtIndex(index)->GetContents())
+             ? RowKind::kSpacePins
+             : RowKind::kLoose;
+}
+
+bool ArgonSidebarView::AddTabRows(views::View* parent, RowKind kind) {
   bool added = false;
   for (int i = 0; i < model_->count(); ++i) {
-    if (model_->IsTabPinned(i) != kept || !InSpace(i)) {
+    if (KindOf(i) != kind || !InSpace(i)) {
       continue;
     }
     tabs::TabInterface* tab = model_->GetTabAtIndex(i);
     auto weak_tab = tab->GetWeakPtr();
     auto open = base::BindRepeating(&ArgonSidebarView::Activate,
                                     weak_factory_.GetWeakPtr(), weak_tab);
+    // Space pins get × too: closing one takes it back to its pinned URL.
     views::Button::PressedCallback close;
-    if (!kept) {
+    if (kind != RowKind::kGlobalPins) {
       close = base::BindRepeating(&ArgonSidebarView::Close,
                                   weak_factory_.GetWeakPtr(), weak_tab);
     }
@@ -801,7 +825,7 @@ void ArgonSidebarView::Reopen(int count) {
 void ArgonSidebarView::CloseLooseTabs() {
   std::vector<base::WeakPtr<tabs::TabInterface>> loose;
   for (int i = 0; i < model_->count(); ++i) {
-    if (!model_->IsTabPinned(i) && InSpace(i)) {
+    if (KindOf(i) == RowKind::kLoose && InSpace(i)) {
       loose.push_back(model_->GetTabAtIndex(i)->GetWeakPtr());
     }
   }

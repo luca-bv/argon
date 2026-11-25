@@ -26,6 +26,7 @@
 #include "chrome/browser/ui/tabs/tab_enums.h"
 #include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#include "chrome/browser/ui/views/argon/argon_pins.h"
 #include "chrome/browser/ui/views/argon/argon_toast.h"
 #include "components/prefs/pref_service.h"
 #include "components/sessions/core/session_id.h"
@@ -59,10 +60,12 @@ constexpr int kFirstProfileCommand = 2;
 // Commands from here up pick the color kFirstColorCommand + TabGroupColorId.
 constexpr int kFirstColorCommand = 1000;
 
-// What a moved space keeps: its name, color and tabs' addresses.
+// What a moved space keeps: its name, color, tabs' addresses and which of
+// them are pins (with their pinned URLs; empty for loose tabs).
 struct SpaceContents {
   tab_groups::TabGroupVisualData visuals;
   std::vector<GURL> urls;
+  std::vector<GURL> pins;
 };
 
 void MoveSpace(SessionID from_id,
@@ -81,9 +84,12 @@ void OpenSpaceIn(SpaceContents contents,
   }
   TabStripModel* to_model = target->GetTabStripModel();
   std::vector<content::WebContents*> added;
-  for (const GURL& url : contents.urls) {
+  for (size_t i = 0; i < contents.urls.size(); ++i) {
     if (content::WebContents* web_contents = chrome::AddAndReturnTabAt(
-            target, url, /*index=*/-1, /*foreground=*/false)) {
+            target, contents.urls[i], /*index=*/-1, /*foreground=*/false)) {
+      if (contents.pins[i].is_valid()) {
+        argon_pins::SetPin(web_contents, contents.pins[i]);
+      }
       added.push_back(web_contents);
     }
   }
@@ -153,7 +159,7 @@ void MoveSpace(SessionID from_id,
     return;
   }
   const TabGroup* group = model->group_model()->GetTabGroup(space);
-  SpaceContents contents{*group->visual_data(), {}};
+  SpaceContents contents{*group->visual_data(), {}, {}};
   const gfx::Range range = group->ListTabs();
   for (int i = static_cast<int>(range.start());
        i < static_cast<int>(range.end()); ++i) {
@@ -167,6 +173,7 @@ void MoveSpace(SessionID from_id,
     const GURL& url = web_contents->GetLastCommittedURL();
     contents.urls.push_back(url.is_empty() ? web_contents->GetVisibleURL()
                                            : url);
+    contents.pins.push_back(argon_pins::PinnedUrl(web_contents));
   }
   // The profile's window in the set (it may be hidden); open one only when it
   // has none.
