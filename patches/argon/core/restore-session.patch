@@ -1,0 +1,14 @@
+--- a/chrome/browser/prefs/session_startup_pref.cc
++++ b/chrome/browser/prefs/session_startup_pref.cc
+@@ -82,7 +82,10 @@
+     return SessionStartupPref::LAST;
+   }
+ #endif
+-  return SessionStartupPref::DEFAULT;
++  // Argon: continue where you left off, so spaces come back, including those
++  // in other profiles' windows (chrome/browser/ui/views/argon/
++  // argon_window_set.h).
++  return SessionStartupPref::LAST;
+ #endif
+ }
+ 

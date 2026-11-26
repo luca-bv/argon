@@ -1,0 +1,133 @@
+--- a/chrome/browser/performance_manager/policies/memory_saver_mode_policy.cc
++++ b/chrome/browser/performance_manager/policies/memory_saver_mode_policy.cc
+@@ -4,8 +4,18 @@
+ 
+ #include "chrome/browser/performance_manager/policies/memory_saver_mode_policy.h"
+ 
++#include <notify.h>
++#include <sys/sysctl.h>
++
++#include <algorithm>
++#include <functional>
++#include <vector>
++
+ #include "base/feature_list.h"
+ #include "base/notreached.h"
++#include "base/power_monitor/power_monitor.h"
++#include "base/system/sys_info.h"
++#include "chrome/browser/performance_manager/policies/discard_eligibility_policy.h"
+ #include "chrome/browser/performance_manager/policies/page_discarding_helper.h"
+ #include "components/performance_manager/public/decorators/tab_page_decorator.h"
+ #include "components/performance_manager/public/features.h"
+@@ -18,6 +28,39 @@
+ namespace {
+ MemorySaverModePolicy* g_memory_saver_mode_policy = nullptr;
+ using user_tuning::prefs::MemorySaverModeAggressiveness;
++
++// Argon: number of discard-eligible background tabs allowed to stay loaded.
++// Halved on battery, in Low Power Mode, under memory pressure or when hot.
++// ponytail: macOS-only (libnotify + sysctl) and polled when a tab is hidden,
++// not observed; add PowerStateObserver/PowerThermalObserver if a state change
++// must discard before the next tab switch.
++size_t GetTabBudget() {
++  static const uint64_t ram_gib =
++      base::SysInfo::AmountOfTotalPhysicalMemory().InGiB();
++  const size_t budget = ram_gib <= 8 ? 2 : ram_gib <= 16 ? 5 : 10;
++
++  static const int low_power_token = [] {
++    int token = 0;
++    notify_register_check("com.apple.system.lowpowermode", &token);
++    return token;
++  }();
++  uint64_t low_power = 0;
++  notify_get_state(low_power_token, &low_power);
++
++  // 1 = normal, 2 = warning, 4 = critical.
++  int pressure = 0;
++  size_t pressure_size = sizeof(pressure);
++  sysctlbyname("kern.memorystatus_vm_pressure_level", &pressure,
++               &pressure_size, nullptr, 0);
++
++  auto* power_monitor = base::PowerMonitor::GetInstance();
++  const bool constrained =
++      low_power || pressure > 1 || power_monitor->IsOnBatteryPower() ||
++      power_monitor->GetCurrentThermalState() >=
++          base::PowerThermalObserver::DeviceThermalState::kSerious;
++  return constrained ? budget / 2 : budget;
++}
++
+ }  // namespace
+ 
+ MemorySaverModePolicy::MemorySaverModePolicy() {
+@@ -91,6 +134,7 @@
+   // timers fire. To avoid possibly having callbacks manipulate invalid PageNode
+   // pointers, clear all the existing timers before unregistering the observer.
+   active_discard_timers_.clear();
++  tab_budget_timer_.Stop();
+ 
+   // Decorator destruction ordered is not defined, so only unregister from
+   // `TabPageDecorator` if it's still present.
+@@ -151,6 +195,11 @@
+     const TabPageDecorator::TabHandle* tab_handle,
+     base::TimeDelta time_before_discard) {
+   if (IsMemorySaverDiscardingEnabled()) {
++    // Argon: a tab was just hidden (or added hidden). Enforce the budget from
++    // a fresh task so nothing is discarded inside a graph notification.
++    tab_budget_timer_.Start(FROM_HERE, base::TimeDelta(), this,
++                            &MemorySaverModePolicy::EnforceTabBudget);
++
+     TabRevisitTracker* revisit_tracker =
+         GetOwningGraph()->GetRegisteredObjectAs<TabRevisitTracker>();
+     CHECK(revisit_tracker);
+@@ -215,6 +264,37 @@
+             {tab_handle->page_node()},
+             DiscardEligibilityPolicy::DiscardReason::PROACTIVE);
+   }
++}
++
++void MemorySaverModePolicy::EnforceTabBudget() {
++  if (!IsMemorySaverDiscardingEnabled()) {
++    return;
++  }
++
++  // Only tabs Chromium would proactively discard anyway count against the
++  // budget; visible, active, pinned, audible, edited... tabs are untouched.
++  auto* eligibility = DiscardEligibilityPolicy::GetFromGraph(GetOwningGraph());
++  std::vector<const PageNode*> tabs;
++  for (const PageNode* page_node : GetOwningGraph()->GetAllPageNodes()) {
++    if (eligibility->CanDiscard(
++            page_node, DiscardEligibilityPolicy::DiscardReason::PROACTIVE,
++            /*ignore_recent_visibility=*/true) == CanDiscardResult::kEligible) {
++      tabs.push_back(page_node);
++    }
++  }
++
++  const size_t budget = GetTabBudget();
++  if (tabs.size() <= budget) {
++    return;
++  }
++
++  // Keep the `budget` most recently hidden tabs, discard the rest.
++  std::ranges::sort(tabs, std::greater<>(),
++                    &PageNode::GetLastVisibilityChangeTime);
++  tabs.erase(tabs.begin(), tabs.begin() + budget);
++  PageDiscardingHelper::GetFromGraph(GetOwningGraph())
++      ->ImmediatelyDiscardMultiplePages(
++          tabs, DiscardEligibilityPolicy::DiscardReason::PROACTIVE);
+ }
+ 
+ base::TimeDelta MemorySaverModePolicy::GetTimeBeforeDiscardForCurrentMode()
+--- a/chrome/browser/performance_manager/policies/memory_saver_mode_policy.h
++++ b/chrome/browser/performance_manager/policies/memory_saver_mode_policy.h
+@@ -62,7 +62,11 @@
+   base::TimeDelta GetTimeBeforeDiscardForCurrentMode() const;
+   int GetMaxNumRevisitsForCurrentMode() const;
+ 
++  // Argon: discards eligible background tabs beyond the live-tab budget.
++  void EnforceTabBudget();
++
+   bool memory_saver_mode_enabled_ = false;
++  base::OneShotTimer tab_budget_timer_;
+ 
+   std::map<const TabPageDecorator::TabHandle*, base::OneShotTimer>
+       active_discard_timers_;

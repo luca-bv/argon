@@ -1,0 +1,290 @@
+--- a/chrome/browser/prefs/browser_prefs.cc
++++ b/chrome/browser/prefs/browser_prefs.cc
+@@ -249,6 +249,8 @@
+ #include "chrome/browser/background/extensions/background_mode_manager.h"
+ #endif
+ 
++#include "chrome/browser/sync/private_sync/private_sync_prefs.h"
++
+ #if BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+ #include "chrome/browser/extensions/activity_log/activity_log.h"
+ #include "chrome/browser/extensions/commands/command_service.h"
+@@ -2229,6 +2231,8 @@ void RegisterProfilePrefs(user_prefs::Pr
+ 
+ #endif  // BUILDFLAG(ENABLE_EXTENSIONS_CORE)
+ 
++  browser_sync::private_sync_prefs::RegisterProfilePrefs(registry);
++
+ #if BUILDFLAG(ENABLE_EXTENSIONS)
+   RegisterAnimationPolicyPrefs(registry);
+ #if BUILDFLAG(IS_CHROMEOS)
+--- /dev/null
++++ b/chrome/browser/sync/private_sync/private_sync_prefs.cc
+@@ -0,0 +1,165 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#include "chrome/browser/sync/private_sync/private_sync_prefs.h"
++
++#include <optional>
++#include <string_view>
++#include <utility>
++
++#include "base/base64.h"
++#include "base/notreached.h"
++#include "base/uuid.h"
++#include "base/values.h"
++#include "components/crx_file/id_util.h"
++#include "components/prefs/pref_registry_simple.h"
++#include "components/prefs/pref_service.h"
++
++namespace browser_sync::private_sync_prefs {
++
++namespace {
++
++using Kind = PrivateSyncProviderHost::Kind;
++
++constexpr char kVersionField[] = "version";
++constexpr char kProviderKindField[] = "provider_kind";
++constexpr char kProviderIdField[] = "provider_id";
++constexpr char kVaultUuidField[] = "vault_uuid";
++constexpr char kVaultNameField[] = "vault_name";
++constexpr char kEncryptedVaultKeyField[] = "encrypted_vault_key";
++
++constexpr char kExtensionKind[] = "extension";
++
++// Each kind of provider must be stored, read back and validated here.
++std::string_view KindToString(Kind kind) {
++  switch (kind) {
++    case Kind::kExtension:
++      return kExtensionKind;
++  }
++  NOTREACHED();
++}
++
++std::optional<Kind> KindFromString(std::string_view kind) {
++  if (kind == kExtensionKind) {
++    return Kind::kExtension;
++  }
++
++  return std::nullopt;
++}
++
++bool IsValidProviderId(Kind kind, std::string_view id) {
++  switch (kind) {
++    case Kind::kExtension:
++      return crx_file::id_util::IdIsValid(id);
++  }
++  NOTREACHED();
++}
++
++// Encrypted values are never empty.
++std::optional<std::vector<uint8_t>> DecodeEncrypted(std::string_view value) {
++  std::optional<std::vector<uint8_t>> decoded = base::Base64Decode(value);
++  if (!decoded || decoded->empty()) {
++    return std::nullopt;
++  }
++
++  return decoded;
++}
++
++}  // namespace
++
++void RegisterProfilePrefs(PrefRegistrySimple* registry) {
++  registry->RegisterDictionaryPref(kConfiguration);
++  registry->RegisterStringPref(kCheckpoint, std::string());
++  registry->RegisterIntegerPref(kBlockedReason,
++                                static_cast<int>(BlockedReason::kNone));
++}
++
++std::optional<Configuration> ReadConfiguration(const PrefService& prefs) {
++  const base::DictValue& value = prefs.GetDict(kConfiguration);
++  const std::string* provider_kind = value.FindString(kProviderKindField);
++  const std::string* provider_id = value.FindString(kProviderIdField);
++  const std::string* vault_uuid = value.FindString(kVaultUuidField);
++  const std::string* encrypted_key = value.FindString(kEncryptedVaultKeyField);
++  const std::optional<Kind> kind =
++      provider_kind ? KindFromString(*provider_kind) : std::nullopt;
++  if (value.FindInt(kVersionField) != kConfigurationVersion || !kind ||
++      !provider_id || !IsValidProviderId(*kind, *provider_id) || !vault_uuid ||
++      !base::Uuid::ParseLowercase(*vault_uuid).is_valid() || !encrypted_key) {
++    return std::nullopt;
++  }
++
++  std::optional<std::vector<uint8_t>> key = DecodeEncrypted(*encrypted_key);
++  if (!key || !ReadEncryptedCheckpoint(prefs)) {
++    return std::nullopt;
++  }
++
++  const std::string* vault_name = value.FindString(kVaultNameField);
++  return Configuration{*kind, *provider_id, *vault_uuid,
++                       vault_name ? *vault_name : std::string(),
++                       std::move(*key)};
++}
++
++void WriteConfiguration(PrefService& prefs,
++                        const Configuration& configuration,
++                        const std::vector<uint8_t>& encrypted_checkpoint) {
++  ClearConfiguration(prefs);
++  WriteEncryptedCheckpoint(prefs, encrypted_checkpoint);
++  prefs.SetDict(
++      kConfiguration,
++      base::DictValue()
++          .Set(kVersionField, kConfigurationVersion)
++          .Set(kProviderKindField, KindToString(configuration.provider_kind))
++          .Set(kProviderIdField, configuration.provider_id)
++          .Set(kVaultUuidField, configuration.vault_uuid)
++          .Set(kVaultNameField, configuration.vault_name)
++          .Set(kEncryptedVaultKeyField,
++               base::Base64Encode(configuration.encrypted_vault_key)));
++}
++
++void ClearConfiguration(PrefService& prefs) {
++  prefs.ClearPref(kConfiguration);
++  prefs.ClearPref(kCheckpoint);
++  prefs.ClearPref(kBlockedReason);
++}
++
++bool IsConfigured(const PrefService& prefs) {
++  return ReadConfiguration(prefs).has_value();
++}
++
++std::optional<std::vector<uint8_t>> ReadEncryptedCheckpoint(
++    const PrefService& prefs) {
++  return DecodeEncrypted(prefs.GetString(kCheckpoint));
++}
++
++void WriteEncryptedCheckpoint(PrefService& prefs,
++                              const std::vector<uint8_t>& checkpoint) {
++  prefs.SetString(kCheckpoint, base::Base64Encode(checkpoint));
++}
++
++BlockedReason GetBlockedReason(const PrefService& prefs) {
++  const int value = prefs.GetInteger(kBlockedReason);
++  // kNone is never stored, so a stored value that reads as kNone is not an
++  // integer.
++  if (value == static_cast<int>(BlockedReason::kNone)) {
++    return prefs.HasPrefPath(kBlockedReason) ? BlockedReason::kIntegrityError
++                                             : BlockedReason::kNone;
++  }
++
++  if (value < 0 || value > static_cast<int>(BlockedReason::kMaxValue)) {
++    return BlockedReason::kIntegrityError;
++  }
++
++  return static_cast<BlockedReason>(value);
++}
++
++void SetBlockedReason(PrefService& prefs, BlockedReason reason) {
++  if (reason == BlockedReason::kNone) {
++    prefs.ClearPref(kBlockedReason);
++    return;
++  }
++
++  prefs.SetInteger(kBlockedReason, static_cast<int>(reason));
++}
++
++}  // namespace browser_sync::private_sync_prefs
+--- /dev/null
++++ b/chrome/browser/sync/private_sync/private_sync_prefs.h
+@@ -0,0 +1,75 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_SYNC_PRIVATE_SYNC_PRIVATE_SYNC_PREFS_H_
++#define CHROME_BROWSER_SYNC_PRIVATE_SYNC_PRIVATE_SYNC_PREFS_H_
++
++#include <cstdint>
++#include <optional>
++#include <string>
++#include <vector>
++
++#include "chrome/browser/sync/private_sync/private_sync_provider_host.h"
++
++class PrefRegistrySimple;
++class PrefService;
++
++namespace browser_sync::private_sync_prefs {
++
++inline constexpr char kConfiguration[] = "helium.private_sync.configuration";
++// The vault's last authenticated commit, encrypted with OSCrypt.
++inline constexpr char kCheckpoint[] = "helium.private_sync.checkpoint";
++// Set when private sync stopped until the user retries.
++inline constexpr char kBlockedReason[] = "helium.private_sync.blocked_reason";
++
++// A configuration written by a newer browser is not read, but is kept until
++// the user disconnects or sets up private sync again.
++inline constexpr int kConfigurationVersion = 1;
++
++struct Configuration {
++  PrivateSyncProviderHost::Kind provider_kind;
++  std::string provider_id;
++  std::string vault_uuid;
++  // Only shown to the user.
++  std::string vault_name;
++  // Encrypted with OSCrypt.
++  std::vector<uint8_t> encrypted_vault_key;
++
++  bool operator==(const Configuration&) const = default;
++};
++
++// These values are persisted.
++enum class BlockedReason {
++  kNone = 0,
++  // The vault was rolled back, forked, or holds data that cannot be read.
++  kIntegrityError = 1,
++  // The vault was written by a newer browser.
++  kUnsupportedVersion = 2,
++  kMaxValue = kUnsupportedVersion,
++};
++
++void RegisterProfilePrefs(PrefRegistrySimple* registry);
++
++// A configuration is only read with its checkpoint, so that rollbacks are
++// always detected.
++std::optional<Configuration> ReadConfiguration(const PrefService& prefs);
++// Replaces the configuration and its checkpoint, and clears the old vault's
++// state.
++void WriteConfiguration(PrefService& prefs,
++                        const Configuration& configuration,
++                        const std::vector<uint8_t>& encrypted_checkpoint);
++void ClearConfiguration(PrefService& prefs);
++bool IsConfigured(const PrefService& prefs);
++
++std::optional<std::vector<uint8_t>> ReadEncryptedCheckpoint(
++    const PrefService& prefs);
++void WriteEncryptedCheckpoint(PrefService& prefs,
++                              const std::vector<uint8_t>& checkpoint);
++
++BlockedReason GetBlockedReason(const PrefService& prefs);
++void SetBlockedReason(PrefService& prefs, BlockedReason reason);
++
++}  // namespace browser_sync::private_sync_prefs
++
++#endif  // CHROME_BROWSER_SYNC_PRIVATE_SYNC_PRIVATE_SYNC_PREFS_H_
+--- a/chrome/browser/sync/BUILD.gn
++++ b/chrome/browser/sync/BUILD.gn
+@@ -34,6 +34,8 @@ source_set("sync") {
+     "prefs/cross_device_pref_tracker/chrome_cross_device_pref_provider.h",
+     "prefs/cross_device_pref_tracker/cross_device_pref_tracker_factory.cc",
+     "prefs/cross_device_pref_tracker/cross_device_pref_tracker_factory.h",
++    "private_sync/private_sync_prefs.cc",
++    "private_sync/private_sync_prefs.h",
+     "send_tab_to_self_sync_service_factory.cc",
+     "send_tab_to_self_sync_service_factory.h",
+     "session_sync_service_factory.cc",
+@@ -62,10 +64,12 @@ source_set("sync") {
+     "//base",
+     "//chrome/browser/profiles:profile",
+     "//chrome/browser/sharing",
++    "//chrome/browser/sync/private_sync:provider_host",
+     "//chrome/browser/tab_group_sync:factories",
+     "//chrome/browser/translate",
+     "//components/browser_sync",
+     "//components/collaboration/public",
++    "//components/crx_file",
+     "//components/favicon/core",
+     "//components/keyed_service/core",
+     "//components/prefs",

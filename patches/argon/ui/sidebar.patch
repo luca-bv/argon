@@ -1,0 +1,58 @@
+--- a/chrome/browser/BUILD.gn
++++ b/chrome/browser/BUILD.gn
+@@ -4309,6 +4309,7 @@
+       "//chrome/browser/ui/views/apps:impl",
+       "//chrome/browser/ui/views/apps/app_info_dialog",
+       "//chrome/browser/ui/views/apps/app_info_dialog:impl",
++      "//chrome/browser/ui/views/argon:impl",
+       "//chrome/browser/ui/views/autofill:address_editor_view",
+       "//chrome/browser/ui/views/autofill:at_memory_promo_bubble_view",
+       "//chrome/browser/ui/views/autofill:at_memory_promo_bubble_view_impl",
+--- a/chrome/browser/ui/views/frame/BUILD.gn
++++ b/chrome/browser/ui/views/frame/BUILD.gn
+@@ -546,6 +546,7 @@
+     "//ui/views",
+   ]
+   deps = [
++    "//chrome/browser/ui/views/argon",
+     ":browser_view_header",
+     ":custom_corners_background",
+     ":frame",
+--- a/chrome/browser/ui/views/frame/vertical_tab_strip_region_view.cc
++++ b/chrome/browser/ui/views/frame/vertical_tab_strip_region_view.cc
+@@ -36,6 +36,7 @@
+ #include "chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h"
+ #include "chrome/browser/ui/ui_features.h"
+ #include "chrome/browser/ui/views/animations/tab_strip_animations.h"
++#include "chrome/browser/ui/views/argon/argon_sidebar_view.h"
+ #include "chrome/browser/ui/views/frame/base_tab_strip_region_view.h"
+ #include "chrome/browser/ui/views/frame/browser_view.h"
+ #include "chrome/browser/ui/views/frame/custom_corners_background.h"
+@@ -190,6 +191,18 @@
+               LayoutConstant::kVerticalTabStripCollapsedVerticalPadding),
+           region_horizontal_padding, 0, region_horizontal_padding));
+ 
++  // Argon: its sidebar replaces the tab list and the new tab button below it;
++  // both stay in the tree (hidden) for the code that still expects them.
++  bottom_button_container_->SetVisible(false);
++  auto* const argon_sidebar = content_area_view_->AddChildView(
++      std::make_unique<ArgonSidebarView>(browser_view->browser()));
++  argon_sidebar->SetProperty(
++      views::kFlexBehaviorKey,
++      views::FlexSpecification(views::MinimumFlexSizeRule::kScaleToZero,
++                               views::MaximumFlexSizeRule::kUnbounded));
++  argon_sidebar->SetProperty(views::kMarginsKey,
++                             gfx::Insets::VH(0, region_horizontal_padding));
++
+   gemini_button_ =
+       content_area_view_->AddChildView(std::make_unique<views::View>());
+ 
+@@ -880,6 +893,8 @@
+               LayoutConstant::kVerticalTabStripCollapsedVerticalPadding),
+           0));
+ 
++  view->SetVisible(false);  // Argon: ArgonSidebarView shows the tabs.
++
+   views::View* const content_parent =
+       content_area_view_ ? content_area_view_.get() : this;
+   std::optional<size_t> separator_index =

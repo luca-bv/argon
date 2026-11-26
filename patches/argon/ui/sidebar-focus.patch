@@ -1,0 +1,21 @@
+--- a/chrome/browser/ui/views/frame/vertical_tab_strip_region_view.cc
++++ b/chrome/browser/ui/views/frame/vertical_tab_strip_region_view.cc
+@@ -534,6 +534,18 @@
+ }
+ 
+ views::View* VerticalTabStripRegionView::GetDefaultFocusableChild() {
++  // Argon: focus starts on the sidebar's active row, not the hidden tab list.
++  if (content_area_view_) {
++    for (views::View* child : content_area_view_->children()) {
++      if (auto* sidebar = views::AsViewClass<ArgonSidebarView>(child)) {
++        if (views::View* row = sidebar->GetActiveTabRow()) {
++          return row;
++        }
++        return top_button_container_;
++      }
++    }
++  }
++
+   tabs::TabInterface* active_tab = tab_strip_model()->GetActiveTab();
+   if (active_tab) {
+     return GetTabAnchorView(active_tab->GetHandle());

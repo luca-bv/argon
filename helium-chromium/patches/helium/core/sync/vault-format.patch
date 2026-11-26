@@ -1,0 +1,282 @@
+--- /dev/null
++++ b/components/sync/engine/sync_vault/BUILD.gn
+@@ -0,0 +1,23 @@
++# Copyright 2026 The Helium Authors
++# You can use, redistribute, and/or modify this source code under
++# the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++import("//third_party/protobuf/proto_library.gni")
++
++proto_library("sync_vault_proto") {
++  proto_in_dir = "//"
++  sources = [ "sync_vault.proto" ]
++  extra_configs = [ "//build/config/compiler:wexit_time_destructors" ]
++}
++
++source_set("sync_vault") {
++  sources = [
++    "sync_vault_format.cc",
++    "sync_vault_format.h",
++    "sync_vault_limits.h",
++  ]
++
++  public_deps = [ "//base" ]
++
++  deps = [ ":sync_vault_proto" ]
++}
+--- /dev/null
++++ b/components/sync/engine/sync_vault/sync_vault.proto
+@@ -0,0 +1,45 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++syntax = "proto2";
++
++option optimize_for = LITE_RUNTIME;
++
++package sync_pb;
++
++// The only mutable object. It names the latest commit.
++message SyncVaultHead {
++  optional uint32 format_version = 1;
++  // Absent only for an initialized vault with no commits.
++  optional bytes commit_digest = 2;
++}
++
++// An immutable commit. The first commit of each epoch holds a snapshot of
++// the state; later commits in the epoch hold deltas.
++message SyncVaultCommit {
++  optional uint32 format_version = 1;
++  optional uint64 generation = 2;
++  // Absent only for generation one.
++  optional bytes parent_commit_digest = 3;
++  optional uint32 epoch = 4;
++  optional uint64 epoch_start_generation = 5;
++  // Commits before this generation may have been collected.
++  optional uint64 minimum_retained_generation = 6;
++  // Plaintext bytes of the epoch's snapshot, and of its later deltas so far.
++  optional uint64 epoch_snapshot_bytes = 7;
++  optional uint64 epoch_delta_bytes = 8;
++  // Small payloads are stored in the commit itself, others in encrypted
++  // chunks named by their digests.
++  optional bytes inline_payload = 9;
++  repeated bytes payload_chunk_digests = 10;
++}
++
++// The last authenticated commit, kept in local state to detect rollbacks and
++// forks.
++message SyncVaultCheckpoint {
++  optional uint32 format_version = 1;
++  optional string vault_uuid = 2;
++  optional uint64 generation = 3;
++  optional bytes commit_digest = 4;
++}
+--- /dev/null
++++ b/components/sync/engine/sync_vault/sync_vault_format.cc
+@@ -0,0 +1,110 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#include "components/sync/engine/sync_vault/sync_vault_format.h"
++
++#include "base/strings/string_number_conversions.h"
++#include "base/uuid.h"
++
++namespace syncer {
++
++namespace {
++
++bool IsDigest(std::string_view value) {
++  return value.size() == kSyncVaultObjectDigestBytes;
++}
++
++template <typename Message>
++base::expected<Message, SyncVaultFormatError> Parse(
++    base::span<const uint8_t> serialized) {
++  Message message;
++  if (!message.ParseFromArray(serialized.data(), serialized.size()) ||
++      !message.has_format_version()) {
++    return base::unexpected(SyncVaultFormatError::kMalformed);
++  }
++  if (message.format_version() != kSyncVaultFormatVersion) {
++    return base::unexpected(SyncVaultFormatError::kUnsupportedVersion);
++  }
++  return message;
++}
++
++}  // namespace
++
++base::expected<sync_pb::SyncVaultHead, SyncVaultFormatError> ParseSyncVaultHead(
++    base::span<const uint8_t> serialized) {
++  auto head = Parse<sync_pb::SyncVaultHead>(serialized);
++  if (head.has_value() && head->has_commit_digest() &&
++      !IsDigest(head->commit_digest())) {
++    return base::unexpected(SyncVaultFormatError::kMalformed);
++  }
++  return head;
++}
++
++base::expected<sync_pb::SyncVaultCommit, SyncVaultFormatError>
++ParseSyncVaultCommit(base::span<const uint8_t> serialized) {
++  auto commit = Parse<sync_pb::SyncVaultCommit>(serialized);
++  if (!commit.has_value()) {
++    return commit;
++  }
++  const bool has_parent = commit->generation() > 1;
++  // The retention floor is the previous epoch's start.
++  const bool has_previous_epoch = commit->epoch() > 0;
++  bool valid = commit->generation() > 0 &&
++               commit->epoch_start_generation() > 0 &&
++               commit->epoch_start_generation() <= commit->generation() &&
++               // Each earlier epoch started at a generation of its own.
++               commit->epoch() < commit->epoch_start_generation() &&
++               has_previous_epoch ==
++                   (commit->minimum_retained_generation() > 0) &&
++               commit->minimum_retained_generation() <
++                   commit->epoch_start_generation() &&
++               has_parent == commit->has_parent_commit_digest() &&
++               (!has_parent || IsDigest(commit->parent_commit_digest())) &&
++               commit->has_inline_payload() !=
++                   (commit->payload_chunk_digests_size() > 0);
++  for (const std::string& digest : commit->payload_chunk_digests()) {
++    valid = valid && IsDigest(digest);
++  }
++  if (!valid) {
++    return base::unexpected(SyncVaultFormatError::kMalformed);
++  }
++  return commit;
++}
++
++std::optional<sync_pb::SyncVaultCheckpoint> ParseSyncVaultCheckpoint(
++    std::string_view serialized) {
++  sync_pb::SyncVaultCheckpoint checkpoint;
++  if (!checkpoint.ParseFromString(serialized) ||
++      checkpoint.format_version() != kSyncVaultFormatVersion ||
++      !base::Uuid::ParseLowercase(checkpoint.vault_uuid()).is_valid() ||
++      (checkpoint.generation() > 0) != IsDigest(checkpoint.commit_digest())) {
++    return std::nullopt;
++  }
++  return checkpoint;
++}
++
++bool IsValidSyncVaultCommitTransition(std::string_view parent_digest,
++                                      const sync_pb::SyncVaultCommit& parent,
++                                      const sync_pb::SyncVaultCommit& child) {
++  if (child.generation() != parent.generation() + 1 ||
++      child.parent_commit_digest() != parent_digest) {
++    return false;
++  }
++  if (child.epoch() == parent.epoch()) {
++    return child.epoch_start_generation() == parent.epoch_start_generation() &&
++           child.minimum_retained_generation() ==
++               parent.minimum_retained_generation();
++  }
++
++  return child.epoch() == parent.epoch() + 1 &&
++         child.epoch_start_generation() == child.generation() &&
++         child.minimum_retained_generation() ==
++             parent.epoch_start_generation();
++}
++
++std::string GetSyncVaultObjectId(std::string_view digest) {
++  return base::HexEncode(digest);
++}
++
++}  // namespace syncer
+--- /dev/null
++++ b/components/sync/engine/sync_vault/sync_vault_format.h
+@@ -0,0 +1,51 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#ifndef COMPONENTS_SYNC_ENGINE_SYNC_VAULT_SYNC_VAULT_FORMAT_H_
++#define COMPONENTS_SYNC_ENGINE_SYNC_VAULT_SYNC_VAULT_FORMAT_H_
++
++#include <cstddef>
++#include <cstdint>
++#include <optional>
++#include <string>
++#include <string_view>
++
++#include "base/containers/span.h"
++#include "base/types/expected.h"
++#include "components/sync/engine/sync_vault/sync_vault.pb.h"
++#include "components/sync/engine/sync_vault/sync_vault_limits.h"
++
++namespace syncer {
++
++inline constexpr uint32_t kSyncVaultFormatVersion = 1;
++inline constexpr size_t kSyncVaultObjectDigestBytes = 32;
++// The maximum number of commits in an epoch.
++inline constexpr uint64_t kSyncVaultEpochCommitTarget = 64;
++
++enum class SyncVaultFormatError {
++  kMalformed,
++  kUnsupportedVersion,
++};
++
++// Parses a decrypted object and checks the invariants the store relies on.
++base::expected<sync_pb::SyncVaultHead, SyncVaultFormatError> ParseSyncVaultHead(
++    base::span<const uint8_t> serialized);
++base::expected<sync_pb::SyncVaultCommit, SyncVaultFormatError>
++ParseSyncVaultCommit(base::span<const uint8_t> serialized);
++std::optional<sync_pb::SyncVaultCheckpoint> ParseSyncVaultCheckpoint(
++    std::string_view serialized);
++
++// Whether `child` directly follows `parent`, which was loaded from
++// `parent_digest`.
++bool IsValidSyncVaultCommitTransition(std::string_view parent_digest,
++                                      const sync_pb::SyncVaultCommit& parent,
++                                      const sync_pb::SyncVaultCommit& child);
++
++// Provider object identifiers for immutable objects are their hex-encoded
++// ciphertext digests.
++std::string GetSyncVaultObjectId(std::string_view digest);
++
++}  // namespace syncer
++
++#endif  // COMPONENTS_SYNC_ENGINE_SYNC_VAULT_SYNC_VAULT_FORMAT_H_
+--- /dev/null
++++ b/components/sync/engine/sync_vault/sync_vault_limits.h
+@@ -0,0 +1,38 @@
++// Copyright 2026 The Helium Authors
++// You can use, redistribute, and/or modify this source code under
++// the terms of the GPL-3.0 license that can be found in the LICENSE file.
++
++#ifndef COMPONENTS_SYNC_ENGINE_SYNC_VAULT_SYNC_VAULT_LIMITS_H_
++#define COMPONENTS_SYNC_ENGINE_SYNC_VAULT_SYNC_VAULT_LIMITS_H_
++
++#include <cstddef>
++#include <string_view>
++
++namespace syncer {
++
++// Limits shared by the encrypted vault format and its provider API.
++inline constexpr size_t kSyncVaultContainerOverheadBytes = 28;
++inline constexpr size_t kSyncVaultMaximumEncryptedObjectBytes =
++    16 * 1024 * 1024;
++// Object identifiers are browser-owned fixed names or hexadecimal SHA-256
++// digests.
++inline constexpr size_t kSyncVaultMaximumObjectIdBytes = 64;
++inline constexpr size_t kSyncVaultMaximumRevisionBytes = 4096;
++inline constexpr size_t kSyncVaultMaximumMetadataPlaintextBytes =
++    64 * 1024 - kSyncVaultContainerOverheadBytes;
++inline constexpr size_t kSyncVaultMaximumCommitPlaintextBytes =
++    4 * 1024 * 1024 - kSyncVaultContainerOverheadBytes;
++inline constexpr size_t kSyncVaultMaximumPayloadPlaintextBytes =
++    kSyncVaultMaximumEncryptedObjectBytes - kSyncVaultContainerOverheadBytes;
++
++inline constexpr bool IsValidSyncVaultObjectId(std::string_view value) {
++  return !value.empty() && value.size() <= kSyncVaultMaximumObjectIdBytes;
++}
++
++inline constexpr bool IsValidSyncVaultRevision(std::string_view value) {
++  return !value.empty() && value.size() <= kSyncVaultMaximumRevisionBytes;
++}
++
++}  // namespace syncer
++
++#endif  // COMPONENTS_SYNC_ENGINE_SYNC_VAULT_SYNC_VAULT_LIMITS_H_
